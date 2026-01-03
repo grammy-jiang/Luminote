@@ -1,4 +1,4 @@
-![Luminote (placeholder)](docs/assets/logo-placeholder.svg)
+![Luminote](docs/assets/logo.webp)
 
 # Luminote
 
@@ -39,7 +39,7 @@ npm run dev          # builds and serves with live reload
 Notes:
 - The UI expects the API at http://127.0.0.1:8000 by default. You can change it in the top‑right input (persisted in localStorage).
 - Minimal styling on purpose; focus is on the two‑pane interactions and API flow.
-- Main functions live on the primary view, with tabs for settings and history.
+- Main functions live on the primary view, with tabs for settings and history>.
 
 ### Initial Configuration (BYOK)
 
@@ -48,7 +48,7 @@ Planned environment variables (final names may change):
 - `LUMINOTE_TARGET_LANG`: Target language (e.g., `zh`, `en`, `ja`).
 - `LUMINOTE_PROVIDER`: Provider id (e.g., `openai`, `azure_openai`, `anthropic`, `groq`).
 - `LUMINOTE_MODEL`: Model name (e.g., `gpt-4.1-mini`, `claude-3.5-sonnet`).
-- `LUMINOTE_API_KEY`: API key for the chosen provider.
+- `LUMINOTE_API_KEY`: API key for the chosen provider>.
 
 Notes:
 - Keys are stored locally for POV. Provide Test/Clear actions; hardening later.
