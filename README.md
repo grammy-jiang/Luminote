@@ -41,9 +41,9 @@ See [docs/pov_features.md](docs/pov_features.md) for the detailed phase breakdow
 
 ### Prerequisites
 
-- Python 3.12+ for backend
-- Node.js 22+ for frontend
-- A valid API key from OpenAI, Anthropic, or other supported providers
+- Backend: Python 3.12+, FastAPI
+- Frontend: Node.js 22+, SvelteKit
+- Access: A valid API key from OpenAI, Anthropic, or other supported providers
 
 ### Installation
 
