@@ -40,7 +40,7 @@ Most translation tools stop at converting words. Luminote targets the real probl
 - [ ] Link cards with bilingual summaries; optional web-browsing/RAG with citations
 - [ ] Multi-model cross-check and refinement (enhanced mode)
 
-See [docs/pov_features.md](docs/pov_features.md) for the detailed phase breakdown.
+See [docs/features.md](docs/features.md) for the detailed phase breakdown.
 
 ## Quick Start
 
@@ -93,7 +93,7 @@ npm run dev  # serves at http://localhost:5000
 
 For more detailed information, refer to:
 - **Product Purpose & Functionality:** [docs/purpose_and_functionality.md](docs/purpose_and_functionality.md)
-- **POV Features & Roadmap:** [docs/pov_features.md](docs/pov_features.md)
+- **Features & Roadmap:** [docs/features.md](docs/features.md)
 - **API Reference:** [docs/API.md](docs/API.md)
 - **Development & Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)
 - **Architecture:** [ARCHITECTURE.md](ARCHITECTURE.md)
