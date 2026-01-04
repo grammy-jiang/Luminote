@@ -8,6 +8,11 @@
 
 > AI-powered two-pane translation workbench for fast, accurate understanding and verification of web content.
 
+**What makes Luminote different**
+- **Two-pane reading**: source on the left (reader-mode), **translation is the primary, persistent view** on the right  
+- **Selection commands**: select text on either pane → explain / define terms / summarize / (later) verify  
+- **Versioned artifacts**: notes/highlights/history + prompt-driven regeneration (keep recent versions)
+
 Luminote is a local-first, AI-driven reading workbench that transforms web materials into **understandable, verifiable, and reviewable** knowledge assets. The original content appears on the left in reader-mode, and the AI translation is your primary, persistent view on the right. AI insights and verification capabilities are on-demand and user-controlled.
 
 ## Why Luminote?
@@ -16,20 +21,20 @@ Most translation tools stop at converting words. Luminote targets the real probl
 
 ## Product Roadmap & Features
 
-**Phase 0**
+**Phase 1**
 - [ ] Dual-pane translation with progressive, block-level rendering
-- [ ] Reader-mode extraction from any URL (titles, paragraphs, lists, quotes, code, images)
+- [ ] Reader-mode extraction from **most public URLs** (titles, paragraphs, lists, quotes, code, images)
 - [ ] BYOK configuration for target language, provider/model, and API key
 - [ ] Clear error handling for fetch failures, invalid keys, and rate limits
 - [ ] Block-level synchronization with hover/click linkage between panes
 
-**Phase 1**
+**Phase 2**
 - [ ] Re-translate per-block or full document with custom prompts
-- [ ] Local visit history and quick paste-text translation
+- [ ] Local visit history and quick paste-text translation (fallback when extraction fails)
 - [ ] Selection-based commands: Explain, Define terms, Summarize (and save as notes)
 - [ ] Prompt templates and termbase setup; translation versioning (keep last versions)
 
-**Phase 2**
+**Phase 3**
 - [ ] On-demand AI insights and verification packs (claims checklist, internal consistency)
 - [ ] Highlights, notes, and saved AI explanations
 - [ ] Link cards with bilingual summaries; optional web-browsing/RAG with citations
@@ -86,28 +91,30 @@ npm run dev  # serves at http://localhost:5000
 
 ## Documentation
 
+For more detailed information, refer to:
 - **Product Purpose & Functionality:** [docs/purpose_and_functionality.md](docs/purpose_and_functionality.md)
 - **POV Features & Roadmap:** [docs/pov_features.md](docs/pov_features.md)
 - **API Reference:** [docs/API.md](docs/API.md)
 - **Development & Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)
-- **Architecture:** Coming soon in `ARCHITECTURE.md`
+- **Architecture:** [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ## Support & Community
 
-- **Issues:** [GitHub Issues](https://github.com/grammy-jiang/Luminote/issues)
-- **Questions:** Use [GitHub Discussions](https://github.com/grammy-jiang/Luminote/discussions) (when available)
-- **Security Issues:** Contact the maintainer directly rather than filing public issues
+- **Bug reports & feature requests:** [GitHub Issues](https://github.com/grammy-jiang/Luminote/issues)
+- **Questions & discussions:** [GitHub Discussions](https://github.com/grammy-jiang/Luminote/discussions)
+- **Security vulnerabilities:** Contact the maintainer directly rather than filing public issues
+- **Status:** This project is actively maintained; see [CONTRIBUTING.md](CONTRIBUTING.md) for development info
 
 ## Contributing
 
-Contributions are welcome! To help:
-1. Fork the repo and create a feature branch
-2. Keep changes focused and add tests when reasonable
-3. Open a pull request with a clear description and rationale
-
-A full contribution guide (coding style, commit conventions, branching model) will be available in `CONTRIBUTING.md`.
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+- Development setup
+- Coding style and conventions
+- Branching model and pull request workflow
+- How to report bugs and propose features
 
 ## License
 
-The code in this project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**. See [LICENSE](LICENSE) for the full text. By contributing, you agree that your contributions will be licensed under GPL-3.0.
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.  
+See [LICENSE](LICENSE) for details. By contributing, you agree your contributions will be licensed under GPL-3.0.
 
