@@ -92,18 +92,18 @@ npm run dev  # serves at http://localhost:5000
 ## Documentation
 
 For more detailed information, refer to:
-- **Product Purpose & Functionality:** [docs/purpose_and_functionality.md](docs/purpose_and_functionality.md)
-- **Features & Roadmap:** [docs/features.md](docs/features.md)
-- **API Reference:** [docs/API.md](docs/API.md)
-- **Development & Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md)
-- **Architecture:** [ARCHITECTURE.md](ARCHITECTURE.md)
+- Product Purpose & Functionality: [docs/purpose_and_functionality.md](docs/purpose_and_functionality.md)
+- Features & Roadmap: [docs/features.md](docs/features.md)
+- API Reference: [docs/API.md](docs/API.md)
+- Development & Contributing: [CONTRIBUTING.md](CONTRIBUTING.md)
+- Architecture: [ARCHITECTURE.md](ARCHITECTURE.md)
 
 ## Support & Community
 
-- **Bug reports & feature requests:** [GitHub Issues](https://github.com/grammy-jiang/Luminote/issues)
-- **Questions & discussions:** [GitHub Discussions](https://github.com/grammy-jiang/Luminote/discussions)
-- **Security vulnerabilities:** Contact the maintainer directly rather than filing public issues
-- **Status:** This project is actively maintained; see [CONTRIBUTING.md](CONTRIBUTING.md) for development info
+- Bug reports & feature requests: [GitHub Issues](https://github.com/grammy-jiang/Luminote/issues)
+- Questions & discussions: [GitHub Discussions](https://github.com/grammy-jiang/Luminote/discussions)
+- Security vulnerabilities: Contact the maintainer directly rather than filing public issues
+- Status: This project is actively maintained; see [CONTRIBUTING.md](CONTRIBUTING.md) for development info
 
 ## Contributing
 
