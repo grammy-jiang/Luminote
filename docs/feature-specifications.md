@@ -197,10 +197,12 @@ Users provide their own API credentials, ensuring full privacy, cost control, an
   - Test connection button (validates key before saving)
 
 #### 3.2 Storage & Security
-- **Browser-only storage**: localStorage or IndexedDB (client-side encryption optional)
-- **No server-side storage** of API keys
-- **Encryption** in transit: HTTPS only
-- **Clear warnings**: Users understand keys stay local and are sent only to provider APIs
+- **Browser-only storage**: default to session-only memory; allow opt-in persistence
+  in localStorage or IndexedDB (client-side encryption optional)
+- **No server-side storage** of API keys and never log keys
+- **HTTPS only** in transit; keys are sent to the backend per request and
+  forwarded to provider APIs without persistence
+- **Clear warnings**: Users understand key handling and can choose persistence
 
 #### 3.3 Validation & Error Messages
 - **Pre-flight checks**:
@@ -232,7 +234,7 @@ Transparent, actionable error messages guide users to resolve issues without con
 | Host unreachable (DNS, timeout) | "Cannot reach the website. Check internet connection or URL." | Suggest retry, check firewall |
 | 403/401 (blocked, unauthorized) | "Website blocked access. Try a different URL or check permissions." | Explain crawl limits (user-agent spoofing not advised) |
 | 5xx (server error) | "Website returned an error. Try again in a few moments." | Retry button with exponential backoff |
-| Extraction empty | "No readable content found on page. Try paste-text mode." | Link to paste-text fallback |
+| Extraction empty | "No readable content found on page." | Suggest manual paste fallback (Phase 2) or try a different URL |
 
 #### 4.2 API Key & Provider Errors
 | Error | User Message | Action |
@@ -715,7 +717,8 @@ Provide tools for managing reusable prompt templates, maintaining terminology co
 - **Version storage**:
   - Each translation generates a version (immutable snapshot)
   - Version metadata: timestamp, model used, provider, template/prompt, language pair, user notes
-  - Store translations in IndexedDB or backend (if backend exists in Phase 2)
+  - Store translations in IndexedDB by default (local-first)
+  - Optional backend sync only if explicitly enabled in a later phase with auth
   - Default retention: keep last 10 versions per document, or 30 days
 
 - **Version comparison**:
@@ -1278,6 +1281,7 @@ For insight packs (especially claims verification), enable AI models to search t
   - Primary: Google Custom Search API (requires API key)
   - Fallback: DuckDuckGo API (no key required, limited results)
   - Optional: scholarly search (scholar.google.com, Google Scholar API)
+  - Keys are user-provided and stored locally; no server-side key storage
 
 #### 5.2 Result Synthesis with Citations
 - **RAG pipeline**:
@@ -1331,7 +1335,8 @@ For insight packs (especially claims verification), enable AI models to search t
   - Searches are traceable to user (if logged into Google/DuckDuckGo)
   - Option to disable web search (use local knowledge only)
   - Clear search history option
-  - User data not sent to Luminote backend (direct to search providers)
+  - Search requests go directly to providers; if a backend proxy is used for
+    CORS, it must be stateless and avoid persisting queries or keys
 
 #### 5.6 Offline Mode
 - **Graceful degradation**:
