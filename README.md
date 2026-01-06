@@ -1,3 +1,22 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# Readme
+
+- [Luminote](#luminote)
+  - [Why Luminote?](#why-luminote)
+  - [Product Roadmap & Features](#product-roadmap--features)
+  - [Quick Start](#quick-start)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Usage](#usage)
+  - [Documentation](#documentation)
+  - [Support & Community](#support--community)
+  - [Contributing](#contributing)
+  - [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
 ![Luminote](docs/assets/logo.webp)
 
 # Luminote
@@ -53,32 +72,45 @@ For detailed specifications, see [docs/feature-specifications.md](docs/feature-s
 ### Installation
 
 ```bash
+
 # Clone and open
+
 git clone https://github.com/grammy-jiang/Luminote.git
 cd Luminote
 
 # Run backend (FastAPI)
+
 cd backend
 python -m venv .venv
 . .venv/Scripts/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
 
 # Configure environment
+
 cp .env.example .env  # Linux/Mac: cp; Windows: copy
+
 # Edit .env and set:
+
 #   LUMINOTE_TARGET_LANG (e.g., zh, en, ja)
+
 #   LUMINOTE_PROVIDER (e.g., openai, anthropic)
+
 #   LUMINOTE_MODEL (e.g., gpt-4o-mini, claude-3-5-sonnet)
+
 #   LUMINOTE_API_KEY (your API key)
 
 uvicorn app.main:app --reload --port 8000
+
 ```
 
 ```bash
+
 # Frontend (Svelte + Rollup, TypeScript) - in a new terminal
+
 cd frontend
 npm install
 npm run dev  # serves at http://localhost:5000
+
 ```
 
 ### Usage
