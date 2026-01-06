@@ -9,13 +9,13 @@ Custom agents are **operational profiles**: a constrained set of instructions + 
 
 Design for three realities:
 
-1) **VS Code agent mode (interactive, local)**  
+1) **VS Code agent mode (interactive, local)**
 You select an agent profile from the chat UI and run a workflow with explicit steps (often via handoffs).
 
-2) **VS Code background/cloud agents (non-interactive or remote)**  
+2) **VS Code background/cloud agents (non-interactive or remote)**
 Some tasks may run with reduced context and different tool availability.
 
-3) **GitHub Copilot Coding Agent (remote, CI-like)**  
+3) **GitHub Copilot Coding Agent (remote, CI-like)**
 Agent execution happens in a GitHub-hosted environment and behaves more like a PR-producing teammate than an IDE assistant.
 
 **Key implication:** your instructions and agents must be useful even when some UI-only conveniences (like certain properties) are ignored outside VS Code.
@@ -95,11 +95,11 @@ VS Code can combine multiple instruction files; when multiple types exist, **no 
 
 High-performing instruction sets reliably cover:
 
-1) **Commands**: build/test/lint/format with exact flags  
-2) **Testing patterns**: framework, fixtures, naming conventions  
-3) **Project structure**: directory map with responsibilities  
-4) **Code style**: conventions + at least one “golden example”  
-5) **Git workflow**: branch naming, commit/PR conventions  
+1) **Commands**: build/test/lint/format with exact flags
+2) **Testing patterns**: framework, fixtures, naming conventions
+3) **Project structure**: directory map with responsibilities
+4) **Code style**: conventions + at least one “golden example”
+5) **Git workflow**: branch naming, commit/PR conventions
 6) **Boundaries**: what to never change / ask-first / always do
 
 If a file doesn’t add clarity in at least one of these areas, it’s usually noise.
@@ -112,10 +112,10 @@ If a file doesn’t add clarity in at least one of these areas, it’s usually n
 Over-permissive tool access is the fastest path to unintended edits, scope creep, and brittle changes. Treat tools like permissions.
 
 ### 5.2 Recommended tool sets by agent type
-- **Planning / Analysis**: `read`, `search`, `fetch`  
-- **Implementation**: `read`, `edit`, plus terminal/shell only if needed  
-- **Review / Audit**: `read`, `search`  
-- **Docs**: `read`, `edit`  
+- **Planning / Analysis**: `read`, `search`, `fetch`
+- **Implementation**: `read`, `edit`, plus terminal/shell only if needed
+- **Review / Audit**: `read`, `search`
+- **Docs**: `read`, `edit`
 - **CI/Release**: `read`, `edit` (scoped to workflows/build config)
 
 ### 5.3 “Boundaries” rubric you should standardize
@@ -134,10 +134,10 @@ Make boundaries enforceable by aligning them with tool allowlists (e.g., no `edi
 VS Code supports `handoffs` to move between agents. Use this to operationalize your SDLC:
 
 ### 6.1 Recommended handoff chain (TDD-friendly)
-1) **Planner** → defines contracts + acceptance criteria  
-2) **Test Engineer** → writes failing tests (red)  
-3) **Implementer** → makes tests pass (green)  
-4) **Security/Compliance Reviewer** → blocks unsafe defaults  
+1) **Planner** → defines contracts + acceptance criteria
+2) **Test Engineer** → writes failing tests (red)
+3) **Implementer** → makes tests pass (green)
+4) **Security/Compliance Reviewer** → blocks unsafe defaults
 5) **Docs** → ships runnable examples aligned to CI
 
 Treat handoffs as “workflow buttons,” not automation you can’t audit. The user stays in control.
@@ -148,9 +148,9 @@ Treat handoffs as “workflow buttons,” not automation you can’t audit. The 
 
 Even with great instruction files, prompts still matter. The strongest pattern is:
 
-- **Persona**: which agent to use and why  
-- **Context**: what files/modules are relevant  
-- **Task**: what to do (and what not to do)  
+- **Persona**: which agent to use and why
+- **Context**: what files/modules are relevant
+- **Task**: what to do (and what not to do)
 - **Format**: the deliverable shape (plan, patch, checklist, etc.)
 
 In VS Code, keep prompts shorter by pushing stable context into instruction files.
@@ -190,11 +190,11 @@ Some agent profile properties may be ignored by GitHub’s Coding Agent for comp
 
 ## 10) Common failure modes (and how to avoid them)
 
-1) **One massive instruction file** → split into layered files and scoped rules  
-2) **Conflicting policies** → enforce single-source-of-truth per topic  
-3) **Vague commands** → write copy/paste runnable commands with flags  
-4) **No boundaries** → add ✅/⚠️/🚫 and align tools to them  
-5) **Too many powerful agents** → keep a small roster of specialists  
+1) **One massive instruction file** → split into layered files and scoped rules
+2) **Conflicting policies** → enforce single-source-of-truth per topic
+3) **Vague commands** → write copy/paste runnable commands with flags
+4) **No boundaries** → add ✅/⚠️/🚫 and align tools to them
+5) **Too many powerful agents** → keep a small roster of specialists
 6) **Tests depend on hardware** → isolate integration tests behind explicit flags/markers
 
 Treat instruction/agent files like production code: review them, refactor them, and version them.
@@ -281,21 +281,21 @@ Add domain specialists only when you have domain complexity (protocols, infra, s
 ## References (official + high-signal)
 
 **VS Code**
-- Custom agents (agent profiles, tools, handoffs):  
-  https://code.visualstudio.com/docs/copilot/customization/custom-agents  
-- Custom instructions (`copilot-instructions.md`, `*.instructions.md`, order notes):  
-  https://code.visualstudio.com/docs/copilot/customization/custom-instructions  
-- MCP servers in VS Code (configuration and secrets guidance):  
-  https://code.visualstudio.com/docs/copilot/chat/mcp-servers  
-- MCP developer guide (building tools/servers):  
-  https://code.visualstudio.com/docs/copilot/chat/mcp-developer-guide  
+- Custom agents (agent profiles, tools, handoffs):
+  https://code.visualstudio.com/docs/copilot/customization/custom-agents
+- Custom instructions (`copilot-instructions.md`, `*.instructions.md`, order notes):
+  https://code.visualstudio.com/docs/copilot/customization/custom-instructions
+- MCP servers in VS Code (configuration and secrets guidance):
+  https://code.visualstudio.com/docs/copilot/chat/mcp-servers
+- MCP developer guide (building tools/servers):
+  https://code.visualstudio.com/docs/copilot/chat/mcp-developer-guide
 
 **GitHub Copilot**
-- Creating custom agents (repo + VS Code creation paths):  
-  https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/create-custom-agents  
-- Custom agents configuration reference (tools allowlist, compatibility notes):  
-  https://docs.github.com/en/copilot/reference/custom-agents-configuration  
+- Creating custom agents (repo + VS Code creation paths):
+  https://docs.github.com/en/copilot/how-tos/use-copilot-agents/coding-agent/create-custom-agents
+- Custom agents configuration reference (tools allowlist, compatibility notes):
+  https://docs.github.com/en/copilot/reference/custom-agents-configuration
 
 **Community / ecosystem**
-- GitHub Blog: “How to write a great agents.md” (commands early, examples, boundaries, six areas):  
+- GitHub Blog: “How to write a great agents.md” (commands early, examples, boundaries, six areas):
   https://github.blog/ai-and-ml/github-copilot/how-to-write-a-great-agents-md-lessons-from-over-2500-repositories/

@@ -190,7 +190,7 @@ Users provide their own API credentials, ensuring full privacy, cost control, an
     - OpenAI (GPT-4o, GPT-4o-mini)
     - Anthropic (Claude 3.5 Sonnet, Claude 3 Opus, Claude 3 Haiku)
     - Other: extensible for future providers (Gemini, Llama Cloud, etc.)
-  
+
   - Model selection (dynamic based on provider)
   - Target language dropdown (ISO 639-1 codes: zh, ja, ko, es, fr, de, etc.)
   - API Key input (masked, with "show/hide" toggle)
@@ -208,7 +208,7 @@ Users provide their own API credentials, ensuring full privacy, cost control, an
 - **Pre-flight checks**:
   - API key format validation (non-empty, reasonable length)
   - Test API call to provider (quota check, not full rate limit)
-- **Clear feedback**: 
+- **Clear feedback**:
   - ✓ "Configuration saved. Ready to translate."
   - ✗ "Invalid API key. Check with provider."
   - ⚠ "Rate limit approaching. Reduce request size or wait."
@@ -306,7 +306,7 @@ Clicking or hovering over a block in one pane highlights the corresponding block
 
 #### 5.4 Mobile & Accessibility
 - **Touch devices**: Tap a block to highlight (no hover); swipe to navigate
-- **Keyboard**: 
+- **Keyboard**:
   - Arrow Up/Down: navigate blocks in active pane
   - Alt+Tab: switch panes
   - Enter: jump to corresponding block in other pane
@@ -392,7 +392,7 @@ Allow users to regenerate translations at block or document level using custom p
   - Dropdown to select different model from configured provider
   - Cross-provider model picker (if multiple providers configured)
   - Model comparison mode: re-translate with Model A vs Model B, show side-by-side
-  
+
 - **Provider fallback**:
   - If primary provider fails, auto-retry with secondary provider (if configured)
   - Show which provider was used in result metadata
@@ -1457,7 +1457,7 @@ How Phase 3 features work together in common workflows.
 - **Storage:** Client-side (browser localStorage/IndexedDB) for config and local history
 - **APIs:** OpenAI, Anthropic, and extensible for future providers
 - **Package Management:** `uv` for Python, npm for frontend
-- **Code Quality:** 
+- **Code Quality:**
   - Python: isort, black (72 char), ruff, mypy (strict mode)
   - TypeScript: ESLint, Prettier (72 char)
 - **Testing:** pytest + tox (Python), npm test (TypeScript)

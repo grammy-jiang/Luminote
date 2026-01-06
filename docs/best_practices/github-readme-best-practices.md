@@ -197,4 +197,3 @@ MIT (see LICENSE)
 - **Python：** 标注 Python 版本；`pip install`；示例；链接到文档站点。
 - **JS/TS：** 标注 Node 版本；npm/yarn；示例；如有 demo，给链接。
 - **Rust：** 标注 MSRV（如有）；cargo add/install；示例；链接 docs.rs。
-

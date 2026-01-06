@@ -165,4 +165,3 @@ ChatGPT is a general-purpose **large language model** rather than a dedicated tr
 
 ## Conclusion
 The translation market has mature “translation-first” tools (Google/DeepL/Microsoft) and developer APIs (AWS), plus emerging “LLM-as-translator” workflows (ChatGPT). Essential baseline features are well-covered (NMT accuracy, language breadth, speed). The biggest opportunity areas align with your project: **translation as a means to understanding and verification**, including **prompt/terminology governance, multi-model cross-checking, selection-based commands, and durable, versioned AI artifacts** that users can replay, compare, and regenerate.
-
