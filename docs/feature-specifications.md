@@ -1,3 +1,161 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# Feature Specifications
+
+- [Luminote: Comprehensive Design Document](#luminote-comprehensive-design-document)
+  - [Table of Contents](#table-of-contents)
+  - [Purpose & Overview](#purpose--overview)
+    - [What is Luminote?](#what-is-luminote)
+    - [Who It Serves](#who-it-serves)
+    - [Core Outcomes](#core-outcomes)
+    - [Key Differentiators](#key-differentiators)
+  - [Product Roadmap](#product-roadmap)
+    - [Phase 1: Core Translation Workbench (Foundation)](#phase-1-core-translation-workbench-foundation)
+    - [Phase 2: Enhanced Translation & Versioning](#phase-2-enhanced-translation--versioning)
+    - [Phase 3: Verification & Knowledge Integration](#phase-3-verification--knowledge-integration)
+- [Phase 1: Core Translation Workbench Features](#phase-1-core-translation-workbench-features)
+  - [1. Dual-Pane Translation with Progressive, Block-Level Rendering](#1-dual-pane-translation-with-progressive-block-level-rendering)
+    - [Overview](#overview)
+    - [Key Requirements](#key-requirements)
+      - [1.1 Two-Pane Layout](#11-two-pane-layout)
+      - [1.2 Progressive Block-Level Rendering](#12-progressive-block-level-rendering)
+      - [1.3 Responsive Pane Sizing](#13-responsive-pane-sizing)
+  - [2. Reader-Mode Extraction from Most Public URLs](#2-reader-mode-extraction-from-most-public-urls)
+    - [Overview](#overview-1)
+    - [Key Requirements](#key-requirements-1)
+      - [2.1 Content Extraction Coverage](#21-content-extraction-coverage)
+      - [2.2 Content Elements Preserved](#22-content-elements-preserved)
+      - [2.3 Content Filtering](#23-content-filtering)
+      - [2.4 Edge Cases & Fallbacks](#24-edge-cases--fallbacks)
+      - [2.5 Performance](#25-performance)
+  - [3. BYOK (Bring Your Own Key) Configuration](#3-byok-bring-your-own-key-configuration)
+    - [Overview](#overview-2)
+    - [Key Requirements](#key-requirements-2)
+      - [3.1 Configuration UI](#31-configuration-ui)
+      - [3.2 Storage & Security](#32-storage--security)
+      - [3.3 Validation & Error Messages](#33-validation--error-messages)
+      - [3.4 Fallback & Reset](#34-fallback--reset)
+  - [4. Clear Error Handling for Fetch Failures, Invalid Keys, and Rate Limits](#4-clear-error-handling-for-fetch-failures-invalid-keys-and-rate-limits)
+    - [Overview](#overview-3)
+    - [Key Requirements](#key-requirements-3)
+      - [4.1 Fetch/Network Errors](#41-fetchnetwork-errors)
+      - [4.2 API Key & Provider Errors](#42-api-key--provider-errors)
+      - [4.3 Rate Limiting](#43-rate-limiting)
+      - [4.4 UI Presentation](#44-ui-presentation)
+      - [4.5 Logging & Debug Mode](#45-logging--debug-mode)
+  - [5. Block-Level Synchronization with Hover/Click Linkage Between Panes](#5-block-level-synchronization-with-hoverclick-linkage-between-panes)
+    - [Overview](#overview-4)
+    - [Key Requirements](#key-requirements-4)
+      - [5.1 Hover Linkage](#51-hover-linkage)
+      - [5.2 Click Linkage](#52-click-linkage)
+      - [5.3 Block Mapping & Synchronization](#53-block-mapping--synchronization)
+      - [5.4 Mobile & Accessibility](#54-mobile--accessibility)
+      - [5.5 Performance](#55-performance)
+  - [Phase 1 Implementation Priority](#phase-1-implementation-priority)
+  - [Phase 1 Success Metrics](#phase-1-success-metrics)
+- [Phase 2: Translation Refinement & User Knowledge Artifacts](#phase-2-translation-refinement--user-knowledge-artifacts)
+  - [1. Re-Translate Per-Block or Full Document with Custom Prompts](#1-re-translate-per-block-or-full-document-with-custom-prompts)
+    - [Overview](#overview-5)
+    - [Key Requirements](#key-requirements-5)
+      - [1.1 Re-Translation Triggers](#11-re-translation-triggers)
+      - [1.2 Custom Prompt Interface](#12-custom-prompt-interface)
+      - [1.3 Model Selection for Re-Translation](#13-model-selection-for-re-translation)
+      - [1.4 Re-Translation Preview & Application](#14-re-translation-preview--application)
+      - [1.5 Contextual Re-Translation](#15-contextual-re-translation)
+      - [1.6 Re-Translation Performance](#16-re-translation-performance)
+  - [2. Local Visit History and Quick Paste-Text Translation](#2-local-visit-history-and-quick-paste-text-translation)
+    - [Overview](#overview-6)
+    - [Key Requirements](#key-requirements-6)
+      - [2.1 Local Visit History](#21-local-visit-history)
+      - [2.2 History Management](#22-history-management)
+      - [2.3 Paste-Text Translation (Fallback Mode)](#23-paste-text-translation-fallback-mode)
+      - [2.4 Quick Paste Workflow](#24-quick-paste-workflow)
+      - [2.5 History Performance & Privacy](#25-history-performance--privacy)
+  - [3. Selection-Based Commands: Explain, Define, Summarize (Save as Notes)](#3-selection-based-commands-explain-define-summarize-save-as-notes)
+    - [Overview](#overview-7)
+    - [Key Requirements](#key-requirements-7)
+      - [3.1 Text Selection & Command Invocation](#31-text-selection--command-invocation)
+      - [3.2 Explain Command](#32-explain-command)
+      - [3.3 Define Command](#33-define-command)
+      - [3.4 Summarize Command](#34-summarize-command)
+      - [3.5 Save as Notes](#35-save-as-notes)
+      - [3.6 Notes Interface](#36-notes-interface)
+      - [3.7 Command Extensibility](#37-command-extensibility)
+      - [3.8 Selection Command Performance](#38-selection-command-performance)
+  - [4. Prompt Templates and Termbase Setup; Translation Versioning](#4-prompt-templates-and-termbase-setup-translation-versioning)
+    - [Overview](#overview-8)
+    - [Key Requirements](#key-requirements-8)
+      - [4.1 Prompt Templates Management](#41-prompt-templates-management)
+      - [4.2 Template Application](#42-template-application)
+      - [4.3 Termbase (Glossary) Setup](#43-termbase-glossary-setup)
+      - [4.4 Termbase Application in Translations](#44-termbase-application-in-translations)
+      - [4.5 Translation Versioning](#45-translation-versioning)
+      - [4.6 Per-Block Versioning](#46-per-block-versioning)
+      - [4.7 Version Management Performance](#47-version-management-performance)
+  - [Phase 2 Implementation Priority](#phase-2-implementation-priority)
+  - [Phase 2 Success Metrics](#phase-2-success-metrics)
+- [Phase 3: AI Insights, Verification & Knowledge Integration](#phase-3-ai-insights-verification--knowledge-integration)
+  - [1. On-Demand AI Insights and Verification Packs](#1-on-demand-ai-insights-and-verification-packs)
+    - [Overview](#overview-9)
+    - [Key Requirements](#key-requirements-9)
+      - [1.1 Insight Types & Packs](#11-insight-types--packs)
+        - [Claims Verification Pack](#claims-verification-pack)
+        - [Internal Consistency Pack](#internal-consistency-pack)
+        - [Argument Structure Pack](#argument-structure-pack)
+        - [Bias & Tone Detection Pack](#bias--tone-detection-pack)
+        - [Summarization & Key Takeaways Pack](#summarization--key-takeaways-pack)
+      - [1.2 Insight Pack Management](#12-insight-pack-management)
+      - [1.3 Insight Performance & Cost](#13-insight-performance--cost)
+  - [2. Highlights, Notes, and Saved AI Explanations](#2-highlights-notes-and-saved-ai-explanations)
+    - [Overview](#overview-10)
+    - [Key Requirements](#key-requirements-10)
+      - [2.1 Highlight System](#21-highlight-system)
+      - [2.2 Note System](#22-note-system)
+      - [2.3 Saved AI Explanations](#23-saved-ai-explanations)
+      - [2.4 Annotation Review Interface](#24-annotation-review-interface)
+      - [2.5 Annotation Sync (Multi-Device - Future)](#25-annotation-sync-multi-device---future)
+  - [3. Link Cards with Bilingual Summaries](#3-link-cards-with-bilingual-summaries)
+    - [Overview](#overview-11)
+    - [Key Requirements](#key-requirements-11)
+      - [3.1 Link Detection and Extraction](#31-link-detection-and-extraction)
+      - [3.2 Link Card Generation](#32-link-card-generation)
+      - [3.3 Link Card UI](#33-link-card-ui)
+      - [3.4 Reading List Integration](#34-reading-list-integration)
+      - [3.5 Link Card Performance](#35-link-card-performance)
+  - [4. Multi-Model Cross-Check and Refinement (Enhanced Mode)](#4-multi-model-cross-check-and-refinement-enhanced-mode)
+    - [Overview](#overview-12)
+    - [Key Requirements](#key-requirements-12)
+      - [4.1 Multi-Model Execution](#41-multi-model-execution)
+      - [4.2 Multi-Model Translation Comparison](#42-multi-model-translation-comparison)
+      - [4.3 Translation Refinement & Synthesis](#43-translation-refinement--synthesis)
+      - [4.4 Multi-Model Verification](#44-multi-model-verification)
+      - [4.5 Enhanced Mode UI](#45-enhanced-mode-ui)
+      - [4.6 Cost Management in Enhanced Mode](#46-cost-management-in-enhanced-mode)
+  - [5. Web-Browsing and RAG (Retrieval-Augmented Generation) with Citations](#5-web-browsing-and-rag-retrieval-augmented-generation-with-citations)
+    - [Overview](#overview-13)
+    - [Key Requirements](#key-requirements-13)
+      - [5.1 Web-Search Integration](#51-web-search-integration)
+      - [5.2 Result Synthesis with Citations](#52-result-synthesis-with-citations)
+      - [5.3 Search Result Caching](#53-search-result-caching)
+      - [5.4 Verification UI](#54-verification-ui)
+      - [5.5 Privacy & Rate Limiting](#55-privacy--rate-limiting)
+      - [5.6 Offline Mode](#56-offline-mode)
+  - [6. Integration of Phase 3 Features](#6-integration-of-phase-3-features)
+    - [Overview](#overview-14)
+      - [6.1 Comprehensive Document Review Workflow](#61-comprehensive-document-review-workflow)
+      - [6.2 Research Paper Review Workflow](#62-research-paper-review-workflow)
+      - [6.3 News Analysis Workflow](#63-news-analysis-workflow)
+  - [Phase 3 Implementation Priority](#phase-3-implementation-priority)
+  - [Phase 3 Success Metrics](#phase-3-success-metrics)
+  - [Architecture Overview](#architecture-overview)
+    - [Technology Stack](#technology-stack)
+    - [Design Principles](#design-principles)
+    - [Core Abstractions](#core-abstractions)
+    - [Reference Documentation](#reference-documentation)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
 # Luminote: Comprehensive Design Document
 
 This document provides the complete design specifications for Luminote, including purpose, roadmap, and detailed features for all development phases.
@@ -87,11 +245,13 @@ This phase establishes Luminote as a stable, reliable translation workbench.
 ## 1. Dual-Pane Translation with Progressive, Block-Level Rendering
 
 ### Overview
+
 Display source and translated content side-by-side with intelligent block-level synchronization, enabling fast comprehension without losing context.
 
 ### Key Requirements
 
 #### 1.1 Two-Pane Layout
+
 - **Left Pane (Source)**: Reader-mode extraction of original content
   - Clean, distraction-free presentation
   - Proper typography and spacing preservation
@@ -103,6 +263,7 @@ Display source and translated content side-by-side with intelligent block-level 
   - Optimized for reading flow in target language
 
 #### 1.2 Progressive Block-Level Rendering
+
 - **Block Definition**: Content chunked at logical boundaries
   - Paragraphs
   - Lists (ordered/unordered)
@@ -124,6 +285,7 @@ Display source and translated content side-by-side with intelligent block-level 
   - Scroll anchor preservation (don't jump when blocks load above)
 
 #### 1.3 Responsive Pane Sizing
+
 - Adjustable pane width ratio (50/50 default, draggable divider)
 - Mobile/tablet: stacked view with tab/toggle to switch panes
 - Accessibility: keyboard shortcuts to navigate between panes
@@ -133,11 +295,13 @@ Display source and translated content side-by-side with intelligent block-level 
 ## 2. Reader-Mode Extraction from Most Public URLs
 
 ### Overview
+
 Intelligently extract and clean main content from web pages, removing clutter while preserving structure, images, and semantic meaning.
 
 ### Key Requirements
 
 #### 2.1 Content Extraction Coverage
+
 Support extraction from:
 - **News articles**: Headlines, bylines, dates, body paragraphs, pull quotes
 - **Blog posts**: Title, metadata, body, comments section (optional)
@@ -148,6 +312,7 @@ Support extraction from:
 - **Plain text/HTML**: Fallback graceful parsing
 
 #### 2.2 Content Elements Preserved
+
 - **Text**: Paragraphs, lists, inline formatting (emphasis, bold, code)
 - **Structure**: Heading hierarchy (H1→H6), sections, subsections
 - **Rich Content**:
@@ -159,18 +324,21 @@ Support extraction from:
 - **Metadata**: Article title, author, publication date, URL
 
 #### 2.3 Content Filtering
+
 - **Remove**: Navigation menus, footers, ads, tracking pixels, popups, "cookie consent" banners
 - **Minimize**: Sidebar widgets, "related articles" suggestions
 - **Flatten**: Complex CSS layouts to semantic HTML
 - **Normalize**: Whitespace and line breaks for consistency
 
 #### 2.4 Edge Cases & Fallbacks
+
 - **JavaScript-heavy sites**: Use headless browser (Playwright/Selenium) if initial HTML extraction yields <30% content
 - **Paywalled content**: Detect and skip; notify user with clear message
 - **Non-HTML (images, videos)**: Graceful fallback—provide URL and request manual paste-text mode
 - **Very long pages**: Chunk extraction into sections; auto-paginate or truncate with continuation pointer
 
 #### 2.5 Performance
+
 - Extraction completes within 5–10 seconds for typical articles
 - Cache extracted content (browser storage) for revisits within 24 hours
 - Lazy-load images (defer fetching until visible in viewport)
@@ -180,11 +348,13 @@ Support extraction from:
 ## 3. BYOK (Bring Your Own Key) Configuration
 
 ### Overview
+
 Users provide their own API credentials, ensuring full privacy, cost control, and provider flexibility. No centralized credential storage.
 
 ### Key Requirements
 
 #### 3.1 Configuration UI
+
 - **Settings modal/panel** accessible from top-right menu
   - Provider selection dropdown:
     - OpenAI (GPT-4o, GPT-4o-mini)
@@ -197,6 +367,7 @@ Users provide their own API credentials, ensuring full privacy, cost control, an
   - Test connection button (validates key before saving)
 
 #### 3.2 Storage & Security
+
 - **Browser-only storage**: default to session-only memory; allow opt-in persistence
   in localStorage or IndexedDB (client-side encryption optional)
 - **No server-side storage** of API keys and never log keys
@@ -205,6 +376,7 @@ Users provide their own API credentials, ensuring full privacy, cost control, an
 - **Clear warnings**: Users understand key handling and can choose persistence
 
 #### 3.3 Validation & Error Messages
+
 - **Pre-flight checks**:
   - API key format validation (non-empty, reasonable length)
   - Test API call to provider (quota check, not full rate limit)
@@ -214,6 +386,7 @@ Users provide their own API credentials, ensuring full privacy, cost control, an
   - ⚠ "Rate limit approaching. Reduce request size or wait."
 
 #### 3.4 Fallback & Reset
+
 - Allow partial config (e.g., remember provider+language, but re-enter key each session)
 - One-click "Reset to defaults" button
 - Download/export config (without key) for backup
@@ -223,11 +396,13 @@ Users provide their own API credentials, ensuring full privacy, cost control, an
 ## 4. Clear Error Handling for Fetch Failures, Invalid Keys, and Rate Limits
 
 ### Overview
+
 Transparent, actionable error messages guide users to resolve issues without confusion or silent failures.
 
 ### Key Requirements
 
 #### 4.1 Fetch/Network Errors
+
 | Error | User Message | Action |
 |-------|--------------|--------|
 | Invalid URL | "URL not recognized. Check format and try again." | Enable user retry or paste URL |
@@ -237,6 +412,7 @@ Transparent, actionable error messages guide users to resolve issues without con
 | Extraction empty | "No readable content found on page." | Suggest manual paste fallback (Phase 2) or try a different URL |
 
 #### 4.2 API Key & Provider Errors
+
 | Error | User Message | Action |
 |-------|--------------|--------|
 | Invalid key format | "API key appears invalid. Check provider docs for correct format." | Link to provider setup guide |
@@ -245,6 +421,7 @@ Transparent, actionable error messages guide users to resolve issues without con
 | Insufficient quota | "API quota exhausted. Upgrade account or wait for reset." | Link to provider account page |
 
 #### 4.3 Rate Limiting
+
 | Scenario | User Message | Action |
 |----------|--------------|--------|
 | Provider rate limit (429) | "Too many requests to provider. Wait 60s before next translation." | Countdown timer, disable button |
@@ -252,12 +429,14 @@ Transparent, actionable error messages guide users to resolve issues without con
 | Batch size exceeded | "Content too long for single request. Breaking into chunks." | Auto-chunk with progress bar |
 
 #### 4.4 UI Presentation
+
 - **Toast notifications** (bottom-right): ephemeral feedback for minor issues
 - **Error modal** (center screen): for critical blockers requiring action
 - **Inline warnings** (in UI): for config issues (e.g., missing API key)
 - **Expandable details**: "Show full error" for debugging/logs (console or user report)
 
 #### 4.5 Logging & Debug Mode
+
 - Client-side error logging (IndexedDB or local file)
 - Optional "Debug Mode" toggle to show full stack traces and API responses
 - User report generation: include sanitized logs (without API keys) for bug reports
@@ -267,11 +446,13 @@ Transparent, actionable error messages guide users to resolve issues without con
 ## 5. Block-Level Synchronization with Hover/Click Linkage Between Panes
 
 ### Overview
+
 Clicking or hovering over a block in one pane highlights the corresponding block in the other pane, maintaining mental mapping as users read across languages.
 
 ### Key Requirements
 
 #### 5.1 Hover Linkage
+
 - **Hover behavior**:
   - User hovers over any block in left (source) pane
   - Corresponding translation block in right pane highlights (e.g., light yellow background, 0.2s animation)
@@ -284,6 +465,7 @@ Clicking or hovering over a block in one pane highlights the corresponding block
   - Tooltip or label showing block type (e.g., "Paragraph 3 of 12")
 
 #### 5.2 Click Linkage
+
 - **Click behavior**:
   - User clicks on any block in left pane
   - Right pane auto-scrolls to corresponding translation block
@@ -295,6 +477,7 @@ Clicking or hovering over a block in one pane highlights the corresponding block
   - Useful for verifying specific translations
 
 #### 5.3 Block Mapping & Synchronization
+
 - **Block ID system**:
   - Each extracted block assigned unique ID during extraction
   - Translation preserves block structure (same ID mapping)
@@ -305,6 +488,7 @@ Clicking or hovering over a block in one pane highlights the corresponding block
   - "Keep blocks aligned" mode: scroll both panes to same block position
 
 #### 5.4 Mobile & Accessibility
+
 - **Touch devices**: Tap a block to highlight (no hover); swipe to navigate
 - **Keyboard**:
   - Arrow Up/Down: navigate blocks in active pane
@@ -313,6 +497,7 @@ Clicking or hovering over a block in one pane highlights the corresponding block
 - **Screen readers**: Announce block position and linkage ("Paragraph 3: Click to see translation")
 
 #### 5.5 Performance
+
 - Lazy-load block mapping (only build when needed)
 - Debounce hover events (50ms) to avoid excessive re-renders
 - Virtual scrolling for pages with 1000+ blocks (render only visible blocks)
@@ -360,11 +545,13 @@ This phase extends Luminote with re-translation capabilities, fallback modes, co
 ## 1. Re-Translate Per-Block or Full Document with Custom Prompts
 
 ### Overview
+
 Allow users to regenerate translations at block or document level using custom prompts, system instructions, and alternative models. Maintain version history for comparison and rollback.
 
 ### Key Requirements
 
 #### 1.1 Re-Translation Triggers
+
 - **Block-level re-translation**:
   - Right-click menu on translated block: "Re-translate", "Re-translate with custom prompt"
   - Inline button (icon) on hover over translated block
@@ -376,6 +563,7 @@ Allow users to regenerate translations at block or document level using custom p
   - Batch mode (re-translate only modified blocks since last save)
 
 #### 1.2 Custom Prompt Interface
+
 - **Prompt template modal**:
   - Pre-filled template: `"Translate the following {source_lang} text to {target_lang}. Consider: [custom instructions]"`
   - Text area for user instructions (e.g., "Use formal tone, preserve technical terms")
@@ -388,6 +576,7 @@ Allow users to regenerate translations at block or document level using custom p
   - Share templates (export as JSON) for collaboration
 
 #### 1.3 Model Selection for Re-Translation
+
 - **Alternative model picker**:
   - Dropdown to select different model from configured provider
   - Cross-provider model picker (if multiple providers configured)
@@ -398,6 +587,7 @@ Allow users to regenerate translations at block or document level using custom p
   - Show which provider was used in result metadata
 
 #### 1.4 Re-Translation Preview & Application
+
 - **Preview before commit**:
   - Show old vs. new translation in split view
   - Highlight differences (insertions, deletions, modifications)
@@ -410,6 +600,7 @@ Allow users to regenerate translations at block or document level using custom p
   - Cancel mid-process with option to keep partial results
 
 #### 1.5 Contextual Re-Translation
+
 - **Include context**:
   - Send surrounding blocks (previous + current + next) to model for better coherence
   - Toggle "context-aware" mode (default: on for paragraphs, off for individual sentences)
@@ -420,6 +611,7 @@ Allow users to regenerate translations at block or document level using custom p
   - Apply termbase to ensure consistent terminology across re-translations
 
 #### 1.6 Re-Translation Performance
+
 - **Streaming responses**:
   - For long blocks, stream translation token-by-token
   - Show partial translation as it arrives (avoid long wait)
@@ -435,11 +627,13 @@ Allow users to regenerate translations at block or document level using custom p
 ## 2. Local Visit History and Quick Paste-Text Translation
 
 ### Overview
+
 Maintain a searchable browsing history of translated URLs, and provide fallback paste-text mode for content that cannot be extracted or fetched.
 
 ### Key Requirements
 
 #### 2.1 Local Visit History
+
 - **History storage**:
   - Store in IndexedDB (client-side, persisted across sessions)
   - Each entry: URL, title, extraction timestamp, source language, target language, provider/model used
@@ -460,6 +654,7 @@ Maintain a searchable browsing history of translated URLs, and provide fallback 
   - Export/backup: download history as JSON
 
 #### 2.2 History Management
+
 - **Revisit functionality**:
   - Click history entry to reload cached extraction + translation
   - Option to fetch fresh (re-extract if page changed)
@@ -471,6 +666,7 @@ Maintain a searchable browsing history of translated URLs, and provide fallback 
   - Tag entries for personal organization (e.g., "research", "reading-list", "references")
 
 #### 2.3 Paste-Text Translation (Fallback Mode)
+
 - **When to use**:
   - User manually pastes text (fallback when URL extraction fails)
   - Direct text input for snippets, emails, or extracted content
@@ -492,6 +688,7 @@ Maintain a searchable browsing history of translated URLs, and provide fallback 
   - Not stored in history by default (unless user clicks "Save to history")
 
 #### 2.4 Quick Paste Workflow
+
 - **One-click translate**:
   - Paste text → Click "Translate" → renders in dual-pane view
   - No extraction step, no URL parsing
@@ -503,6 +700,7 @@ Maintain a searchable browsing history of translated URLs, and provide fallback 
   - Result in full-screen reading mode
 
 #### 2.5 History Performance & Privacy
+
 - **Lazy loading**:
   - Load history list without full cached content initially
   - Fetch cached content on-demand when user clicks entry
@@ -518,11 +716,13 @@ Maintain a searchable browsing history of translated URLs, and provide fallback 
 ## 3. Selection-Based Commands: Explain, Define, Summarize (Save as Notes)
 
 ### Overview
+
 Enable users to select text in either pane and trigger context-specific AI operations to build understanding and annotate content.
 
 ### Key Requirements
 
 #### 3.1 Text Selection & Command Invocation
+
 - **Selection mechanism**:
   - User selects text in source or translated pane
   - Floating context menu appears near selection (400ms delay to avoid flashing)
@@ -535,6 +735,7 @@ Enable users to select text in either pane and trigger context-specific AI opera
   - Disable commands if selection <3 words or >2000 words (configurable)
 
 #### 3.2 Explain Command
+
 - **Behavior**:
   - User selects text (e.g., a technical term or concept)
   - Click "Explain" or press Alt+E
@@ -552,6 +753,7 @@ Enable users to select text in either pane and trigger context-specific AI opera
   - Save to notes button
 
 #### 3.3 Define Command
+
 - **Behavior**:
   - Quick definition (sentence or two) for terms/phrases
   - Faster than Explain (use smaller/cheaper model if available)
@@ -568,6 +770,7 @@ Enable users to select text in either pane and trigger context-specific AI opera
   - Option to expand to full explanation or add to personal glossary
 
 #### 3.4 Summarize Command
+
 - **Behavior**:
   - Summarize selected text or entire block
   - Useful for reducing dense paragraphs or understanding key points
@@ -583,6 +786,7 @@ Enable users to select text in either pane and trigger context-specific AI opera
   - Save to notes
 
 #### 3.5 Save as Notes
+
 - **Note creation**:
   - Each Explain/Define/Summarize result includes "Add to Notes" button
   - Note metadata: timestamp, source URL/block, command type, user tags
@@ -595,6 +799,7 @@ Enable users to select text in either pane and trigger context-specific AI opera
   - Link related notes
 
 #### 3.6 Notes Interface
+
 - **Notes sidebar panel**:
   - List of notes, filterable by tag, date, rating
   - Search notes by content
@@ -608,6 +813,7 @@ Enable users to select text in either pane and trigger context-specific AI opera
   - Show highlighted original selection in left pane
 
 #### 3.7 Command Extensibility
+
 - **Custom commands**:
   - Plugin system for adding new selection-based commands
   - Config file to define command prompt templates
@@ -619,6 +825,7 @@ Enable users to select text in either pane and trigger context-specific AI opera
   - Aggregate results (e.g., "Define these 5 terms")
 
 #### 3.8 Selection Command Performance
+
 - **Request optimization**:
   - Debounce selection events (100ms) before showing context menu
   - Cache results for identical selections (within same session)
@@ -633,11 +840,13 @@ Enable users to select text in either pane and trigger context-specific AI opera
 ## 4. Prompt Templates and Termbase Setup; Translation Versioning
 
 ### Overview
+
 Provide tools for managing reusable prompt templates, maintaining terminology consistency, and tracking translation history for comparison and refinement.
 
 ### Key Requirements
 
 #### 4.1 Prompt Templates Management
+
 - **Template structure**:
   - Name, description, category (e.g., "translation", "explanation", "summary")
   - Template body with variables: `{source_lang}`, `{target_lang}`, `{text}`, `{context}`, `{tone}`, `{custom_vars}`
@@ -668,6 +877,7 @@ Provide tools for managing reusable prompt templates, maintaining terminology co
   - Version templates (track changes over time)
 
 #### 4.2 Template Application
+
 - **In-app usage**:
   - Re-translation modal shows available templates dropdown
   - Select template to auto-populate custom prompt
@@ -681,6 +891,7 @@ Provide tools for managing reusable prompt templates, maintaining terminology co
   - Iterate on template without committing
 
 #### 4.3 Termbase (Glossary) Setup
+
 - **Termbase structure**:
   - Entries: source term → target term + metadata
   - Metadata: part of speech, context, approved/pending status, notes
@@ -702,6 +913,7 @@ Provide tools for managing reusable prompt templates, maintaining terminology co
   - Combine termbases (use multiple at once)
 
 #### 4.4 Termbase Application in Translations
+
 - **Enforcement**:
   - When translating, check text against active termbase
   - Highlight terms from termbase in source (left pane) and translation (right pane)
@@ -714,6 +926,7 @@ Provide tools for managing reusable prompt templates, maintaining terminology co
   - Works with custom prompts + templates
 
 #### 4.5 Translation Versioning
+
 - **Version storage**:
   - Each translation generates a version (immutable snapshot)
   - Version metadata: timestamp, model used, provider, template/prompt, language pair, user notes
@@ -740,6 +953,7 @@ Provide tools for managing reusable prompt templates, maintaining terminology co
   - Archive versions to exclude from auto-delete
 
 #### 4.6 Per-Block Versioning
+
 - **Block-level history**:
   - Each translated block has version history
   - Useful for comparing alternative translations of single paragraph
@@ -752,6 +966,7 @@ Provide tools for managing reusable prompt templates, maintaining terminology co
   - Track which versions were actually used (auditing)
 
 #### 4.7 Version Management Performance
+
 - **Storage optimization**:
   - Store diffs instead of full copies (delta compression)
   - Compress older versions or archive to browser cache
@@ -828,6 +1043,7 @@ This phase transforms Luminote into a comprehensive knowledge workbench with on-
 ## 1. On-Demand AI Insights and Verification Packs
 
 ### Overview
+
 Provide users with advanced analysis capabilities: claims verification, internal consistency checking, argument extraction, and bias detection. Package these as reusable "packs" that apply multiple AI operations in sequence.
 
 ### Key Requirements
@@ -835,6 +1051,7 @@ Provide users with advanced analysis capabilities: claims verification, internal
 #### 1.1 Insight Types & Packs
 
 ##### Claims Verification Pack
+
 - **Functionality**:
   - Extract factual claims from translated content
   - Evaluate claim credibility (checkable, verifiable, contested, etc.)
@@ -858,6 +1075,7 @@ Provide users with advanced analysis capabilities: claims verification, internal
   - "Verify" button to web-search or consult external sources (Phase 3+ feature)
 
 ##### Internal Consistency Pack
+
 - **Functionality**:
   - Detect contradictions within document (claim X conflicts with claim Y)
   - Identify unresolved tensions or open questions
@@ -880,6 +1098,7 @@ Provide users with advanced analysis capabilities: claims verification, internal
   - "Review" button to add manual note (resolved/acknowledged/needs fix)
 
 ##### Argument Structure Pack
+
 - **Functionality**:
   - Identify thesis/main argument
   - Extract supporting premises and evidence
@@ -902,6 +1121,7 @@ Provide users with advanced analysis capabilities: claims verification, internal
   - Click node to highlight supporting text in document
 
 ##### Bias & Tone Detection Pack
+
 - **Functionality**:
   - Detect language bias (political, cultural, gender bias)
   - Analyze tone (neutral, opinionated, inflammatory, etc.)
@@ -926,6 +1146,7 @@ Provide users with advanced analysis capabilities: claims verification, internal
   - "Neutral rewrite" button to generate alternative phrasing
 
 ##### Summarization & Key Takeaways Pack
+
 - **Functionality**:
   - Multi-level summaries (executive summary, section summaries, key takeaways)
   - Extract questions the document answers
@@ -948,6 +1169,7 @@ Provide users with advanced analysis capabilities: claims verification, internal
   - Questions + answers linked to source locations
 
 #### 1.2 Insight Pack Management
+
 - **Pack selection UI**:
   - Button in toolbar or menu: "Insights"
   - Popup/modal listing available packs
@@ -967,6 +1189,7 @@ Provide users with advanced analysis capabilities: claims verification, internal
   - Allow early termination if user has enough insight
 
 #### 1.3 Insight Performance & Cost
+
 - **Optimization**:
   - Use cheaper/faster models for straightforward analysis (Define level)
   - Use advanced models for complex reasoning (Claims verification)
@@ -988,11 +1211,13 @@ Provide users with advanced analysis capabilities: claims verification, internal
 ## 2. Highlights, Notes, and Saved AI Explanations
 
 ### Overview
+
 Enable persistent annotation of documents: user-created highlights, notes, and AI-generated explanations grouped for easy review and export.
 
 ### Key Requirements
 
 #### 2.1 Highlight System
+
 - **Highlight creation**:
   - Select text in either pane (source or translation)
   - Click highlight button or press Ctrl+H
@@ -1017,6 +1242,7 @@ Enable persistent annotation of documents: user-created highlights, notes, and A
   - Filter by color, label, or date range
 
 #### 2.2 Note System
+
 - **Note creation**:
   - From highlighted text: right-click → "Add note"
   - From anywhere: floating "Add note" button in side panel
@@ -1042,6 +1268,7 @@ Enable persistent annotation of documents: user-created highlights, notes, and A
   - Filter by type, tag, date
 
 #### 2.3 Saved AI Explanations
+
 - **Auto-save explanations**:
   - When user runs Explain/Define on selection (Phase 2 feature), result is auto-saved
   - Grouped in "AI Explanations" panel
@@ -1059,6 +1286,7 @@ Enable persistent annotation of documents: user-created highlights, notes, and A
   - Mark as "verified" or "questionable"
 
 #### 2.4 Annotation Review Interface
+
 - **Unified review panel**:
   - Tab-based view: Highlights | Notes | Explanations | All Annotations
   - Timeline view: chronological order of all annotations
@@ -1076,6 +1304,7 @@ Enable persistent annotation of documents: user-created highlights, notes, and A
   - Export format options: preserve colors, include timestamps, include ratings
 
 #### 2.5 Annotation Sync (Multi-Device - Future)
+
 - **Cloud sync** (Phase 3+):
   - Optional cloud backend to sync annotations across devices
   - E2E encryption for privacy
@@ -1087,11 +1316,13 @@ Enable persistent annotation of documents: user-created highlights, notes, and A
 ## 3. Link Cards with Bilingual Summaries
 
 ### Overview
+
 For documents that contain links, generate bilingual summary cards that provide context and encourage exploration of related resources without leaving the workbench.
 
 ### Key Requirements
 
 #### 3.1 Link Detection and Extraction
+
 - **Link collection**:
   - Parse all hyperlinks from extracted content
   - Store link metadata: URL, anchor text, context (surrounding text)
@@ -1106,6 +1337,7 @@ For documents that contain links, generate bilingual summary cards that provide 
   - Language of target page (if detectable)
 
 #### 3.2 Link Card Generation
+
 - **Link card content**:
   - Original link context (source language)
   - Bilingual title: auto-extract or AI-generate summary title
@@ -1125,6 +1357,7 @@ For documents that contain links, generate bilingual summary cards that provide 
   - "Translate this title and description to {target_lang} briefly: Title: [title], Description: [description]. Preserve meaning but adapt for fluent readability."
 
 #### 3.3 Link Card UI
+
 - **Link card panel**:
   - Sidebar or footer section: "Linked Resources" / "References"
   - Cards displayed in grid or list view
@@ -1144,6 +1377,7 @@ For documents that contain links, generate bilingual summary cards that provide 
   - Quick back button to return to original document
 
 #### 3.4 Reading List Integration
+
 - **Save to reading list**:
   - Each link card has "Save to reading list" button
   - Automatically linked to original document (for context)
@@ -1157,6 +1391,7 @@ For documents that contain links, generate bilingual summary cards that provide 
   - Export reading list (Markdown, JSON)
 
 #### 3.5 Link Card Performance
+
 - **Lazy fetching**:
   - Don't fetch all linked pages immediately
   - Fetch on-demand when user scrolls to card or clicks "Preview"
@@ -1176,11 +1411,13 @@ For documents that contain links, generate bilingual summary cards that provide 
 ## 4. Multi-Model Cross-Check and Refinement (Enhanced Mode)
 
 ### Overview
+
 Enable power users to query multiple AI models in parallel, compare responses, and synthesize refined outputs—achieving higher confidence and accuracy through model diversity.
 
 ### Key Requirements
 
 #### 4.1 Multi-Model Execution
+
 - **Model selection**:
   - User selects 2–5 models from configured providers
   - Example: GPT-4o, Claude Sonnet, Gemini Pro (if configured)
@@ -1193,6 +1430,7 @@ Enable power users to query multiple AI models in parallel, compare responses, a
   - Timeout model if exceeds threshold (e.g., 30 seconds)
 
 #### 4.2 Multi-Model Translation Comparison
+
 - **Comparison UI**:
   - Side-by-side view of multiple translations (2–5 columns)
   - Color-code differences (red: significant deviation, yellow: minor variation)
@@ -1205,6 +1443,7 @@ Enable power users to query multiple AI models in parallel, compare responses, a
   - Suggest synthesized version (merge strong points from each model)
 
 #### 4.3 Translation Refinement & Synthesis
+
 - **Refinement workflow**:
   1. User reviews multi-model translations
   2. Selects best phrases from each version
@@ -1223,6 +1462,7 @@ Enable power users to query multiple AI models in parallel, compare responses, a
   - Green (>80% agreement), yellow (50–80%), red (<50%)
 
 #### 4.4 Multi-Model Verification
+
 - **Cross-model verification** for insights:
   - Run insight packs on multiple models (e.g., 2 models assess document bias)
   - Compare results (agreements, disagreements)
@@ -1236,6 +1476,7 @@ Enable power users to query multiple AI models in parallel, compare responses, a
   - UI highlights: consensus (X) vs. uncertain (Y)
 
 #### 4.5 Enhanced Mode UI
+
 - **Mode toggle**:
   - Settings: "Enhanced Mode" checkbox (disabled by default)
   - Enables multi-model options in relevant UI (translation, insights, etc.)
@@ -1247,6 +1488,7 @@ Enable power users to query multiple AI models in parallel, compare responses, a
   - Scoreboard: which model "won" on quality metrics
 
 #### 4.6 Cost Management in Enhanced Mode
+
 - **Cost estimation**:
   - Show total estimated cost before executing multi-model request
   - Break down by model (GPT-4o = $X, Claude = $Y, etc.)
@@ -1262,11 +1504,13 @@ Enable power users to query multiple AI models in parallel, compare responses, a
 ## 5. Web-Browsing and RAG (Retrieval-Augmented Generation) with Citations
 
 ### Overview
+
 For insight packs (especially claims verification), enable AI models to search the web and reference external sources, providing citations for verification results.
 
 ### Key Requirements
 
 #### 5.1 Web-Search Integration
+
 - **Search triggers**:
   - Claims verification pack: auto-search uncertain claims
   - User manually requests verification: "Verify this claim" button
@@ -1284,6 +1528,7 @@ For insight packs (especially claims verification), enable AI models to search t
   - Keys are user-provided and stored locally; no server-side key storage
 
 #### 5.2 Result Synthesis with Citations
+
 - **RAG pipeline**:
   1. Generate search queries from claim/term
   2. Fetch top N results (5–10) from search provider
@@ -1302,6 +1547,7 @@ For insight packs (especially claims verification), enable AI models to search t
   - Show consensus across sources (if multiple sources verify)
 
 #### 5.3 Search Result Caching
+
 - **Cache search results**:
   - Cache for identical queries (avoid duplicate searches)
   - TTL: 7 days (information changes frequently)
@@ -1313,6 +1559,7 @@ For insight packs (especially claims verification), enable AI models to search t
   - Results appear in panel when ready
 
 #### 5.4 Verification UI
+
 - **Verification panel**:
   - Claim statement with verification badge
   - Search results displayed as expandable list
@@ -1326,6 +1573,7 @@ For insight packs (especially claims verification), enable AI models to search t
   - Export verification results with citations
 
 #### 5.5 Privacy & Rate Limiting
+
 - **Search API rate limits**:
   - Google CSE: 100 queries/day free tier
   - DuckDuckGo: no official limit, but throttle to 1/second
@@ -1339,6 +1587,7 @@ For insight packs (especially claims verification), enable AI models to search t
     CORS, it must be stateless and avoid persisting queries or keys
 
 #### 5.6 Offline Mode
+
 - **Graceful degradation**:
   - If offline, skip web search
   - Use cached results if available (recent)
@@ -1349,9 +1598,11 @@ For insight packs (especially claims verification), enable AI models to search t
 ## 6. Integration of Phase 3 Features
 
 ### Overview
+
 How Phase 3 features work together in common workflows.
 
 #### 6.1 Comprehensive Document Review Workflow
+
 1. User translates document (Phase 1)
 2. Refines translation with custom prompts (Phase 2)
 3. Saves annotations and notes (Phase 3)
@@ -1361,6 +1612,7 @@ How Phase 3 features work together in common workflows.
 7. Export final document + annotations + bibliography (Phase 3)
 
 #### 6.2 Research Paper Review Workflow
+
 1. Extract and translate research paper
 2. Highlight key claims and methodologies
 3. Run insight pack: argument structure + claims verification
@@ -1370,6 +1622,7 @@ How Phase 3 features work together in common workflows.
 7. Export annotated translation for future reference
 
 #### 6.3 News Analysis Workflow
+
 1. Translate news article
 2. Run bias & tone detection
 3. Extract claims and verify with web search

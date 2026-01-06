@@ -1,3 +1,23 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# Api
+
+- [Luminote API Reference](#luminote-api-reference)
+  - [Overview](#overview)
+  - [Endpoints](#endpoints)
+    - [GET /health](#get-health)
+    - [POST /fetch](#post-fetch)
+    - [POST /extract](#post-extract)
+    - [POST /translate](#post-translate)
+  - [Configuration](#configuration)
+  - [Error Handling](#error-handling)
+  - [Rate Limiting](#rate-limiting)
+  - [Security](#security)
+  - [Related Documentation](#related-documentation)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
 # Luminote API Reference
 
 ## Overview
@@ -20,12 +40,14 @@ Health check and configuration validation.
 **Purpose:** Verify API connectivity and provider configuration.
 
 **Response:**
+
 ```json
 {
   "status": "healthy",
   "provider": "openai",
   "model": "gpt-4o-mini"
 }
+
 ```
 
 **Status Codes:**
@@ -41,19 +63,25 @@ Retrieve raw content from a URL via backend proxy.
 **Purpose:** Fetch web content server-side to handle CORS and provide consistent access.
 
 **Request:**
+
 ```json
+
 {
   "url": "https://example.com/article"
 }
+
 ```
 
 **Response:**
+
 ```json
+
 {
   "url": "https://example.com/article",
   "html": "<html>...</html>",
   "status_code": 200
 }
+
 ```
 
 **Status Codes:**
@@ -71,15 +99,20 @@ Parse HTML content into reader-mode blocks.
 **Purpose:** Extract structured, readable content from raw HTML.
 
 **Request:**
+
 ```json
+
 {
   "html": "<html>...</html>",
   "url": "https://example.com/article"
 }
+
 ```
 
 **Response:**
+
 ```json
+
 {
   "title": "Article Title",
   "blocks": [
@@ -98,6 +131,7 @@ Parse HTML content into reader-mode blocks.
     }
   ]
 }
+
 ```
 
 **Block Types:**
@@ -123,7 +157,9 @@ Translate content blocks progressively using configured model.
 **Purpose:** Translate extracted blocks with streaming support for progressive rendering.
 
 **Request:**
+
 ```json
+
 {
   "blocks": [
     {
@@ -135,15 +171,19 @@ Translate content blocks progressively using configured model.
   "target_lang": "zh",
   "source_lang": "auto"
 }
+
 ```
 
 **Response (streaming):**
+
 ```json
+
 {
   "block_id": "block-1",
   "translation": "Translated text...",
   "status": "complete"
 }
+
 ```
 
 **Parameters:**
@@ -172,12 +212,15 @@ API behavior is controlled via environment variables:
 See `.env.example` for full configuration options.
 
 **Development Setup:**
+
 ```bash
+
 cd backend
 uv venv
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
 uv pip install -e ".[dev]"
 luminote serve  # Starts on port 8000
+
 ```
 
 For complete setup instructions, see [../CONTRIBUTING.md](../CONTRIBUTING.md).
@@ -187,11 +230,13 @@ For complete setup instructions, see [../CONTRIBUTING.md](../CONTRIBUTING.md).
 All endpoints return consistent error responses:
 
 ```json
+
 {
   "error": "Error message",
   "detail": "Detailed error information",
   "code": "ERROR_CODE"
 }
+
 ```
 
 **Common Error Codes:**

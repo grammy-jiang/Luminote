@@ -1,3 +1,45 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# Contributing
+
+- [Contributing to Luminote](#contributing-to-luminote)
+  - [Table of Contents](#table-of-contents)
+  - [Prerequisites](#prerequisites)
+  - [Project Structure](#project-structure)
+    - [Key Modules](#key-modules)
+  - [Local Development](#local-development)
+    - [Backend Setup](#backend-setup)
+    - [Frontend Setup](#frontend-setup)
+  - [Development Standards](#development-standards)
+    - [Python (Backend)](#python-backend)
+    - [TypeScript (Frontend)](#typescript-frontend)
+    - [Running Code Quality Checks](#running-code-quality-checks)
+  - [Testing](#testing)
+    - [Coverage Requirements](#coverage-requirements)
+    - [Python Tests](#python-tests)
+    - [TypeScript Tests](#typescript-tests)
+  - [Building and Packaging](#building-and-packaging)
+    - [Backend Package](#backend-package)
+    - [Frontend Build](#frontend-build)
+  - [Core Concepts](#core-concepts)
+    - [Design Principles](#design-principles)
+    - [Concept Model](#concept-model)
+  - [Contribution Process](#contribution-process)
+    - [Getting Started](#getting-started)
+    - [Development Workflow](#development-workflow)
+    - [Pull Request Requirements](#pull-request-requirements)
+    - [Review Process](#review-process)
+  - [Code of Conduct](#code-of-conduct)
+    - [Our Commitment](#our-commitment)
+    - [Unacceptable Behavior](#unacceptable-behavior)
+    - [Enforcement](#enforcement)
+  - [Support](#support)
+    - [Resources](#resources)
+  - [License](#license)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
 # Contributing to Luminote
 
 Thank you for your interest in contributing to Luminote! This guide covers development setup, coding standards, testing requirements, and the contribution workflow.
@@ -49,6 +91,7 @@ Luminote/
     ├── purpose_and_functionality.md
     ├── detailed-feature-specifications.md
     └── API.md
+
 ```
 
 ### Key Modules
@@ -123,28 +166,37 @@ Code must follow these standards:
 **Python:**
 
 ```bash
+
 cd backend
 
 # Format imports and code
+
 isort app/ && black app/
 
 # Lint for issues
+
 ruff check app/ --no-fix
 
 # Check type hints
+
 mypy app/
 
 # Run all checks
+
 isort app/ && black app/ && ruff check app/ --no-fix && mypy app/
+
 ```
 
 **TypeScript:**
 
 ```bash
+
 cd frontend
 
 # Lint and format
+
 npm run lint && npm run format
+
 ```
 
 ## Testing
@@ -161,21 +213,27 @@ Coverage below these thresholds blocks pull requests.
 **Run tests:**
 
 ```bash
+
 cd backend
 
 # Run all tests
+
 pytest
 
 # Run with coverage report
+
 pytest --cov=app --cov-report=html
 
 # Run specific test type
+
 pytest -m unit   # Unit tests
 pytest -m smoke  # Smoke tests
 pytest -m e2e    # End-to-end tests
 
 # Test across all supported Python versions
+
 tox
+
 ```
 
 **Test categories:**
@@ -189,16 +247,21 @@ tox
 **Run tests:**
 
 ```bash
+
 cd frontend
 
 # Run all tests
+
 npm test
 
 # Generate coverage report
+
 npm run test:coverage
 
 # Test across Node.js versions
+
 npm run test:all-versions
+
 ```
 
 Use the same test categorization as Python tests.
@@ -212,15 +275,19 @@ The backend is a Python package ready for PyPI publication.
 **Development installation:**
 
 ```bash
+
 cd backend
 uv pip install -e ".[dev]"
+
 ```
 
 **Build distributions:**
 
 ```bash
+
 cd backend
 python -m build
+
 ```
 
 Creates in `backend/dist/`:
@@ -230,7 +297,9 @@ Creates in `backend/dist/`:
 **Run server:**
 
 ```bash
+
 luminote serve
+
 ```
 
 The `luminote serve` command is defined as an entry point in `pyproject.toml` under `[project.scripts]`.
@@ -238,15 +307,19 @@ The `luminote serve` command is defined as an entry point in `pyproject.toml` un
 **Test local build:**
 
 ```bash
+
 pip install backend/dist/luminote-*.whl
 luminote serve
+
 ```
 
 **Upload to PyPI (maintainers only):**
 
 ```bash
+
 cd backend
 python -m twine upload dist/*
+
 ```
 
 ### Frontend Build
@@ -254,8 +327,10 @@ python -m twine upload dist/*
 **Build for production:**
 
 ```bash
+
 cd frontend
 npm run build
+
 ```
 
 Output is in `frontend/public/build/`.
