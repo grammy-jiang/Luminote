@@ -1,4 +1,45 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# Vscode Copilot Custom Agents Best Practices
+
+- [Best Practices for GitHub Copilot Custom Agents in VS Code](#best-practices-for-github-copilot-custom-agents-in-vs-code)
+  - [1) What “custom agents” are (and what they’re not)](#1-what-custom-agents-are-and-what-theyre-not)
+  - [2) File architecture: the “layered contract” approach](#2-file-architecture-the-layered-contract-approach)
+    - [2.1 Recommended repo layout](#21-recommended-repo-layout)
+    - [2.2 Baseline contract: `.github/copilot-instructions.md`](#22-baseline-contract-githubcopilot-instructionsmd)
+    - [2.3 Scoped policies: `.github/instructions/*.instructions.md`](#23-scoped-policies-githubinstructionsinstructionsmd)
+    - [2.4 Agent profiles: `.github/agents/*.agent.md`](#24-agent-profiles-githubagentsagentmd)
+    - [2.5 Local boundaries: `AGENTS.md` (optional)](#25-local-boundaries-agentsmd-optional)
+  - [3) Instruction precedence and conflict management](#3-instruction-precedence-and-conflict-management)
+    - [3.1 Three tiers exist in practice](#31-three-tiers-exist-in-practice)
+    - [3.2 VS Code-specific behavior to plan for](#32-vs-code-specific-behavior-to-plan-for)
+  - [4) The six essentials (quality checklist for every instruction file)](#4-the-six-essentials-quality-checklist-for-every-instruction-file)
+  - [5) Tool governance: least privilege by default](#5-tool-governance-least-privilege-by-default)
+    - [5.1 Why tool restriction matters](#51-why-tool-restriction-matters)
+    - [5.2 Recommended tool sets by agent type](#52-recommended-tool-sets-by-agent-type)
+    - [5.3 “Boundaries” rubric you should standardize](#53-boundaries-rubric-you-should-standardize)
+  - [6) Multi-agent workflows: handoffs are your SDLC control plane (VS Code)](#6-multi-agent-workflows-handoffs-are-your-sdlc-control-plane-vs-code)
+    - [6.1 Recommended handoff chain (TDD-friendly)](#61-recommended-handoff-chain-tdd-friendly)
+  - [7) Prompt design: reduce ambiguity, increase determinism](#7-prompt-design-reduce-ambiguity-increase-determinism)
+  - [8) MCP servers in VS Code: configuration and safety](#8-mcp-servers-in-vs-code-configuration-and-safety)
+    - [8.1 Configuration principles](#81-configuration-principles)
+    - [8.2 Tool design principles (when you are the MCP server author)](#82-tool-design-principles-when-you-are-the-mcp-server-author)
+  - [9) GitHub Copilot Coding Agent compatibility (practical notes)](#9-github-copilot-coding-agent-compatibility-practical-notes)
+    - [9.1 Deterministic setup](#91-deterministic-setup)
+    - [9.2 Avoid thrash in reviews](#92-avoid-thrash-in-reviews)
+    - [9.3 Don’t rely on VS Code-only conveniences](#93-dont-rely-on-vs-code-only-conveniences)
+  - [10) Common failure modes (and how to avoid them)](#10-common-failure-modes-and-how-to-avoid-them)
+  - [11) Practical templates (copy/paste starters)](#11-practical-templates-copypaste-starters)
+    - [11.1 `.github/copilot-instructions.md` skeleton](#111-githubcopilot-instructionsmd-skeleton)
+    - [11.2 `.github/agents/<name>.agent.md` skeleton](#112-githubagentsnameagentmd-skeleton)
+  - [12) Suggested specialist roster (useful for serious projects)](#12-suggested-specialist-roster-useful-for-serious-projects)
+  - [References (official + high-signal)](#references-official--high-signal)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
 # Best Practices for GitHub Copilot Custom Agents in VS Code
+
 *A practical, team-ready playbook for designing repeatable agent behavior (with compatibility notes for GitHub Copilot Coding Agent).*
 
 ---
@@ -39,9 +80,11 @@ Use a layered instruction stack instead of one giant prompt. This prevents confl
   mcp.json
 .github/workflows/
   copilot-setup-steps.yml   # for GitHub Copilot Coding Agent
+
 ```
 
 ### 2.2 Baseline contract: `.github/copilot-instructions.md`
+
 Put **workspace-wide rules** here:
 - exact build/test/lint/type-check commands
 - architecture overview and module boundaries
@@ -52,11 +95,13 @@ Put **workspace-wide rules** here:
 VS Code will apply this file automatically to all chat requests when instruction files are enabled, and the file is also recognized by GitHub Copilot environments.
 
 ### 2.3 Scoped policies: `.github/instructions/*.instructions.md`
+
 Use multiple smaller instruction files and apply them selectively via `applyTo` patterns (e.g., Python rules only for `**/*.py`, test rules only for `**/tests/**/*.py`).
 
 This is the best way to avoid conflicts and “instruction drift” across unrelated parts of the repo.
 
 ### 2.4 Agent profiles: `.github/agents/*.agent.md`
+
 Each agent profile is a Markdown file with YAML frontmatter that defines:
 - `name`, `description`
 - `tools` allowlist
@@ -67,6 +112,7 @@ Each agent profile is a Markdown file with YAML frontmatter that defines:
 Store each profile as “one job, one agent.”
 
 ### 2.5 Local boundaries: `AGENTS.md` (optional)
+
 If you want folder-level guardrails close to the code:
 - place `AGENTS.md` near risk-heavy modules (security, transports, protocol code)
 - keep it short and specific
@@ -76,6 +122,7 @@ If you want folder-level guardrails close to the code:
 ## 3) Instruction precedence and conflict management
 
 ### 3.1 Three tiers exist in practice
+
 Across environments, instructions can come from:
 - **personal/user instructions** (highest priority)
 - **repository instructions** (`.github/copilot-instructions.md`, `.instructions.md`)
@@ -87,6 +134,7 @@ Because your repository instructions may be combined with other tiers, the safes
 - prefer “hard boundaries” over stylistic preferences
 
 ### 3.2 VS Code-specific behavior to plan for
+
 VS Code can combine multiple instruction files; when multiple types exist, **no strict order is guaranteed**, so keep instructions non-conflicting and additive.
 
 ---
@@ -109,9 +157,11 @@ If a file doesn’t add clarity in at least one of these areas, it’s usually n
 ## 5) Tool governance: least privilege by default
 
 ### 5.1 Why tool restriction matters
+
 Over-permissive tool access is the fastest path to unintended edits, scope creep, and brittle changes. Treat tools like permissions.
 
 ### 5.2 Recommended tool sets by agent type
+
 - **Planning / Analysis**: `read`, `search`, `fetch`
 - **Implementation**: `read`, `edit`, plus terminal/shell only if needed
 - **Review / Audit**: `read`, `search`
@@ -119,6 +169,7 @@ Over-permissive tool access is the fastest path to unintended edits, scope creep
 - **CI/Release**: `read`, `edit` (scoped to workflows/build config)
 
 ### 5.3 “Boundaries” rubric you should standardize
+
 Use a three-tier rubric so humans and agents interpret it consistently:
 
 - ✅ **Allowed** (safe, routine work)
@@ -134,6 +185,7 @@ Make boundaries enforceable by aligning them with tool allowlists (e.g., no `edi
 VS Code supports `handoffs` to move between agents. Use this to operationalize your SDLC:
 
 ### 6.1 Recommended handoff chain (TDD-friendly)
+
 1) **Planner** → defines contracts + acceptance criteria
 2) **Test Engineer** → writes failing tests (red)
 3) **Implementer** → makes tests pass (green)
@@ -162,11 +214,13 @@ In VS Code, keep prompts shorter by pushing stable context into instruction file
 If you use MCP tools (either consuming or building MCP servers):
 
 ### 8.1 Configuration principles
+
 - keep secrets out of versioned files
 - prefer environment variables / secure input prompts
 - document how to run MCP servers locally vs CI
 
 ### 8.2 Tool design principles (when you are the MCP server author)
+
 - keep tools narrowly scoped (“safe primitives”), not “do anything” endpoints
 - validate inputs and return typed, predictable outputs
 - design error semantics to be actionable without leaking secrets
@@ -178,12 +232,15 @@ If you use MCP tools (either consuming or building MCP servers):
 If you also use GitHub’s Coding Agent, align instructions to CI reality:
 
 ### 9.1 Deterministic setup
+
 Provide a `copilot-setup-steps.yml` workflow so the agent can consistently bootstrap dependencies and run checks.
 
 ### 9.2 Avoid thrash in reviews
+
 Batch review comments so the agent can process changes in one coherent pass rather than re-running on every single comment.
 
 ### 9.3 Don’t rely on VS Code-only conveniences
+
 Some agent profile properties may be ignored by GitHub’s Coding Agent for compatibility. Keep the core contract in repo instruction files and keep agent profiles valuable even without handoffs.
 
 ---
@@ -206,15 +263,19 @@ Treat instruction/agent files like production code: review them, refactor them, 
 ### 11.1 `.github/copilot-instructions.md` skeleton
 
 ```md
+
 # Project Overview
+
 What this project does (one paragraph).
 
 # Tech Stack
+
 - Python X.Y
 - Key libs: ...
 - Tooling: ruff, mypy/pyright, pytest, build backend
 
 # Commands (copy/paste)
+
 - Install: `...`
 - Test: `pytest -q`
 - Lint: `ruff check .`
@@ -222,24 +283,29 @@ What this project does (one paragraph).
 - Build: `python -m build`
 
 # Project Structure
+
 - `src/...`: ...
 - `tests/...`: ...
 
 # Code Standards
+
 - Type hints required for public APIs
 - Error handling: raise typed exceptions; no silent failure
 - Logging: redact secrets; no credentials in logs
 
 # Definition of Done
+
 - Tests added/updated
 - CI green
 - Docs updated (if user-facing)
 - No secrets introduced
+
 ```
 
 ### 11.2 `.github/agents/<name>.agent.md` skeleton
 
 ```md
+
 ---
 name: example-specialist
 description: One-job agent profile with explicit tools and boundaries.
@@ -254,12 +320,15 @@ handoffs:
 ---
 
 # Operating mandate
+
 State the single responsibility and expected deliverable.
 
 ## Boundaries
+
 ✅ Allowed: ...
 ⚠️ Ask first: ...
 🚫 Never: ...
+
 ```
 
 ---

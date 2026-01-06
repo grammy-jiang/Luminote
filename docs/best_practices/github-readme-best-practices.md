@@ -1,3 +1,32 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# Github Readme Best Practices
+
+- [GitHub README.md Best Practices (End‑User First)](#github-readmemd-best-practices-end%E2%80%91user-first)
+  - [1) Project name + one‑liner](#1-project-name--one%E2%80%91liner)
+  - [2) Key features up front](#2-key-features-up-front)
+  - [3) Quick start for end‑users](#3-quick-start-for-end%E2%80%91users)
+    - [Installation](#installation)
+    - [Minimal usage example](#minimal-usage-example)
+  - [4) Badges: high signal, low noise](#4-badges-high-signal-low-noise)
+  - [5) Documentation funnel: README as the front door](#5-documentation-funnel-readme-as-the-front-door)
+  - [6) Separate developer-facing content cleanly](#6-separate-developer-facing-content-cleanly)
+  - [7) Help, support, and project status](#7-help-support-and-project-status)
+  - [8) License and acknowledgments](#8-license-and-acknowledgments)
+  - [9) Readability and structure standards](#9-readability-and-structure-standards)
+  - [10) Language-specific conventions (Python / JS/TS / Rust)](#10-language-specific-conventions-python--jsts--rust)
+    - [Python (libraries/tools)](#python-librariestools)
+    - [JavaScript/TypeScript](#javascripttypescript)
+    - [Rust](#rust)
+  - [Practical README skeleton (copy/paste)](#practical-readme-skeleton-copypaste)
+  - [Sources (high-level)](#sources-high-level)
+- [中文版本（简要）](#%E4%B8%AD%E6%96%87%E7%89%88%E6%9C%AC%E7%AE%80%E8%A6%81)
+  - [核心要点](#%E6%A0%B8%E5%BF%83%E8%A6%81%E7%82%B9)
+  - [语言生态建议](#%E8%AF%AD%E8%A8%80%E7%94%9F%E6%80%81%E5%BB%BA%E8%AE%AE)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
 # GitHub README.md Best Practices (End‑User First)
 
 > **Goal:** Help end-users understand your project’s purpose and key features quickly, while providing clear paths to deeper developer/design docs.
@@ -23,6 +52,7 @@
 ## 3) Quick start for end‑users
 
 ### Installation
+
 Provide the most common install path first:
 
 - **Python:** `pip install <package>`
@@ -32,6 +62,7 @@ Provide the most common install path first:
 If prerequisites exist (Python/Node/Rust version, OS requirements), list them **before** install steps.
 
 ### Minimal usage example
+
 - Include a **copy‑pasteable** minimal example (CLI command or small code snippet).
 - Show expected output or behavior when possible.
 - Consider a screenshot/GIF for UI projects—visual proof reduces user friction.
@@ -115,18 +146,21 @@ A useful heuristic:
 ## 10) Language-specific conventions (Python / JS/TS / Rust)
 
 ### Python (libraries/tools)
+
 - Mention supported Python versions.
 - Provide `pip install ...` and a minimal snippet.
 - Link to docs (ReadTheDocs/MkDocs/Sphinx) for advanced API.
 - Common badges: PyPI version, CI, license, coverage.
 
 ### JavaScript/TypeScript
+
 - Mention supported Node.js versions.
 - Provide npm/yarn install and minimal example.
 - If a web demo exists, link it.
 - Common badges: npm version, CI, license.
 
 ### Rust
+
 - Mention MSRV (minimum supported Rust version) if you enforce one.
 - Provide cargo add/install and a minimal snippet.
 - Link to docs.rs (or generated docs).
@@ -137,43 +171,55 @@ A useful heuristic:
 ## Practical README skeleton (copy/paste)
 
 ```markdown
+
 # ProjectName
+
 > One-line description: what it does, who it's for, why it matters.
 
 [![CI](...)](...) [![License](...)](...) [![Version](...)](...)
 
 ## Features
+
 - Feature 1 (end-user benefit)
 - Feature 2
 - Feature 3
 
 ## Quick Start
+
 ### Install
+
 - (Prereqs)
 - Command(s)
 
 ### Use
+
 - Minimal example
 - Expected output
 
 ## Documentation
+
 - User guide: ...
 - API reference: ...
 - Design/architecture: ...
 
 ## Support
+
 - Issues / Discussions / Contact
 
 ## Contributing
+
 See CONTRIBUTING.md
 
 ## License
+
 MIT (see LICENSE)
+
 ```
 
 ---
 
 ## Sources (high-level)
+
 - GitHub docs: README purpose and typical content.
 - Community guides and checklists on structuring READMEs, documentation funnels, and badge usage.
 - Curated example lists (“awesome README”) and standardized README specs (“Standard Readme”).
@@ -185,6 +231,7 @@ MIT (see LICENSE)
 > **目标：** README 主要服务终端用户：让用户在 30–60 秒内理解“这是什么、能解决什么、怎么开始”。开发者信息用链接下沉到文档。
 
 ## 核心要点
+
 - **标题 + 一句话价值主张：** 直接说明用途、目标用户、收益。
 - **功能亮点优先：** 3–7 条 bullet，讲结果/价值，不讲实现细节。
 - **Quick Start：** 先给最常用的安装方式 + 最小可复制示例（CLI 或代码片段）。
@@ -194,6 +241,7 @@ MIT (see LICENSE)
 - **License：** 明确协议并链接 LICENSE。
 
 ## 语言生态建议
+
 - **Python：** 标注 Python 版本；`pip install`；示例；链接到文档站点。
 - **JS/TS：** 标注 Node 版本；npm/yarn；示例；如有 demo，给链接。
 - **Rust：** 标注 MSRV（如有）；cargo add/install；示例；链接 docs.rs。

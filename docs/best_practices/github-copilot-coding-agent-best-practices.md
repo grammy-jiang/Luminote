@@ -1,3 +1,27 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# Github Copilot Coding Agent Best Practices
+
+- [GitHub Copilot Coding Agent – Best Practices for High-Quality, Autonomous Work](#github-copilot-coding-agent--best-practices-for-high-quality-autonomous-work)
+  - [1. Objective & Scope](#1-objective--scope)
+  - [2. Mental Model: What the Agent Is (and Isn't)](#2-mental-model-what-the-agent-is-and-isnt)
+  - [3. The Configuration File Hierarchy](#3-the-configuration-file-hierarchy)
+  - [4. Writing Effective Instructions](#4-writing-effective-instructions)
+  - [5. Pre-Warming the Environment](#5-pre-warming-the-environment)
+  - [6. Designing Tasks the Agent Can Complete](#6-designing-tasks-the-agent-can-complete)
+  - [7. Optimizing Issue and Prompt Structure](#7-optimizing-issue-and-prompt-structure)
+  - [8. Constraining Blast Radius](#8-constraining-blast-radius)
+  - [9. Embedding the Agent in CI and Team Process](#9-embedding-the-agent-in-ci-and-team-process)
+  - [10. Security Considerations](#10-security-considerations)
+  - [11. Common Anti-Patterns](#11-common-anti-patterns)
+  - [12. Operational Checklist](#12-operational-checklist)
+  - [13. Summary](#13-summary)
+  - [14. Quick Reference](#14-quick-reference)
+  - [References](#references)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+
 # GitHub Copilot Coding Agent – Best Practices for High-Quality, Autonomous Work
 
 ---
@@ -53,7 +77,9 @@ Understanding the instruction file hierarchy is fundamental to controlling agent
 applyTo: "app/models/**/*.rb"
 excludeAgent: "code-review"
 ---
+
 # These instructions apply only to Ruby model files
+
 ```
 
 **Agent instruction files** (`**/AGENTS.md`, `/CLAUDE.md`, `/GEMINI.md`) provide compatibility with multiple AI coding tools. The `AGENTS.md` format is particularly powerful because the nearest file in the directory tree takes precedence, allowing fine-grained control over different parts of your codebase.
@@ -71,17 +97,22 @@ GitHub's analysis of over 2,500 repositories reveals that effective instruction 
 **Put executable commands early.** The agent needs to know how to build, test, and validate your project immediately:
 
 ```markdown
+
 ## Available Commands
+
 - `make build` - Build the project
 - `make test` - Run unit tests
 - `make fmt` - Format code before committing
 - `make ci` - Full CI check (build, lint, test)
+
 ```
 
 **One real code snippet beats three paragraphs.** Instead of describing your error handling philosophy, show it:
 
 ```python
+
 # Error handling pattern for this project
+
 async def fetch_user(user_id: str) -> User:
     try:
         response = await client.get(f"/users/{user_id}")
@@ -90,6 +121,7 @@ async def fetch_user(user_id: str) -> User:
     except httpx.HTTPStatusError as e:
         logger.error(f"Failed to fetch user {user_id}: {e.response.status_code}")
         raise UserNotFoundError(user_id) from e
+
 ```
 
 **Define three-tier boundaries** using "always do," "ask first," and "never do" rules:
@@ -101,9 +133,12 @@ async def fetch_user(user_id: str) -> User:
 **Provide fast, focused test commands**—not just "run the full suite":
 
 ```markdown
+
 ## Fast Validation Commands
+
 - `pytest tests/service_x -q` - Quick tests for service_x only
 - `npm test -- --testPathPattern=auth` - Auth module tests only
+
 ```
 
 ---
@@ -125,7 +160,9 @@ This workflow is referenced by Copilot when running the coding agent and should 
 Example:
 
 ```yaml
+
 # .github/workflows/copilot-setup-steps.yml
+
 name: Copilot Setup Steps
 
 on:
@@ -160,6 +197,7 @@ jobs:
 
       - name: Verify tests can run
         run: make test --dry-run
+
 ```
 
 ---
@@ -199,30 +237,38 @@ When you assign an issue to `@copilot`, the **issue is the prompt**. For high ef
 Example issue structure:
 
 ```markdown
+
 ## Problem
+
 The user profile API returns 500 when accessing /api/users/{id} for users without profile photos.
 
 ## Context
+
 This endpoint is called ~10K times/day. The photo field was added in v2.3 but older users don't have it populated.
 
 ## Acceptance Criteria
+
 - [ ] API returns default avatar URL when user has no photo
 - [ ] Add unit tests covering the edge case
 - [ ] Update API documentation in /docs/api.md
 - [ ] Endpoint returns 200 for test user ID `test-user-no-photo`
 
 ## Files to Modify
+
 - `src/api/routes/users.py` - Add fallback logic
 - `tests/api/test_users.py` - Add test cases
 - `docs/api.md` - Update response schema
 
 ## Do Not Change
+
 - Authentication middleware
 - Database schema
 
 ## How to Test
+
 - `pytest tests/api/test_users.py -v`
 - `curl localhost:8000/api/users/test-user-no-photo` should return 200
+
 ```
 
 ---
@@ -236,10 +282,12 @@ Small structural tweaks in issues can significantly improve outcomes:
 **Ask for a plan first.** Request that the agent write a short numbered plan before implementing. This improves alignment and makes review easier:
 
 ```markdown
+
 Before making changes, please:
 1. Write a numbered plan of the changes you'll make
 2. List any assumptions you're making
 3. Then implement the plan
+
 ```
 
 **Use explicit follow-up prompts** when the agent stops with TODOs. The comment `@copilot Please replace the TODO with a full implementation` often pushes past cautious stopping points.
@@ -263,6 +311,7 @@ Use explicit constraints to keep changes focused and safe:
 Create **specialized custom agents** for recurring quality concerns. A test specialist agent with focused instructions produces better results than asking the general agent to also write tests:
 
 ```markdown
+
 ---
 name: test-agent
 description: QA specialist for comprehensive testing
@@ -272,6 +321,7 @@ You are a QA software engineer. You:
 - Run tests and iterate on failures
 - Never modify source code or remove failing tests
 - Use table-driven tests when testing multiple inputs
+
 ```
 
 ---
