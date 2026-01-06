@@ -10,3 +10,33 @@ dependencies = []
 dev = [
   "pre-commit>=4.5.1"
 ]
+
+[tool.pymarkdown.plugins.line-length]
+enabled = false
+
+[tool.pymarkdown.plugins.single-title]
+enabled = false
+
+[tool.pymarkdown.plugins.first-line-heading]
+enabled = false
+
+[tool.pymarkdown.plugins.no-emphasis-as-heading]
+enabled = false
+
+[tool.pymarkdown.plugins.no-duplicate-heading]
+enabled = false
+
+[tool.pymarkdown.plugins.fenced-code-language]
+enabled = false
+
+[tool.pymarkdown.plugins.blanks-around-fences]
+enabled = false
+
+[tool.pymarkdown.plugins.no-bare-urls]
+enabled = false
+
+[tool.pymarkdown.plugins.blanks-around-headings]
+enabled = false
+
+[tool.pymarkdown.plugins.no-multiple-blanks]
+enabled = false
