@@ -9,8 +9,8 @@
 > AI-powered two-pane translation workbench for fast, accurate understanding and verification of web content.
 
 **What makes Luminote different**
-- **Two-pane reading**: source on the left (reader-mode), **translation is the primary, persistent view** on the right  
-- **Selection commands**: select text on either pane → explain / define terms / summarize / (later) verify  
+- **Two-pane reading**: source on the left (reader-mode), **translation is the primary, persistent view** on the right
+- **Selection commands**: select text on either pane → explain / define terms / summarize / (later) verify
 - **Versioned artifacts**: notes/highlights/history + prompt-driven regeneration (keep recent versions)
 
 Luminote is a local-first, AI-driven reading workbench that transforms web materials into **understandable, verifiable, and reviewable** knowledge assets. The original content appears on the left in reader-mode, and the AI translation is your primary, persistent view on the right. AI insights and verification capabilities are on-demand and user-controlled.
@@ -114,6 +114,5 @@ Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 ## License
 
-This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.  
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
 See [LICENSE](LICENSE) for details. By contributing, you agree your contributions will be licensed under GPL-3.0.
-
