@@ -148,7 +148,7 @@ Luminote/
 Code must follow these standards:
 
 - **Imports:** Format with `isort`
-- **Code:** Format with `black` (72 character line length)
+- **Code:** Format with `black`
 - **Linting:** Check with `ruff` (no automatic formatting)
 - **Type checking:** Validate with `mypy` (strict mode)
 - **Standards:** Use type hints throughout and follow PEP 8
@@ -157,7 +157,7 @@ Code must follow these standards:
 
 Code must follow these standards:
 
-- **Code:** Format with `Prettier` (72 character line length)
+- **Code:** Format with `Prettier`
 - **Linting:** Check with `ESLint`
 - **Standards:** Use TypeScript best practices and prefer functional components
 

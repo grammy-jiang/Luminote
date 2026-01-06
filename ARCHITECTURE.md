@@ -44,7 +44,7 @@
 - **State:** Blocks, translations, settings (lang/provider/model/key stored locally).
 - **Interactions:** Block sync, selection commands (future), re-translate actions.
 - **Networking:** Calls backend for fetch/extract/translate; no direct calls to AI providers.
-- **Code quality:** ESLint (linting), Prettier (formatting, 72 char line length).
+- **Code quality:** ESLint (linting), Prettier (formatting).
 
 ### Backend (FastAPI)
 
@@ -53,7 +53,7 @@
 - **Endpoints:** health, fetch, extract, translate (see docs/API.md).
 - **Services:** Provider clients (OpenAI, Anthropic, etc.), extraction pipeline, translation orchestration.
 - **Config:** env-driven (see .env.example); BYOK stored server-side for calls.
-- **Code quality:** isort (imports), black (formatting, 72 char), ruff (linting), mypy (type checking, strict mode).
+- **Code quality:** isort (imports), black (formatting), ruff (linting), mypy (type checking, strict mode).
 - **Testing:** pytest (unit/smoke/e2e tests), tox (multi-version testing).
 - **Coverage requirements:** Core modules (app/core/) ≥95%, other modules ≥85%.
 - **Packaging:** PyPI-publishable Python package with wheel and source distributions.
