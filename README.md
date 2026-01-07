@@ -8,6 +8,9 @@
     - [Installation](#installation)
     - [Usage](#usage)
   - [Documentation](#documentation)
+    - [Planning & Architecture](#planning--architecture)
+    - [Feature Documentation](#feature-documentation)
+    - [Development](#development)
   - [Support & Community](#support--community)
   - [Contributing](#contributing)
   - [License](#license)
@@ -21,9 +24,25 @@
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%203.0-blue.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Node.js 22+](https://img.shields.io/badge/node.js-22+-green.svg)](https://nodejs.org/)
+[![Status: Planning](https://img.shields.io/badge/status-planning-yellow.svg)](docs/PROJECT-STATUS.md)
 
 > AI-powered two-pane translation workbench for fast, accurate understanding and
 > verification of web content.
+
+**🔨 Project Status:** Currently in planning phase. See
+[PROJECT-STATUS.md](docs/PROJECT-STATUS.md) for detailed progress.
+
+**✅ Planning Completed:**
+
+- Feature dependency analysis
+  ([feature-dependency-analysis.md](docs/feature-dependency-analysis.md))
+- Infrastructure requirements
+  ([infrastructure-requirements.md](docs/infrastructure-requirements.md))
+- Architecture decision records ([adr/](docs/adr/))
+- Atomic features breakdown ([atomic-features.md](docs/atomic-features.md))
+- Tech stack layer mapping ([layer-mapping.md](docs/layer-mapping.md))
+- Implementation sequence
+  ([implementation-sequence.md](docs/implementation-sequence.md))
 
 **What makes Luminote different**
 
@@ -143,18 +162,34 @@ npm run dev  # serves at http://localhost:5000
 
 ## Documentation<a name="documentation"></a>
 
-For more detailed information, refer to:
+### Planning & Architecture<a name="planning--architecture"></a>
 
-- **Complete Design Document:**
-  [docs/feature-specifications.md](docs/feature-specifications.md) -
-  Comprehensive specifications for all phases including purpose, roadmap, and
-  detailed features
-- **API Reference:** [docs/API.md](docs/API.md) - Backend API endpoints and
-  usage
-- **Development & Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) - Setup,
-  coding standards, and workflow
-- **Architecture:** [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture and
-  design decisions
+- **[Project Status](docs/PROJECT-STATUS.md)** ⭐ - Current progress, next steps,
+  and achievements
+- **[GitHub Issue Methodology](docs/github-issue-creation-methodology.md)** -
+  Systematic issue creation process
+- **[Feature Dependencies](docs/feature-dependency-analysis.md)** - Dependency
+  graphs and implementation batches
+- **[Infrastructure Requirements](docs/infrastructure-requirements.md)** -
+  Complete setup and tooling guide
+- **[Architecture Decision Records](docs/adr/)** - Key architectural choices and
+  rationale
+
+### Feature Documentation<a name="feature-documentation"></a>
+
+- **[Feature Specifications](docs/feature-specifications.md)** - Comprehensive
+  specifications for all phases
+- **[API Reference](docs/API.md)** - Backend API endpoints and usage (coming
+  soon)
+- **[Architecture Overview](ARCHITECTURE.md)** - System architecture and design
+  patterns
+
+### Development<a name="development"></a>
+
+- **[Contributing Guide](CONTRIBUTING.md)** - Setup, coding standards, and
+  workflow
+- **[Development Environment](docs/infrastructure-requirements.md#phase-0-infrastructure-setup-week-1)**
+  \- Local setup instructions
 
 ## Support & Community<a name="support--community"></a>
 
