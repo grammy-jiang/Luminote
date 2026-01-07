@@ -92,10 +92,20 @@ repos:
         additional_dependencies: ["bandit[toml]"]
   # ==== Documentation ====
   # Markdown and documentation tools
-  - repo: https://github.com/thlorenz/doctoc
-    rev: v2.2.0
+  # Markdown formatter (auto-fix line wrapping and formatting)
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.17
     hooks:
-      - id: doctoc
+      - id: mdformat
+        additional_dependencies:
+          - mdformat-gfm # GitHub Flavored Markdown
+          - mdformat-frontmatter # YAML frontmatter
+          - mdformat-tables # Better table formatting
+          - mdformat-toc # Auto-generate table of contents
+        args:
+          - --wrap
+          - "80"
+  # Markdown linter (checks for issues)
   - repo: https://github.com/jackdewinter/pymarkdown
     rev: v0.9.34
     hooks:

@@ -1,6 +1,4 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-# Readme
+<!-- mdformat-toc start --slug=github --maxlevel=3 --minlevel=1 -->
 
 - [Luminote](#luminote)
   - [Why Luminote?](#why-luminote)
@@ -14,62 +12,84 @@
   - [Contributing](#contributing)
   - [License](#license)
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
+<!-- mdformat-toc end -->
 
 ![Luminote](docs/assets/logo.webp)
 
-# Luminote
+# Luminote<a name="luminote"></a>
 
 [![License: GPL-3.0](https://img.shields.io/badge/License-GPL%203.0-blue.svg)](LICENSE)
 [![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
 [![Node.js 22+](https://img.shields.io/badge/node.js-22+-green.svg)](https://nodejs.org/)
 
-> AI-powered two-pane translation workbench for fast, accurate understanding and verification of web content.
+> AI-powered two-pane translation workbench for fast, accurate understanding and
+> verification of web content.
 
 **What makes Luminote different**
-- **Two-pane reading**: source on the left (reader-mode), **translation is the primary, persistent view** on the right
-- **Selection commands**: select text on either pane → explain / define terms / summarize / (later) verify
-- **Versioned artifacts**: notes/highlights/history + prompt-driven regeneration (keep recent versions)
 
-Luminote is a local-first, AI-driven reading workbench that transforms web materials into **understandable, verifiable, and reviewable** knowledge assets. The original content appears on the left in reader-mode, and the AI translation is your primary, persistent view on the right. AI insights and verification capabilities are on-demand and user-controlled.
+- **Two-pane reading**: source on the left (reader-mode), **translation is the
+  primary, persistent view** on the right
+- **Selection commands**: select text on either pane → explain / define terms /
+  summarize / (later) verify
+- **Versioned artifacts**: notes/highlights/history + prompt-driven regeneration
+  (keep recent versions)
 
-## Why Luminote?
+Luminote is a local-first, AI-driven reading workbench that transforms web
+materials into **understandable, verifiable, and reviewable** knowledge assets.
+The original content appears on the left in reader-mode, and the AI translation
+is your primary, persistent view on the right. AI insights and verification
+capabilities are on-demand and user-controlled.
 
-Most translation tools stop at converting words. Luminote targets the real problem: **fast, accurate understanding and verification** of high-density materials—news articles, research papers, technical documentation, financial reports. Translation is the core function, but it serves a bigger goal: **understand + verify + retain**.
+## Why Luminote?<a name="why-luminote"></a>
 
-## Product Roadmap & Features
+Most translation tools stop at converting words. Luminote targets the real
+problem: **fast, accurate understanding and verification** of high-density
+materials—news articles, research papers, technical documentation, financial
+reports. Translation is the core function, but it serves a bigger goal:
+**understand + verify + retain**.
+
+## Product Roadmap & Features<a name="product-roadmap--features"></a>
 
 **Phase 1**
+
 - [ ] Dual-pane translation with progressive, block-level rendering
-- [ ] Reader-mode extraction from **most public URLs** (titles, paragraphs, lists, quotes, code, images)
+- [ ] Reader-mode extraction from **most public URLs** (titles, paragraphs,
+  lists, quotes, code, images)
 - [ ] BYOK configuration for target language, provider/model, and API key
 - [ ] Clear error handling for fetch failures, invalid keys, and rate limits
 - [ ] Block-level synchronization with hover/click linkage between panes
 
 **Phase 2**
+
 - [ ] Re-translate per-block or full document with custom prompts
-- [ ] Local visit history and quick paste-text translation (fallback when extraction fails)
-- [ ] Selection-based commands: Explain, Define terms, Summarize (and save as notes)
-- [ ] Prompt templates and termbase setup; translation versioning (keep last versions)
+- [ ] Local visit history and quick paste-text translation (fallback when
+  extraction fails)
+- [ ] Selection-based commands: Explain, Define terms, Summarize (and save as
+  notes)
+- [ ] Prompt templates and termbase setup; translation versioning (keep last
+  versions)
 
 **Phase 3**
-- [ ] On-demand AI insights and verification packs (claims checklist, internal consistency)
+
+- [ ] On-demand AI insights and verification packs (claims checklist, internal
+  consistency)
 - [ ] Highlights, notes, and saved AI explanations
-- [ ] Link cards with bilingual summaries; optional web-browsing/RAG with citations
+- [ ] Link cards with bilingual summaries; optional web-browsing/RAG with
+  citations
 - [ ] Multi-model cross-check and refinement (enhanced mode)
 
-For detailed specifications, see [docs/feature-specifications.md](docs/feature-specifications.md).
+For detailed specifications, see
+[docs/feature-specifications.md](docs/feature-specifications.md).
 
-## Quick Start
+## Quick Start<a name="quick-start"></a>
 
-### Prerequisites
+### Prerequisites<a name="prerequisites"></a>
 
 - Backend: Python 3.12+, FastAPI
 - Frontend: Node.js 22+, SvelteKit
 - Access: A valid API key from OpenAI, Anthropic, or other supported providers
 
-### Installation
+### Installation<a name="installation"></a>
 
 ```bash
 
@@ -113,38 +133,51 @@ npm run dev  # serves at http://localhost:5000
 
 ```
 
-### Usage
+### Usage<a name="usage"></a>
 
 1. Enter a URL in the input field
-2. Click "Translate" to fetch and translate the content
-3. View original content (left) and translation (right) side-by-side
-4. Hover over blocks to see synchronized highlighting
-5. Configure settings in the top-right menu (language, provider, model)
+1. Click "Translate" to fetch and translate the content
+1. View original content (left) and translation (right) side-by-side
+1. Hover over blocks to see synchronized highlighting
+1. Configure settings in the top-right menu (language, provider, model)
 
-## Documentation
+## Documentation<a name="documentation"></a>
 
 For more detailed information, refer to:
-- **Complete Design Document:** [docs/feature-specifications.md](docs/feature-specifications.md) - Comprehensive specifications for all phases including purpose, roadmap, and detailed features
-- **API Reference:** [docs/API.md](docs/API.md) - Backend API endpoints and usage
-- **Development & Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) - Setup, coding standards, and workflow
-- **Architecture:** [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture and design decisions
 
-## Support & Community
+- **Complete Design Document:**
+  [docs/feature-specifications.md](docs/feature-specifications.md) -
+  Comprehensive specifications for all phases including purpose, roadmap, and
+  detailed features
+- **API Reference:** [docs/API.md](docs/API.md) - Backend API endpoints and
+  usage
+- **Development & Contributing:** [CONTRIBUTING.md](CONTRIBUTING.md) - Setup,
+  coding standards, and workflow
+- **Architecture:** [ARCHITECTURE.md](ARCHITECTURE.md) - System architecture and
+  design decisions
 
-- Bug reports & feature requests: [GitHub Issues](https://github.com/grammy-jiang/Luminote/issues)
-- Questions & discussions: [GitHub Discussions](https://github.com/grammy-jiang/Luminote/discussions)
-- Security vulnerabilities: Contact the maintainer directly rather than filing public issues
-- Status: This project is actively maintained; see [CONTRIBUTING.md](CONTRIBUTING.md) for development info
+## Support & Community<a name="support--community"></a>
 
-## Contributing
+- Bug reports & feature requests:
+  [GitHub Issues](https://github.com/grammy-jiang/Luminote/issues)
+- Questions & discussions:
+  [GitHub Discussions](https://github.com/grammy-jiang/Luminote/discussions)
+- Security vulnerabilities: Contact the maintainer directly rather than filing
+  public issues
+- Status: This project is actively maintained; see
+  [CONTRIBUTING.md](CONTRIBUTING.md) for development info
+
+## Contributing<a name="contributing"></a>
 
 Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+
 - Development setup
 - Coding style and conventions
 - Branching model and pull request workflow
 - How to report bugs and propose features
 
-## License
+## License<a name="license"></a>
 
-This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
-See [LICENSE](LICENSE) for details. By contributing, you agree your contributions will be licensed under GPL-3.0.
+This project is licensed under the **GNU General Public License v3.0
+(GPL-3.0)**. See [LICENSE](LICENSE) for details. By contributing, you agree your
+contributions will be licensed under GPL-3.0.

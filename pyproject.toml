@@ -14,6 +14,9 @@ dev = [
 [tool.pymarkdown.plugins.line-length]
 enabled = false
 
+[tool.pymarkdown.plugins.no-inline-html]
+enabled = false
+
 [tool.pymarkdown.plugins.single-title]
 enabled = false
 

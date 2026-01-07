@@ -1,6 +1,4 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-# Contributing
+<!-- mdformat-toc start --slug=github --maxlevel=3 --minlevel=1 -->
 
 - [Contributing to Luminote](#contributing-to-luminote)
   - [Table of Contents](#table-of-contents)
@@ -37,14 +35,15 @@
     - [Resources](#resources)
   - [License](#license)
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+<!-- mdformat-toc end -->
 
+# Contributing to Luminote<a name="contributing-to-luminote"></a>
 
-# Contributing to Luminote
+Thank you for your interest in contributing to Luminote! This guide covers
+development setup, coding standards, testing requirements, and the contribution
+workflow.
 
-Thank you for your interest in contributing to Luminote! This guide covers development setup, coding standards, testing requirements, and the contribution workflow.
-
-## Table of Contents
+## Table of Contents<a name="table-of-contents"></a>
 
 - [Prerequisites](#prerequisites)
 - [Project Structure](#project-structure)
@@ -57,15 +56,16 @@ Thank you for your interest in contributing to Luminote! This guide covers devel
 - [Code of Conduct](#code-of-conduct)
 - [Support](#support)
 
-## Prerequisites
+## Prerequisites<a name="prerequisites"></a>
 
 Ensure you have:
 
 - **Backend:** Python 3.12+ with `uv` for dependency management
 - **Frontend:** Node.js 22+
-- **APIs:** Valid API keys from OpenAI, Anthropic, or other supported providers (for testing)
+- **APIs:** Valid API keys from OpenAI, Anthropic, or other supported providers
+  (for testing)
 
-## Project Structure
+## Project Structure<a name="project-structure"></a>
 
 ```
 Luminote/
@@ -94,56 +94,62 @@ Luminote/
 
 ```
 
-### Key Modules
+### Key Modules<a name="key-modules"></a>
 
 - **`app/core/`** — Core business logic (95%+ test coverage required)
 - **`app/api/`** — API endpoints and request handling
 - **`app/services/`** — AI provider integrations and external services
 - **`app/models/`** — Data structures and database models
 
-## Local Development
+## Local Development<a name="local-development"></a>
 
-### Backend Setup
+### Backend Setup<a name="backend-setup"></a>
 
 1. **Create and activate virtual environment:**
+
    ```bash
    cd backend
    uv venv
    source .venv/bin/activate  # Windows: .venv\Scripts\activate
    ```
 
-2. **Install dependencies:**
+1. **Install dependencies:**
+
    ```bash
    uv pip install -e ".[dev]"
    ```
 
-3. **Configure environment:**
+1. **Configure environment:**
+
    ```bash
    cp .env.example .env
    # Edit .env with your API keys and settings
    ```
 
-4. **Start development server:**
+1. **Start development server:**
+
    ```bash
    luminote serve  # Runs on port 8000
    ```
 
-### Frontend Setup
+### Frontend Setup<a name="frontend-setup"></a>
 
 1. **Install dependencies:**
+
    ```bash
    cd frontend
    npm install
    ```
 
-2. **Start development server:**
+1. **Start development server:**
+
    ```bash
    npm run dev  # Serves at http://localhost:5000
    ```
 
-## Development Standards
+## Development Standards<a name="development-standards"></a>
 
-### Python (Backend)
+### Python (Backend)<a name="python-backend"></a>
 
 Code must follow these standards:
 
@@ -153,7 +159,7 @@ Code must follow these standards:
 - **Type checking:** Validate with `mypy` (strict mode)
 - **Standards:** Use type hints throughout and follow PEP 8
 
-### TypeScript (Frontend)
+### TypeScript (Frontend)<a name="typescript-frontend"></a>
 
 Code must follow these standards:
 
@@ -161,7 +167,7 @@ Code must follow these standards:
 - **Linting:** Check with `ESLint`
 - **Standards:** Use TypeScript best practices and prefer functional components
 
-### Running Code Quality Checks
+### Running Code Quality Checks<a name="running-code-quality-checks"></a>
 
 **Python:**
 
@@ -199,16 +205,16 @@ npm run lint && npm run format
 
 ```
 
-## Testing
+## Testing<a name="testing"></a>
 
-### Coverage Requirements
+### Coverage Requirements<a name="coverage-requirements"></a>
 
 - **Core modules** (`app/core/`): minimum 95%
 - **Other modules**: minimum 85%
 
 Coverage below these thresholds blocks pull requests.
 
-### Python Tests
+### Python Tests<a name="python-tests"></a>
 
 **Run tests:**
 
@@ -242,7 +248,7 @@ tox
 - **Smoke tests:** Critical path verification
 - **End-to-end tests:** Full workflow validation
 
-### TypeScript Tests
+### TypeScript Tests<a name="typescript-tests"></a>
 
 **Run tests:**
 
@@ -266,9 +272,9 @@ npm run test:all-versions
 
 Use the same test categorization as Python tests.
 
-## Building and Packaging
+## Building and Packaging<a name="building-and-packaging"></a>
 
-### Backend Package
+### Backend Package<a name="backend-package"></a>
 
 The backend is a Python package ready for PyPI publication.
 
@@ -291,6 +297,7 @@ python -m build
 ```
 
 Creates in `backend/dist/`:
+
 - `luminote-*.whl` — Wheel distribution
 - `luminote-*.tar.gz` — Source distribution
 
@@ -302,7 +309,8 @@ luminote serve
 
 ```
 
-The `luminote serve` command is defined as an entry point in `pyproject.toml` under `[project.scripts]`.
+The `luminote serve` command is defined as an entry point in `pyproject.toml`
+under `[project.scripts]`.
 
 **Test local build:**
 
@@ -322,7 +330,7 @@ python -m twine upload dist/*
 
 ```
 
-### Frontend Build
+### Frontend Build<a name="frontend-build"></a>
 
 **Build for production:**
 
@@ -335,25 +343,32 @@ npm run build
 
 Output is in `frontend/public/build/`.
 
-## Core Concepts
+## Core Concepts<a name="core-concepts"></a>
 
-### Design Principles
+### Design Principles<a name="design-principles"></a>
 
 These principles guide all architecture and feature decisions:
 
-1. **Two-pane reading is primary** — Translation always visible on the right pane. Never replace this with alternative content.
+1. **Two-pane reading is primary** — Translation always visible on the right
+   pane. Never replace this with alternative content.
 
-2. **On-demand AI, user-controlled cost** — All AI operations must be explicitly triggered by users. No automatic background AI calls.
+1. **On-demand AI, user-controlled cost** — All AI operations must be explicitly
+   triggered by users. No automatic background AI calls.
 
-3. **BYOK multi-provider** — Users bring their own API keys. Support multiple providers (OpenAI, Anthropic, etc.).
+1. **BYOK multi-provider** — Users bring their own API keys. Support multiple
+   providers (OpenAI, Anthropic, etc.).
 
-4. **Configurable governance** — Make prompts and terminology configurable per task type for consistency.
+1. **Configurable governance** — Make prompts and terminology configurable per
+   task type for consistency.
 
-5. **All AI outputs are versioned assets** — Save every AI output with full provenance (model, prompt version, referenced blocks) for replay and regeneration.
+1. **All AI outputs are versioned assets** — Save every AI output with full
+   provenance (model, prompt version, referenced blocks) for replay and
+   regeneration.
 
-6. **Compliance-first** — Never bypass authentication, anti-bot mechanisms, or paywalls automatically. All sessions are user-driven.
+1. **Compliance-first** — Never bypass authentication, anti-bot mechanisms, or
+   paywalls automatically. All sessions are user-driven.
 
-### Concept Model
+### Concept Model<a name="concept-model"></a>
 
 Key abstractions throughout the codebase:
 
@@ -361,19 +376,22 @@ Key abstractions throughout the codebase:
 - **Block** — Normalized content unit (paragraph, heading, list, quote, code)
 - **Translation** — Block-mapped translation with version tracking
 - **AI Job** — Any model request with prompt version and metadata
-- **Artifact** — Saved output from an AI Job (note, link card, verification, etc.)
+- **Artifact** — Saved output from an AI Job (note, link card, verification,
+  etc.)
 
-Maintain consistency by understanding these abstractions when working on the codebase.
+Maintain consistency by understanding these abstractions when working on the
+codebase.
 
-## Contribution Process
+## Contribution Process<a name="contribution-process"></a>
 
-### Getting Started
+### Getting Started<a name="getting-started"></a>
 
-1. Check [GitHub Issues](https://github.com/grammy-jiang/Luminote/issues) for existing work
-2. Comment on the issue to claim it
-3. For significant changes, open a discussion first
+1. Check [GitHub Issues](https://github.com/grammy-jiang/Luminote/issues) for
+   existing work
+1. Comment on the issue to claim it
+1. For significant changes, open a discussion first
 
-### Development Workflow
+### Development Workflow<a name="development-workflow"></a>
 
 1. **Fork and clone:**
 
@@ -382,7 +400,7 @@ Maintain consistency by understanding these abstractions when working on the cod
    cd Luminote
    ```
 
-2. **Create a feature branch:**
+1. **Create a feature branch:**
 
    ```bash
    git checkout -b feature/short-description
@@ -390,22 +408,24 @@ Maintain consistency by understanding these abstractions when working on the cod
 
    Use prefixes: `feature/`, `fix/`, `docs/`, `refactor/`, `test/`, `chore/`
 
-3. **Make changes:**
+1. **Make changes:**
+
    - Follow development standards
    - Add tests for new functionality
    - Update documentation
 
-4. **Verify quality:**
+1. **Verify quality:**
 
    ```bash
    # Backend
-   cd backend && pytest && isort app/ && black app/ && ruff check app/ --no-fix && mypy app/
+   cd backend && pytest && isort app/ && black app/ && \
+     ruff check app/ --no-fix && mypy app/
 
    # Frontend
    cd frontend && npm test && npm run lint && npm run format
    ```
 
-5. **Commit with conventional commits:**
+1. **Commit with conventional commits:**
 
    ```bash
    git commit -m "type: short description"
@@ -413,13 +433,13 @@ Maintain consistency by understanding these abstractions when working on the cod
 
    Types: `feat:`, `fix:`, `docs:`, `refactor:`, `test:`, `chore:`
 
-6. **Push and open a pull request:**
+1. **Push and open a pull request:**
 
    ```bash
    git push origin feature/short-description
    ```
 
-### Pull Request Requirements
+### Pull Request Requirements<a name="pull-request-requirements"></a>
 
 Every PR must:
 
@@ -428,20 +448,21 @@ Every PR must:
 - Reference related issues
 - Pass all tests (pytest for Python, npm test for TypeScript)
 - Meet coverage requirements (core >95%, other >85%)
-- Pass code quality checks (isort, black, ruff, mypy for Python; ESLint, Prettier for TypeScript)
+- Pass code quality checks (isort, black, ruff, mypy for Python; ESLint,
+  Prettier for TypeScript)
 - Include screenshots for UI changes
 - Update documentation if applicable
 
-### Review Process
+### Review Process<a name="review-process"></a>
 
 - Reviewers request changes for clarity, consistency, or quality
 - Address feedback promptly; push new commits (do not force-push)
 - Keep discussions professional and focused
 - Maintainers merge when all requirements are met
 
-## Code of Conduct
+## Code of Conduct<a name="code-of-conduct"></a>
 
-### Our Commitment
+### Our Commitment<a name="our-commitment"></a>
 
 We are committed to a welcoming and inclusive environment:
 
@@ -451,35 +472,40 @@ We are committed to a welcoming and inclusive environment:
 - Accept responsibility for mistakes and learn from them
 - Prioritize community well-being
 
-### Unacceptable Behavior
+### Unacceptable Behavior<a name="unacceptable-behavior"></a>
 
 - Harassment, discrimination, or hate speech
 - Trolling, insults, or personal attacks
 - Sharing others' private information
 - Professional misconduct
 
-### Enforcement
+### Enforcement<a name="enforcement"></a>
 
 Violations result in:
 
 1. **First offense:** Warning and discussion
-2. **Repeated violations:** Temporary repository ban
-3. **Severe violations:** Permanent ban
+1. **Repeated violations:** Temporary repository ban
+1. **Severe violations:** Permanent ban
 
 Report concerns directly to maintainers.
 
-## Support
+## Support<a name="support"></a>
 
-### Resources
+### Resources<a name="resources"></a>
 
-- **Issues:** [GitHub Issues](https://github.com/grammy-jiang/Luminote/issues) for bugs and features
-- **Discussions:** [GitHub Discussions](https://github.com/grammy-jiang/Luminote/discussions) for questions
-- **Security:** Contact maintainers directly for vulnerabilities (do not open public issues)
+- **Issues:** [GitHub Issues](https://github.com/grammy-jiang/Luminote/issues)
+  for bugs and features
+- **Discussions:**
+  [GitHub Discussions](https://github.com/grammy-jiang/Luminote/discussions) for
+  questions
+- **Security:** Contact maintainers directly for vulnerabilities (do not open
+  public issues)
 
-## License
+## License<a name="license"></a>
 
-By contributing to Luminote, you agree that your contributions will be licensed under the [GNU General Public License v3.0 (GPL-3.0)](LICENSE).
+By contributing to Luminote, you agree that your contributions will be licensed
+under the [GNU General Public License v3.0 (GPL-3.0)](LICENSE).
 
----
+______________________________________________________________________
 
 **Thank you for contributing to Luminote!**

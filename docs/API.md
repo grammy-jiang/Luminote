@@ -1,6 +1,4 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
-# Api
+<!-- mdformat-toc start --slug=github --maxlevel=3 --minlevel=1 -->
 
 - [Luminote API Reference](#luminote-api-reference)
   - [Overview](#overview)
@@ -15,25 +13,27 @@
   - [Security](#security)
   - [Related Documentation](#related-documentation)
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+<!-- mdformat-toc end -->
 
+# Luminote API Reference<a name="luminote-api-reference"></a>
 
-# Luminote API Reference
+## Overview<a name="overview"></a>
 
-## Overview
-
-The Luminote backend (FastAPI with Python 3.12+) provides a RESTful API for content fetching, extraction, and translation. All endpoints are designed for reliability, cost control, and consistent user experience.
+The Luminote backend (FastAPI with Python 3.12+) provides a RESTful API for
+content fetching, extraction, and translation. All endpoints are designed for
+reliability, cost control, and consistent user experience.
 
 **Technology Stack:**
+
 - Backend: Python 3.12+ with FastAPI
 - Package Management: `uv`
 - Entry Point: `luminote serve` command
 
 **Base URL:** `http://127.0.0.1:8000` (default development)
 
-## Endpoints
+## Endpoints<a name="endpoints"></a>
 
-### GET /health
+### GET /health<a name="get-health"></a>
 
 Health check and configuration validation.
 
@@ -51,16 +51,18 @@ Health check and configuration validation.
 ```
 
 **Status Codes:**
+
 - `200` - Service healthy
 - `503` - Service unavailable or misconfigured
 
----
+______________________________________________________________________
 
-### POST /fetch
+### POST /fetch<a name="post-fetch"></a>
 
 Retrieve raw content from a URL via backend proxy.
 
-**Purpose:** Fetch web content server-side to handle CORS and provide consistent access.
+**Purpose:** Fetch web content server-side to handle CORS and provide consistent
+access.
 
 **Request:**
 
@@ -85,14 +87,15 @@ Retrieve raw content from a URL via backend proxy.
 ```
 
 **Status Codes:**
+
 - `200` - Content fetched successfully
 - `400` - Invalid URL
 - `404` - URL not found
 - `500` - Fetch failed
 
----
+______________________________________________________________________
 
-### POST /extract
+### POST /extract<a name="post-extract"></a>
 
 Parse HTML content into reader-mode blocks.
 
@@ -135,6 +138,7 @@ Parse HTML content into reader-mode blocks.
 ```
 
 **Block Types:**
+
 - `title` - Document title
 - `heading` - Section heading (with `level`)
 - `paragraph` - Text paragraph
@@ -144,17 +148,19 @@ Parse HTML content into reader-mode blocks.
 - `image` - Image with caption
 
 **Status Codes:**
+
 - `200` - Extraction successful
 - `400` - Invalid HTML
 - `500` - Extraction failed
 
----
+______________________________________________________________________
 
-### POST /translate
+### POST /translate<a name="post-translate"></a>
 
 Translate content blocks progressively using configured model.
 
-**Purpose:** Translate extracted blocks with streaming support for progressive rendering.
+**Purpose:** Translate extracted blocks with streaming support for progressive
+rendering.
 
 **Request:**
 
@@ -187,20 +193,22 @@ Translate content blocks progressively using configured model.
 ```
 
 **Parameters:**
+
 - `target_lang` - Target language code (required)
 - `source_lang` - Source language code or "auto" for detection
 - `blocks` - Array of content blocks to translate
 
 **Status Codes:**
+
 - `200` - Translation successful
 - `400` - Invalid request
 - `401` - Invalid API key
 - `429` - Rate limit exceeded
 - `500` - Translation failed
 
----
+______________________________________________________________________
 
-## Configuration
+## Configuration<a name="configuration"></a>
 
 API behavior is controlled via environment variables:
 
@@ -225,7 +233,7 @@ luminote serve  # Starts on port 8000
 
 For complete setup instructions, see [../CONTRIBUTING.md](../CONTRIBUTING.md).
 
-## Error Handling
+## Error Handling<a name="error-handling"></a>
 
 All endpoints return consistent error responses:
 
@@ -240,6 +248,7 @@ All endpoints return consistent error responses:
 ```
 
 **Common Error Codes:**
+
 - `INVALID_URL` - Malformed URL
 - `FETCH_FAILED` - Unable to fetch content
 - `EXTRACTION_FAILED` - Unable to extract readable content
@@ -247,34 +256,44 @@ All endpoints return consistent error responses:
 - `INVALID_API_KEY` - API key invalid or expired
 - `RATE_LIMIT_EXCEEDED` - Provider rate limit hit
 
-## Rate Limiting
+## Rate Limiting<a name="rate-limiting"></a>
 
-Rate limits are enforced by the configured AI provider. The API does not implement additional rate limiting at the application level in early phases.
+Rate limits are enforced by the configured AI provider. The API does not
+implement additional rate limiting at the application level in early phases.
 
-## Security
+## Security<a name="security"></a>
 
 **BYOK (Bring Your Own Key):**
+
 - API keys are configured server-side via environment variables
 - Keys are never exposed to the frontend
-- Frontend stores configuration (provider, model, language) locally but sends API key to backend for each request
+- Frontend stores configuration (provider, model, language) locally but sends
+  API key to backend for each request
 - Backend uses provided key per request; does not store keys persistently
 - Keys are sent only to the configured AI provider (OpenAI, Anthropic, etc.)
 
 **Local Development:**
+
 - API runs on `localhost` by default
 - No authentication required for local development
 - Production deployment should add authentication/authorization
 
 **Design Principles:**
+
 - User-controlled cost: All AI operations explicitly triggered
 - Compliance-first: No automatic bypass of authentication or paywalls
 - Multi-provider support: OpenAI, Anthropic, and extensible for future providers
 
 For architecture details, see [../ARCHITECTURE.md](../ARCHITECTURE.md).
 
-## Related Documentation
+## Related Documentation<a name="related-documentation"></a>
 
-- **Complete Design Document:** [feature-specifications.md](feature-specifications.md) - Full specifications for all phases
-- **Architecture Overview:** [../ARCHITECTURE.md](../ARCHITECTURE.md) - System design and components
-- **Development Guide:** [../CONTRIBUTING.md](../CONTRIBUTING.md) - Setup, standards, and workflow
-- **Main Project:** [../README.md](../README.md) - Project overview and quick start
+- **Complete Design Document:**
+  [feature-specifications.md](feature-specifications.md) - Full specifications
+  for all phases
+- **Architecture Overview:** [../ARCHITECTURE.md](../ARCHITECTURE.md) - System
+  design and components
+- **Development Guide:** [../CONTRIBUTING.md](../CONTRIBUTING.md) - Setup,
+  standards, and workflow
+- **Main Project:** [../README.md](../README.md) - Project overview and quick
+  start
