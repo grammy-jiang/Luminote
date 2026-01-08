@@ -7,6 +7,9 @@ import sys
 
 from app.config import get_settings
 
+# Module-level logger for app
+logger = logging.getLogger("app")
+
 
 def setup_logging() -> None:
     """
@@ -26,7 +29,6 @@ def setup_logging() -> None:
     )
 
     # Set up logger for the app
-    logger = logging.getLogger("app")
     logger.setLevel(getattr(logging, settings.LOG_LEVEL.upper()))
 
 

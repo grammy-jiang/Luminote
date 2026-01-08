@@ -87,3 +87,59 @@ class ExternalServiceError(ServerError):
             code="EXTERNAL_SERVICE_ERROR",
             details={"service": service, "reason": reason},
         )
+
+
+class ExtractionError(LuminoteException):
+    """Content extraction failed."""
+
+    def __init__(self, url: str, reason: str) -> None:
+        """Initialize an extraction error."""
+        super().__init__(
+            message=f"Failed to extract content from {url}: {reason}",
+            code="EXTRACTION_ERROR",
+            status_code=422,
+            details={"url": url, "reason": reason},
+        )
+
+
+class APIKeyError(LuminoteException):
+    """API key validation or authentication error."""
+
+    def __init__(
+        self, provider: str, reason: str = "Invalid or missing API key"
+    ) -> None:
+        """Initialize an API key error."""
+        super().__init__(
+            message=f"API key error for {provider}: {reason}",
+            code="API_KEY_ERROR",
+            status_code=401,
+            details={"provider": provider, "reason": reason},
+        )
+
+
+class RateLimitError(LuminoteException):
+    """Rate limit exceeded."""
+
+    def __init__(self, retry_after: int, provider: str | None = None) -> None:
+        """Initialize a rate limit error."""
+        message = f"Rate limit exceeded. Retry after {retry_after} seconds."
+        if provider:
+            message += f" (Provider: {provider})"
+        super().__init__(
+            message=message,
+            code="RATE_LIMIT_EXCEEDED",
+            status_code=429,
+            details={"retry_after": retry_after, "provider": provider},
+        )
+
+
+class TranslationError(ServerError):
+    """Translation failed."""
+
+    def __init__(self, provider: str, model: str, reason: str) -> None:
+        """Initialize a translation error."""
+        super().__init__(
+            message=f"Translation failed using {provider}/{model}: {reason}",
+            code="TRANSLATION_ERROR",
+            details={"provider": provider, "model": model, "reason": reason},
+        )
