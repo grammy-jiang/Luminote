@@ -4,9 +4,11 @@ Test CORS and timing middleware.
 
 from unittest.mock import patch
 
+import pytest
 from fastapi.testclient import TestClient
 
 
+@pytest.mark.unit
 def test_cors_headers_present(client: TestClient) -> None:
     """Test CORS headers are present in response."""
     response = client.get("/health", headers={"Origin": "http://localhost:5000"})
@@ -18,6 +20,7 @@ def test_cors_headers_present(client: TestClient) -> None:
     assert response.headers["access-control-allow-credentials"] == "true"
 
 
+@pytest.mark.unit
 def test_cors_preflight_request(client: TestClient) -> None:
     """Test CORS preflight OPTIONS request works correctly."""
     response = client.options(
@@ -37,6 +40,7 @@ def test_cors_preflight_request(client: TestClient) -> None:
     assert "access-control-allow-credentials" in response.headers
 
 
+@pytest.mark.unit
 def test_cors_invalid_origin(client: TestClient) -> None:
     """Test CORS headers not present for invalid origin."""
     response = client.get("/health", headers={"Origin": "http://malicious.com"})
@@ -50,6 +54,7 @@ def test_cors_invalid_origin(client: TestClient) -> None:
     )
 
 
+@pytest.mark.unit
 def test_timing_header_present(client: TestClient) -> None:
     """Test X-Response-Time header is present in all responses."""
     response = client.get("/health")
@@ -60,6 +65,7 @@ def test_timing_header_present(client: TestClient) -> None:
     assert response.headers["x-response-time"].endswith("ms")
 
 
+@pytest.mark.unit
 def test_request_id_header_present(client: TestClient) -> None:
     """Test X-Request-ID header is present in all responses."""
     response = client.get("/health")
@@ -70,6 +76,7 @@ def test_request_id_header_present(client: TestClient) -> None:
     assert len(response.headers["x-request-id"]) == 36
 
 
+@pytest.mark.unit
 def test_slow_request_logging(client: TestClient) -> None:
     """Test that slow requests (>1s) are logged."""
     import asyncio
@@ -102,6 +109,7 @@ def test_slow_request_logging(client: TestClient) -> None:
         ), f"Duration {duration_value}ms should be >= 1000ms"
 
 
+@pytest.mark.unit
 def test_custom_headers_present(client: TestClient) -> None:
     """Test that X-Request-ID and X-Response-Time headers are present."""
     # Make a GET request with an Origin header to exercise CORS middleware

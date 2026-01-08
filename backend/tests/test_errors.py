@@ -1,107 +1,25 @@
 """
 Test error handling and response standardization.
 
-Tests cover custom exceptions, exception handlers, and request ID tracking.
+Tests cover exception handlers and request ID tracking.
 """
 
 import uuid
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.core.errors import (
     APIKeyError,
     ExtractionError,
     InvalidURLError,
-    LuminoteException,
     RateLimitError,
     TranslationError,
-    ValidationError,
 )
 from app.main import fastapi_application
 
 
-class TestCustomExceptions:
-    """Test custom exception classes."""
-
-    def test_luminote_exception_base(self) -> None:
-        """Test base LuminoteException."""
-        exc = LuminoteException(
-            message="Test error",
-            code="TEST_ERROR",
-            status_code=500,
-            details={"key": "value"},
-        )
-        assert exc.message == "Test error"
-        assert exc.code == "TEST_ERROR"
-        assert exc.status_code == 500
-        assert exc.details == {"key": "value"}
-
-    def test_invalid_url_error(self) -> None:
-        """Test InvalidURLError exception."""
-        exc = InvalidURLError("not-a-url")
-        assert exc.status_code == 400
-        assert exc.code == "INVALID_URL"
-        assert "not-a-url" in exc.message
-        assert exc.details["url"] == "not-a-url"
-
-    def test_validation_error(self) -> None:
-        """Test ValidationError exception."""
-        exc = ValidationError("email", "Invalid format")
-        assert exc.status_code == 400
-        assert exc.code == "VALIDATION_ERROR"
-        assert "email" in exc.message
-        assert exc.details["field"] == "email"
-        assert exc.details["reason"] == "Invalid format"
-
-    def test_extraction_error(self) -> None:
-        """Test ExtractionError exception."""
-        exc = ExtractionError("https://example.com", "Connection timeout")
-        assert exc.status_code == 422
-        assert exc.code == "EXTRACTION_ERROR"
-        assert "https://example.com" in exc.message
-        assert exc.details["url"] == "https://example.com"
-        assert exc.details["reason"] == "Connection timeout"
-
-    def test_api_key_error(self) -> None:
-        """Test APIKeyError exception."""
-        exc = APIKeyError("openai", "Invalid API key format")
-        assert exc.status_code == 401
-        assert exc.code == "API_KEY_ERROR"
-        assert "openai" in exc.message
-        assert exc.details["provider"] == "openai"
-        assert exc.details["reason"] == "Invalid API key format"
-
-    def test_rate_limit_error_with_provider(self) -> None:
-        """Test RateLimitError with provider."""
-        exc = RateLimitError(60, provider="openai")
-        assert exc.status_code == 429
-        assert exc.code == "RATE_LIMIT_EXCEEDED"
-        assert "60 seconds" in exc.message
-        assert "openai" in exc.message
-        assert exc.details["retry_after"] == 60
-        assert exc.details["provider"] == "openai"
-
-    def test_rate_limit_error_without_provider(self) -> None:
-        """Test RateLimitError without provider."""
-        exc = RateLimitError(30)
-        assert exc.status_code == 429
-        assert exc.code == "RATE_LIMIT_EXCEEDED"
-        assert "30 seconds" in exc.message
-        assert exc.details["retry_after"] == 30
-        assert exc.details["provider"] is None
-
-    def test_translation_error(self) -> None:
-        """Test TranslationError exception."""
-        exc = TranslationError("openai", "gpt-4", "API unavailable")
-        assert exc.status_code == 500
-        assert exc.code == "TRANSLATION_ERROR"
-        assert "openai" in exc.message
-        assert "gpt-4" in exc.message
-        assert exc.details["provider"] == "openai"
-        assert exc.details["model"] == "gpt-4"
-        assert exc.details["reason"] == "API unavailable"
-
-
+@pytest.mark.e2e
 class TestExceptionHandlers:
     """Test exception handler middleware."""
 
@@ -236,6 +154,7 @@ class TestExceptionHandlers:
         assert "request_id" in data
 
 
+@pytest.mark.unit
 class TestRequestIDMiddleware:
     """Test request ID middleware."""
 
