@@ -13,8 +13,30 @@ SvelteKit-based frontend for the Luminote translation workbench.
 
 ## Prerequisites
 
-- Node.js 20+
-- npm 10+
+- **Node.js 22+** (LTS version recommended)
+  - **Note:** Node.js 22 is the project standard as specified in ARCHITECTURE.md and CONTRIBUTING.md. While Node.js 20 may work, 22+ is required for consistency and to ensure access to the latest features.
+- **npm 10+** (comes with Node.js)
+
+**Check your versions:**
+
+```bash
+node --version  # Should be 22 or higher
+npm --version   # Should be 10 or higher
+```
+
+**Install Node.js 22:**
+
+If you don't have Node.js 22, install it from:
+- [Official Node.js website](https://nodejs.org/)
+- Or use a version manager like [nvm](https://github.com/nvm-sh/nvm):
+  ```bash
+  # Install nvm (macOS/Linux)
+  curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
+  
+  # Install and use Node.js 22
+  nvm install 22
+  nvm use 22
+  ```
 
 ## Quick Start
 
@@ -49,15 +71,68 @@ npm run preview
 ### Testing
 
 ```bash
-# Run tests once
+# Run tests once (CI mode)
 npm test
 
-# Watch mode
+# Watch mode (re-runs on file changes)
 npm run test:watch
 
-# With coverage report
+# With coverage report (≥85% required)
 npm run test:coverage
+# Open coverage/index.html to view detailed coverage
+
+# Run specific test file
+npm test -- YourComponent.test.ts
+
+# Run tests matching pattern
+npm test -- --grep "Button component"
 ```
+
+**Test structure:**
+
+Tests are co-located with the code they test:
+
+```
+src/lib/
+├── components/
+│   ├── Button.svelte
+│   └── Button.test.ts        # Tests for Button component
+├── stores/
+│   ├── settings.ts
+│   └── settings.test.ts      # Tests for settings store
+└── utils/
+    ├── formatDate.ts
+    └── formatDate.test.ts    # Tests for formatDate utility
+```
+
+**Writing tests:**
+
+```typescript
+import { render, screen, fireEvent } from '@testing-library/svelte';
+import { describe, it, expect, vi } from 'vitest';
+import Button from './Button.svelte';
+
+describe('Button component', () => {
+  it('renders with correct text', () => {
+    render(Button, { props: { text: 'Click me' } });
+    expect(screen.getByText('Click me')).toBeInTheDocument();
+  });
+
+  it('calls onClick when clicked', async () => {
+    const onClick = vi.fn();
+    render(Button, { props: { text: 'Click', onClick } });
+    
+    await fireEvent.click(screen.getByText('Click'));
+    expect(onClick).toHaveBeenCalledOnce();
+  });
+});
+```
+
+**Coverage requirements:**
+
+- All code must have **≥85%** coverage
+- Tests must be meaningful, not just for coverage numbers
+- Focus on behavior, not implementation details
 
 ### Code Quality
 
@@ -146,35 +221,229 @@ import { formatDate } from '$utils/date';
 
 ## Integration with Backend
 
-The backend API runs on `http://localhost:8000`. Configure API endpoints in environment variables or a config file (to be added in Phase 1).
+The frontend communicates with the backend via HTTP REST API:
+
+- **Backend API:** http://localhost:8000
+- **API base path:** `/api/v1/`
+- **Health check:** http://localhost:8000/health
+
+**API endpoints will be configured in Phase 1.** For now, ensure both servers run simultaneously:
+
+```bash
+# Terminal 1: Backend
+cd backend && source .venv/bin/activate && luminote serve
+
+# Terminal 2: Frontend
+cd frontend && npm run dev
+```
+
+**CORS configuration:**
+
+The backend allows requests from the frontend origins. Default CORS origins:
+- `http://localhost:5000`
+- `http://127.0.0.1:5000`
+
+If you change the frontend port, update `backend/.env`:
+```bash
+CORS_ORIGINS=http://localhost:5000,http://127.0.0.1:5000,http://localhost:5001
+```
+
+## Architecture
+
+The frontend follows a component-based architecture with clear separation of concerns:
+
+```
+┌─────────────────────────────────────┐
+│     Routes (src/routes/)            │  Page-level components
+│     - SvelteKit pages               │  (file-based routing)
+│     - Layouts                        │
+└─────────────────┬───────────────────┘
+                  │
+┌─────────────────▼───────────────────┐
+│   Components (src/lib/components/)  │  Reusable UI components
+│     - DualPane layout (Phase 1)     │
+│     - Input fields                  │
+│     - Buttons, cards, etc.          │
+└─────────────────┬───────────────────┘
+                  │
+┌─────────────────▼───────────────────┐
+│   Stores (src/lib/stores/)          │  State management
+│     - Settings (lang, provider)     │  (Svelte stores)
+│     - Content blocks                │
+│     - Translation state             │
+└─────────────────┬───────────────────┘
+                  │
+┌─────────────────▼───────────────────┐
+│   Utils (src/lib/utils/)            │  Helper functions
+│     - API client                    │
+│     - Formatters                    │
+│     - Validators                    │
+└─────────────────────────────────────┘
+```
+
+**Key principles:**
+
+1. **Functional components** — Use Svelte's component syntax, avoid class components
+2. **Svelte stores for state** — Global state managed via Svelte stores (see ADR-005)
+3. **TypeScript strict mode** — All code must pass strict type checking
+4. **Co-located tests** — Tests live next to the code they test
+5. **Utility-first CSS** — Use Tailwind CSS classes, minimize custom CSS
+
+For architecture decisions, see [ADR-005: Frontend State Management](../docs/adr/005-frontend-state-management.md).
+
+## Development Workflow
+
+**Quick development cycle:**
+
+1. Start dev server: `npm run dev`
+2. Make changes to components/pages
+3. Browser auto-refreshes (HMR)
+4. Run tests: `npm test`
+5. Check types: `npm run type-check`
+6. Format code: `npm run format`
+7. Lint code: `npm run lint`
+8. Commit: `git commit -m "feat: your change"`
+
+**Adding a new component:**
+
+1. Create component: `src/lib/components/YourComponent.svelte`
+2. Write the component with TypeScript: `<script lang="ts">`
+3. Add tests: `src/lib/components/YourComponent.test.ts`
+4. Ensure ≥85% coverage: `npm run test:coverage`
+5. Use component in pages: `import YourComponent from '$components/YourComponent.svelte'`
+
+**Adding a new store:**
+
+1. Create store: `src/lib/stores/yourStore.ts`
+2. Export store and methods
+3. Add tests: `src/lib/stores/yourStore.test.ts`
+4. Use in components: `import { yourStore } from '$stores/yourStore'`
+
+For detailed workflow, see [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md).
+
+## Contributing
+
+Contributions are welcome! Please see:
+
+- **[CONTRIBUTING.md](../CONTRIBUTING.md)** — Setup, standards, and workflow
+- **[docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md)** — Detailed development guide
+- **[ARCHITECTURE.md](../ARCHITECTURE.md)** — System architecture
+
+**Before contributing:**
+
+1. Read the contributing guidelines
+2. Set up your development environment
+3. Run all quality checks before submitting PR
+4. Ensure tests pass and coverage ≥85%
+
+## Documentation
+
+- **[README.md](../README.md)** — Project overview
+- **[CONTRIBUTING.md](../CONTRIBUTING.md)** — Contributing guidelines
+- **[ARCHITECTURE.md](../ARCHITECTURE.md)** — System architecture
+- **[docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md)** — Development guide
+- **[docs/adr/](../docs/adr/)** — Architecture Decision Records
 
 ## Troubleshooting
 
 ### Port 5000 Already in Use
 
-If port 5000 is already in use, you can:
+**Symptom:** `Port 5000 is in use`
 
-1. Stop the process using port 5000
-2. Or temporarily change the port in `vite.config.ts` (not recommended for this project)
-
-### Type Errors
-
-If you see TypeScript errors after installing dependencies:
+**Solution 1** — Kill the process using port 5000:
 
 ```bash
-npm run type-check
+# macOS/Linux
+lsof -i :5000
+kill -9 <PID>
+
+# Windows
+netstat -ano | findstr :5000
+taskkill /PID <PID> /F
 ```
 
-This will show all type errors. Fix them before proceeding.
+**Solution 2** — Use a different port (not recommended for this project):
 
-### Build Errors
+Edit `package.json`:
+```json
+"scripts": {
+  "dev": "vite dev --port 5001"
+}
+```
 
-Clear the build cache and rebuild:
+### Node Modules Not Found
+
+**Symptom:** `Cannot find module '@sveltejs/kit'`
+
+**Solution:**
 
 ```bash
-rm -rf .svelte-kit
+cd frontend
+rm -rf node_modules package-lock.json
+npm install
+```
+
+### Type Errors After Update
+
+**Symptom:** `Type error: Property 'xyz' does not exist on type...`
+
+**Solution:**
+
+```bash
+# Check all type errors
+npm run type-check
+
+# Clear cache and rebuild
+rm -rf .svelte-kit node_modules
+npm install
 npm run build
 ```
+
+### Vite Build Fails
+
+**Symptom:** `✘ [ERROR] Build failed`
+
+**Solution:**
+
+```bash
+# Clear Svelte cache
+rm -rf .svelte-kit
+
+# Check for syntax/type errors
+npm run type-check
+npm run lint
+
+# Rebuild
+npm run build
+```
+
+### Hot Module Replacement (HMR) Not Working
+
+**Symptom:** Changes don't reflect in browser without manual refresh
+
+**Solution:**
+
+1. Check browser console for errors
+2. Restart dev server: `npm run dev`
+3. Clear browser cache (Ctrl+Shift+R or Cmd+Shift+R)
+4. Check file watcher limits (Linux):
+   ```bash
+   echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
+   sudo sysctl -p
+   ```
+
+### Tests Failing
+
+**Symptom:** Tests pass locally but fail in CI
+
+**Solution:**
+
+- Ensure Node.js version matches CI (22+)
+- Check for timing issues (use `waitFor` for async operations)
+- Avoid relying on specific DOM order
+- Mock date/time if tests depend on it
+
+For more troubleshooting tips, see [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md#troubleshooting).
 
 ## Next Steps
 
@@ -186,14 +455,18 @@ This is the Phase 0 infrastructure setup. Phase 1 development will add:
 - Error handling UI
 - Loading states and progressive rendering
 
+See [docs/feature-specifications.md](../docs/feature-specifications.md) for detailed feature specs.
+
 ## Resources
 
-- [SvelteKit Documentation](https://kit.svelte.dev/docs)
-- [Svelte Documentation](https://svelte.dev/docs)
-- [Tailwind CSS Documentation](https://tailwindcss.com/docs)
-- [TypeScript Documentation](https://www.typescriptlang.org/docs)
-- [Vitest Documentation](https://vitest.dev)
+- **[SvelteKit Documentation](https://kit.svelte.dev/docs)** — Frontend framework
+- **[Svelte Documentation](https://svelte.dev/docs)** — Component framework
+- **[Tailwind CSS Documentation](https://tailwindcss.com/docs)** — Styling framework
+- **[TypeScript Documentation](https://www.typescriptlang.org/docs)** — Type system
+- **[Vitest Documentation](https://vitest.dev)** — Testing framework
 
 ## License
 
-GPL-3.0 - See LICENSE file in repository root
+This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
+
+See [LICENSE](../LICENSE) for details.
