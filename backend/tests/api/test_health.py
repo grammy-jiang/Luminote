@@ -2,9 +2,11 @@
 Test health check endpoint.
 """
 
+import pytest
 from fastapi.testclient import TestClient
 
 
+@pytest.mark.smoke
 def test_health_check(client: TestClient) -> None:
     """Test health check endpoint returns correct response."""
     response = client.get("/health")

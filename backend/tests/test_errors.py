@@ -6,6 +6,7 @@ Tests cover custom exceptions, exception handlers, and request ID tracking.
 
 import uuid
 
+import pytest
 from fastapi.testclient import TestClient
 
 from app.core.errors import (
@@ -20,6 +21,7 @@ from app.core.errors import (
 from app.main import fastapi_application
 
 
+@pytest.mark.unit
 class TestCustomExceptions:
     """Test custom exception classes."""
 
@@ -102,6 +104,7 @@ class TestCustomExceptions:
         assert exc.details["reason"] == "API unavailable"
 
 
+@pytest.mark.e2e
 class TestExceptionHandlers:
     """Test exception handler middleware."""
 
@@ -236,6 +239,7 @@ class TestExceptionHandlers:
         assert "request_id" in data
 
 
+@pytest.mark.unit
 class TestRequestIDMiddleware:
     """Test request ID middleware."""
 
