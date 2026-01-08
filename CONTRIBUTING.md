@@ -6,8 +6,11 @@
   - [Project Structure](#project-structure)
     - [Key Modules](#key-modules)
   - [Local Development](#local-development)
+    - [Automated Setup (Recommended)](#automated-setup)
+    - [Manual Setup](#manual-setup)
     - [Backend Setup](#backend-setup)
     - [Frontend Setup](#frontend-setup)
+    - [Pre-commit Hooks Setup](#pre-commit-hooks-setup)
   - [Development Standards](#development-standards)
     - [Python (Backend)](#python-backend)
     - [TypeScript (Frontend)](#typescript-frontend)
@@ -103,6 +106,36 @@ Luminote/
 
 ## Local Development<a name="local-development"></a>
 
+### Automated Setup (Recommended)<a name="automated-setup"></a>
+
+The easiest way to set up your development environment is using the setup script:
+
+```bash
+# Clone the repository
+git clone https://github.com/grammy-jiang/Luminote.git
+cd Luminote
+
+# Run the setup script
+./scripts/setup-dev.sh  # Linux/macOS
+# OR
+scripts\setup-dev.bat   # Windows
+```
+
+The script will:
+
+- ✅ Verify Python 3.12+ and Node.js 22+ are installed
+- ✅ Create backend virtual environment and install dependencies
+- ✅ Install frontend dependencies
+- ✅ Install pre-commit hooks
+- ✅ Create `.env` files from examples
+- ✅ Verify the setup by collecting tests
+
+After setup, edit `backend/.env` to add your API keys, then start the servers.
+
+### Manual Setup<a name="manual-setup"></a>
+
+If you prefer manual setup or need more control:
+
 ### Backend Setup<a name="backend-setup"></a>
 
 1. **Create and activate virtual environment:**
@@ -146,6 +179,76 @@ Luminote/
    ```bash
    npm run dev  # Serves at http://localhost:5000
    ```
+
+### Pre-commit Hooks Setup<a name="pre-commit-hooks-setup"></a>
+
+Pre-commit hooks automatically check your code quality before each commit. They help
+catch issues early and maintain consistent code standards.
+
+**Installation:**
+
+```bash
+# If you used the automated setup script, hooks are already installed
+# Otherwise, install manually:
+
+cd backend
+source .venv/bin/activate  # Windows: .venv\Scripts\activate.bat
+pip install pre-commit
+pre-commit install
+```
+
+**Usage:**
+
+```bash
+# Hooks run automatically on git commit
+git commit -m "your message"
+
+# Run hooks manually on all files
+pre-commit run --all-files
+
+# Run specific hook
+pre-commit run ruff-format --all-files
+pre-commit run ruff --all-files
+pre-commit run mypy --all-files
+
+# Skip hooks if needed (use sparingly)
+git commit --no-verify -m "your message"
+```
+
+**Configured Hooks:**
+
+The following checks run automatically on commit:
+
+- **Python Code Quality:**
+  - `ruff` - Lint for code issues and style (with auto-fix)
+  - `ruff-format` - Format code (replaces Black)
+  - `pyupgrade` - Upgrade syntax for Python 3.12+
+  - `docformatter` - Format docstrings
+  - `mypy` - Type checking
+  - `bandit` - Security vulnerability scanning
+
+- **Configuration Files:**
+  - `yamlfmt` - Format YAML files
+  - `toml-sort` - Sort and format TOML files
+  - `yamllint` - Lint YAML files
+
+- **File Quality:**
+  - Trailing whitespace removal
+  - End-of-file fixes
+  - JSON validation and formatting
+  - Merge conflict detection
+  - Case conflict detection
+
+- **Shell Scripts:**
+  - `shellcheck` - Shell script linting
+  - `bashate` - Bash script style checking
+
+- **Documentation:**
+  - `mdformat` - Markdown formatting
+  - `pymarkdown` - Markdown linting
+
+**Performance:** Hooks complete in <10 seconds on typical commits. First run may be
+slower as it sets up hook environments.
 
 ## Development Standards<a name="development-standards"></a>
 
