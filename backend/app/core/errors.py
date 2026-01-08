@@ -89,7 +89,7 @@ class ExternalServiceError(ServerError):
         )
 
 
-class ExtractionError(LuminoteException):
+class ExtractionError(ClientError):
     """Content extraction failed."""
 
     def __init__(self, url: str, reason: str) -> None:
@@ -97,12 +97,12 @@ class ExtractionError(LuminoteException):
         super().__init__(
             message=f"Failed to extract content from {url}: {reason}",
             code="EXTRACTION_ERROR",
-            status_code=422,
             details={"url": url, "reason": reason},
         )
+        self.status_code = 422  # Override default 400 status
 
 
-class APIKeyError(LuminoteException):
+class APIKeyError(ClientError):
     """API key validation or authentication error."""
 
     def __init__(
@@ -112,12 +112,12 @@ class APIKeyError(LuminoteException):
         super().__init__(
             message=f"API key error for {provider}: {reason}",
             code="API_KEY_ERROR",
-            status_code=401,
             details={"provider": provider, "reason": reason},
         )
+        self.status_code = 401  # Override default 400 status
 
 
-class RateLimitError(LuminoteException):
+class RateLimitError(ClientError):
     """Rate limit exceeded."""
 
     def __init__(self, retry_after: int, provider: str | None = None) -> None:
@@ -128,9 +128,9 @@ class RateLimitError(LuminoteException):
         super().__init__(
             message=message,
             code="RATE_LIMIT_EXCEEDED",
-            status_code=429,
             details={"retry_after": retry_after, "provider": provider},
         )
+        self.status_code = 429  # Override default 400 status
 
 
 class TranslationError(ServerError):

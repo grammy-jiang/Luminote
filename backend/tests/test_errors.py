@@ -6,7 +6,6 @@ Tests cover custom exceptions, exception handlers, and request ID tracking.
 
 import uuid
 
-import pytest
 from fastapi.testclient import TestClient
 
 from app.core.errors import (
@@ -19,12 +18,6 @@ from app.core.errors import (
     ValidationError,
 )
 from app.main import fastapi_application
-
-
-@pytest.fixture
-def client() -> TestClient:
-    """Create test client."""
-    return TestClient(fastapi_application)
 
 
 class TestCustomExceptions:
@@ -188,6 +181,9 @@ class TestExceptionHandlers:
         assert data["details"]["provider"] == "openai"
         assert "request_id" in data
         assert "X-Request-ID" in response.headers
+        # Verify Retry-After header is included per RFC 7231
+        assert "Retry-After" in response.headers
+        assert response.headers["Retry-After"] == "60"
 
     def test_api_key_error_handler(self, client: TestClient) -> None:
         """Test API key error handler."""

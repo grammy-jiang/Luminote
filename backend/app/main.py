@@ -67,7 +67,7 @@ def create_app() -> FastAPI:
         """Handle all Luminote custom exceptions."""
         request_id = getattr(request.state, "request_id", str(uuid.uuid4()))
 
-        # Log error with context
+        # Log error with context - only include stack trace for server errors (5xx)
         logger.error(
             f"Error handling request {request_id}",
             extra={
@@ -78,8 +78,15 @@ def create_app() -> FastAPI:
                 "path": request.url.path,
                 "method": request.method,
             },
-            exc_info=True,
+            exc_info=exc.status_code >= 500,
         )
+
+        # Prepare response headers
+        headers = {"X-Request-ID": request_id}
+
+        # Add Retry-After header for rate limit errors (RFC 7231)
+        if exc.code == "RATE_LIMIT_EXCEEDED" and "retry_after" in exc.details:
+            headers["Retry-After"] = str(exc.details["retry_after"])
 
         # Return user-friendly response
         return JSONResponse(
@@ -90,7 +97,7 @@ def create_app() -> FastAPI:
                 "details": exc.details,
                 "request_id": request_id,
             },
-            headers={"X-Request-ID": request_id},
+            headers=headers,
         )
 
     @fastapi_app.exception_handler(RequestValidationError)
