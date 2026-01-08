@@ -142,7 +142,7 @@ cd frontend && npm run dev
 
 **Verify setup:**
 
-- Backend: http://localhost:8000/health (should return `{"status": "ok"}`)
+- Backend: http://localhost:8000/health (should return `{"status": "ok", "version": "0.1.0"}`)
 - Frontend: http://localhost:5000 (should show the app)
 - API docs: http://localhost:8000/docs (interactive API documentation)
 

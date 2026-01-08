@@ -734,8 +734,8 @@ def test_translation_workflow(client: TestClient, mock_openai):
 **Frontend (TypeScript):**
 
 ```typescript
-import { render, screen } from '@testing-library/svelte';
-import { describe, it, expect } from 'vitest';
+import { render, screen, fireEvent } from '@testing-library/svelte';
+import { describe, it, expect, vi } from 'vitest';
 import Button from './Button.svelte';
 
 describe('Button component', () => {

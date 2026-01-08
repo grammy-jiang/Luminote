@@ -14,6 +14,7 @@ SvelteKit-based frontend for the Luminote translation workbench.
 ## Prerequisites
 
 - **Node.js 22+** (LTS version recommended)
+  - **Note:** Node.js 22 is the project standard as specified in ARCHITECTURE.md and CONTRIBUTING.md. While Node.js 20 may work, 22+ is required for consistency and to ensure access to the latest features.
 - **npm 10+** (comes with Node.js)
 
 **Check your versions:**
