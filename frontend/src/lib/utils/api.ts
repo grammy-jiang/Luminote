@@ -187,7 +187,10 @@ export class APIClient {
 	 * @param params - Optional query parameters
 	 * @returns Promise resolving to the response data
 	 */
-	async get<T>(endpoint: string, params?: Record<string, string | number | boolean>): Promise<APIResponse<T>> {
+	async get<T>(
+		endpoint: string,
+		params?: Record<string, string | number | boolean>
+	): Promise<APIResponse<T>> {
 		return this.request<T>(endpoint, { method: 'GET', params });
 	}
 
