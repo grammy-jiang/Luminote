@@ -12,8 +12,8 @@ from fastapi.testclient import TestClient
 def test_app_creates_successfully(client: TestClient) -> None:
     """Test that the FastAPI application can be created."""
     assert client.app is not None
-    assert client.app.title == "Luminote API"
-    assert client.app.version == "0.1.0"
+    assert client.app.title == "Luminote API"  # type: ignore[attr-defined]
+    assert client.app.version == "0.1.0"  # type: ignore[attr-defined]
 
 
 @pytest.mark.smoke
