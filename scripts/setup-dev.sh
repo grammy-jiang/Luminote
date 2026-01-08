@@ -40,9 +40,49 @@ command_exists() {
     command -v "$1" >/dev/null 2>&1
 }
 
-# Compare version numbers
+# Compare version numbers - portable approach
 version_ge() {
-    [ "$(printf '%s\n' "$1" "$2" | sort -V | head -n1)" = "$2" ]
+    local ver1="$1"
+    local ver2="$2"
+    
+    # If versions are identical, $1 is >= $2
+    if [ "$ver1" = "$ver2" ]; then
+        return 0
+    fi
+    
+    # Split versions into arrays on '.'
+    IFS='.' read -ra ver1_parts <<< "$ver1"
+    IFS='.' read -ra ver2_parts <<< "$ver2"
+    
+    local len1="${#ver1_parts[@]}"
+    local len2="${#ver2_parts[@]}"
+    local max_len=$len1
+    if [ "$len2" -gt "$max_len" ]; then
+        max_len=$len2
+    fi
+    
+    # Compare each numeric component
+    for ((i=0; i<max_len; i++)); do
+        local part1=0
+        local part2=0
+        
+        if [ "$i" -lt "$len1" ]; then
+            part1="${ver1_parts[i]}"
+        fi
+        if [ "$i" -lt "$len2" ]; then
+            part2="${ver2_parts[i]}"
+        fi
+        
+        # Numeric comparison
+        if [ "$part1" -gt "$part2" ]; then
+            return 0
+        elif [ "$part1" -lt "$part2" ]; then
+            return 1
+        fi
+    done
+    
+    # All components are equal
+    return 0
 }
 
 # Main setup process
@@ -185,13 +225,15 @@ main() {
     # Install pre-commit if not already installed
     if ! command_exists pre-commit; then
         print_info "Installing pre-commit..."
+        cd backend || exit 1
+        # shellcheck disable=SC1091
+        source .venv/bin/activate
         if command_exists uv; then
-            # shellcheck disable=SC1091
-            cd backend && source .venv/bin/activate && uv pip install pre-commit && cd ..
+            uv pip install pre-commit
         else
-            # shellcheck disable=SC1091
-            cd backend && source .venv/bin/activate && pip install pre-commit && cd ..
+            pip install pre-commit
         fi
+        cd .. || exit 1
         print_success "pre-commit installed"
     else
         print_success "pre-commit already installed"
@@ -199,8 +241,11 @@ main() {
 
     # Install pre-commit hooks
     print_info "Installing pre-commit hooks..."
+    cd backend || exit 1
     # shellcheck disable=SC1091
-    cd backend && source .venv/bin/activate && pre-commit install && cd ..
+    source .venv/bin/activate
+    pre-commit install
+    cd .. || exit 1
     print_success "Pre-commit hooks installed"
 
     # Step 5: Verify setup
@@ -230,8 +275,8 @@ main() {
     print_info "Testing frontend setup..."
     cd frontend || exit 1
 
-    # Check if npm test works (just check if the command exists)
-    if npm run test -- --version > /dev/null 2>&1; then
+    # Check that the npm test command is resolvable (basic check, don't run tests)
+    if npm run test -- --help > /dev/null 2>&1; then
         print_success "Frontend test environment is ready"
     else
         print_warning "Frontend test command check had issues"

@@ -207,8 +207,9 @@ git commit -m "your message"
 pre-commit run --all-files
 
 # Run specific hook
-pre-commit run black --all-files
+pre-commit run ruff-format --all-files
 pre-commit run ruff --all-files
+pre-commit run mypy --all-files
 
 # Skip hooks if needed (use sparingly)
 git commit --no-verify -m "your message"
@@ -219,18 +220,24 @@ git commit --no-verify -m "your message"
 The following checks run automatically on commit:
 
 - **Python Code Quality:**
-  - `isort` - Sort and organize imports
-  - `black` - Format code to Black standards
-  - `ruff` - Lint for code issues and style
-  - `mypy` - Type checking
+  - `ruff` - Lint for code issues and style (with auto-fix)
+  - `ruff-format` - Format code (replaces Black)
   - `pyupgrade` - Upgrade syntax for Python 3.12+
+  - `docformatter` - Format docstrings
+  - `mypy` - Type checking
   - `bandit` - Security vulnerability scanning
+
+- **Configuration Files:**
+  - `yamlfmt` - Format YAML files
+  - `toml-sort` - Sort and format TOML files
+  - `yamllint` - Lint YAML files
 
 - **File Quality:**
   - Trailing whitespace removal
   - End-of-file fixes
-  - YAML, TOML, and JSON validation and formatting
+  - JSON validation and formatting
   - Merge conflict detection
+  - Case conflict detection
 
 - **Shell Scripts:**
   - `shellcheck` - Shell script linting

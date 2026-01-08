@@ -126,7 +126,7 @@ scripts\setup-dev.bat   # Windows
 # - Check Python 3.12+ and Node.js 22+ are installed
 # - Set up backend virtual environment and install dependencies
 # - Install frontend dependencies
-# - Install pre-commit hooks
+# - Install pre-commit hooks (will run automatically on future git commits)
 # - Create .env files from examples
 ```
 

@@ -63,8 +63,9 @@ if %ERRORLEVEL% neq 0 (
     exit /b 1
 )
 
-for /f "tokens=1 delims=v" %%i in ('node --version') do set NODE_VERSION=%%i
-echo %INFO_MARK% Found Node.js %NODE_VERSION%
+for /f %%i in ('node --version') do set NODE_VERSION_RAW=%%i
+set NODE_VERSION=%NODE_VERSION_RAW:~1%
+echo %INFO_MARK% Found Node.js v%NODE_VERSION%
 
 REM Extract major version
 for /f "tokens=1 delims=." %%a in ("%NODE_VERSION%") do set NODE_MAJOR=%%a
@@ -221,11 +222,11 @@ if %ERRORLEVEL% neq 0 (
     ) else (
         pip install pre-commit
     )
-    cd ..
     if %ERRORLEVEL% neq 0 (
         echo %CROSS_MARK% Failed to install pre-commit
         exit /b 1
     )
+    cd ..
     echo %CHECK_MARK% pre-commit installed
 ) else (
     echo %CHECK_MARK% pre-commit already installed
@@ -275,8 +276,8 @@ REM Test frontend
 echo %INFO_MARK% Testing frontend setup...
 cd frontend
 
-REM Check if npm test works
-npm run test -- --version >nul 2>&1
+REM Check that the npm test command is resolvable (basic check, don't run tests)
+npm run test -- --help >nul 2>&1
 if %ERRORLEVEL% equ 0 (
     echo %CHECK_MARK% Frontend test environment is ready
 ) else (
