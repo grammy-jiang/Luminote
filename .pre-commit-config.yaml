@@ -1,0 +1,139 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+exclude: '^\.gitignore$'
+repos:
+  # ==== File Quality Checks ====
+  # Fast, foundational checks that catch basic issues
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      # Critical checks - prevent bad commits
+      - id: check-merge-conflict
+      - id: check-case-conflict
+      # File validation - size and type checks
+      - id: check-added-large-files
+      - id: check-symlinks
+      # Syntax validation - file format checks
+      - id: check-yaml
+      - id: check-toml
+      - id: check-json
+      - id: check-ast
+      # Python code quality
+      - id: check-builtin-literals
+      - id: check-docstring-first
+      - id: debug-statements
+      # Executable validation
+      - id: check-executables-have-shebangs
+      - id: check-shebang-scripts-are-executable
+      # Formatting fixes - run last
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: mixed-line-ending
+      - id: pretty-format-json
+        args:
+          - --autofix
+          - --indent
+          - "4"
+          - --no-sort-keys
+  # ==== Configuration File Formatters ====
+  # Format config files before linting them
+  - repo: https://github.com/google/yamlfmt
+    rev: v0.21.0
+    hooks:
+      - id: yamlfmt
+  - repo: https://github.com/pappasam/toml-sort
+    rev: v0.24.3
+    hooks:
+      - id: toml-sort-fix
+        args:
+          - --in-place
+          - --no-sort-tables
+  # ==== Python Code Quality ====
+  # Modernize, format, and lint Python code
+  - repo: https://github.com/asottile/pyupgrade
+    rev: v3.21.2
+    hooks:
+      - id: pyupgrade
+        args: [--py312-plus]
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.10
+    hooks:
+      - id: ruff
+        args: [--fix]
+      - id: ruff-format
+  - repo: local
+    hooks:
+      - id: docformatter
+        name: docformatter
+        entry: docformatter
+        language: system
+        types: [python]
+        args:
+          - --in-place
+          - --wrap-summaries
+          - "88"
+          - --wrap-descriptions
+          - "88"
+  # ==== Python Analysis ====
+  # Type checking, security, and architecture analysis
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.19.1
+    hooks:
+      - id: mypy
+        additional_dependencies: []
+        args: [--ignore-missing-imports]
+  - repo: https://github.com/PyCQA/bandit
+    rev: 1.9.2
+    hooks:
+      - id: bandit
+        args:
+          - --configfile
+          - pyproject.toml
+        additional_dependencies: ["bandit[toml]"]
+  # ==== Documentation ====
+  # Markdown and documentation tools
+  # Markdown formatter (auto-fix line wrapping and formatting)
+  - repo: https://github.com/executablebooks/mdformat
+    rev: 0.7.17
+    hooks:
+      - id: mdformat
+        additional_dependencies:
+          - mdformat-gfm # GitHub Flavored Markdown
+          - mdformat-frontmatter # YAML frontmatter
+          - mdformat-tables # Better table formatting
+          - mdformat-toc # Auto-generate table of contents
+        args:
+          - --wrap
+          - "80"
+  # Markdown linter (checks for issues)
+  - repo: https://github.com/jackdewinter/pymarkdown
+    rev: v0.9.34
+    hooks:
+      - id: pymarkdown
+  # ==== Shell Scripts ====
+  # Shell script linting and validation
+  - repo: https://github.com/shellcheck-py/shellcheck-py
+    rev: v0.11.0.1
+    hooks:
+      - id: shellcheck
+  - repo: https://github.com/openstack/bashate
+    rev: 2.1.1
+    hooks:
+      - id: bashate
+        name: bashate
+        description: This hook runs bashate for linting shell scripts
+        entry: bashate
+        language: python
+        types: [shell]
+  # ==== YAML Linting ====
+  # Lint YAML files after formatting
+  - repo: https://github.com/adrienverge/yamllint
+    rev: v1.37.1
+    hooks:
+      - id: yamllint
+  # ==== Makefile ====
+  # Makefile linting
+  - repo: https://github.com/mrtazz/checkmake
+    rev: 0.2.2
+    hooks:
+      - id: checkmake

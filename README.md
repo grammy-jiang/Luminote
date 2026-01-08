@@ -1,170 +1,218 @@
-![Luminote (placeholder)](docs/assets/logo-placeholder.svg)
+<!-- mdformat-toc start --slug=github --maxlevel=3 --minlevel=1 -->
 
-# Luminote
+- [Luminote](#luminote)
+  - [Why Luminote?](#why-luminote)
+  - [Product Roadmap & Features](#product-roadmap--features)
+  - [Quick Start](#quick-start)
+    - [Prerequisites](#prerequisites)
+    - [Installation](#installation)
+    - [Usage](#usage)
+  - [Documentation](#documentation)
+    - [Planning & Architecture](#planning--architecture)
+    - [Feature Documentation](#feature-documentation)
+    - [Development](#development)
+  - [Support & Community](#support--community)
+  - [Contributing](#contributing)
+  - [License](#license)
 
-> AI two‑pane translation reader for fast, accurate comprehension of web content.
+<!-- mdformat-toc end -->
 
-Luminote is a dual‑pane (original/translation) AI translation reader that emphasizes translation quality and uninterrupted reading flow. The original content appears on the left (reader‑mode), and the translation is the primary, persistent view on the right. Insights and verification stay off by default and are triggered when needed.
+![Luminote](docs/assets/logo.webp)
 
-## Installing / Getting Started
+# Luminote<a name="luminote"></a>
 
-Clone the repo, run the FastAPI backend, and start the Svelte frontend.
+[![License: GPL-3.0](https://img.shields.io/badge/License-GPL%203.0-blue.svg)](LICENSE)
+[![Python 3.12+](https://img.shields.io/badge/python-3.12+-blue.svg)](https://www.python.org/downloads/)
+[![Node.js 22+](https://img.shields.io/badge/node.js-22+-green.svg)](https://nodejs.org/)
+[![Status: Planning](https://img.shields.io/badge/status-planning-yellow.svg)](docs/PROJECT-STATUS.md)
+
+> AI-powered two-pane translation workbench for fast, accurate understanding and
+> verification of web content.
+
+**🔨 Project Status:** Currently in planning phase. See
+[PROJECT-STATUS.md](docs/PROJECT-STATUS.md) for detailed progress.
+
+**✅ Planning Completed:**
+
+- Feature dependency analysis
+  ([feature-dependency-analysis.md](docs/feature-dependency-analysis.md))
+- Infrastructure requirements
+  ([infrastructure-requirements.md](docs/infrastructure-requirements.md))
+- Architecture decision records ([adr/](docs/adr/))
+- Atomic features breakdown ([atomic-features.md](docs/atomic-features.md))
+- Tech stack layer mapping ([layer-mapping.md](docs/layer-mapping.md))
+- Implementation sequence
+  ([implementation-sequence.md](docs/implementation-sequence.md))
+
+**What makes Luminote different**
+
+- **Two-pane reading**: source on the left (reader-mode), **translation is the
+  primary, persistent view** on the right
+- **Selection commands**: select text on either pane → explain / define terms /
+  summarize / (later) verify
+- **Versioned artifacts**: notes/highlights/history + prompt-driven regeneration
+  (keep recent versions)
+
+Luminote is a local-first, AI-driven reading workbench that transforms web
+materials into **understandable, verifiable, and reviewable** knowledge assets.
+The original content appears on the left in reader-mode, and the AI translation
+is your primary, persistent view on the right. AI insights and verification
+capabilities are on-demand and user-controlled.
+
+## Why Luminote?<a name="why-luminote"></a>
+
+Most translation tools stop at converting words. Luminote targets the real
+problem: **fast, accurate understanding and verification** of high-density
+materials—news articles, research papers, technical documentation, financial
+reports. Translation is the core function, but it serves a bigger goal:
+**understand + verify + retain**.
+
+## Product Roadmap & Features<a name="product-roadmap--features"></a>
+
+**Phase 1**
+
+- [ ] Dual-pane translation with progressive, block-level rendering
+- [ ] Reader-mode extraction from **most public URLs** (titles, paragraphs,
+  lists, quotes, code, images)
+- [ ] BYOK configuration for target language, provider/model, and API key
+- [ ] Clear error handling for fetch failures, invalid keys, and rate limits
+- [ ] Block-level synchronization with hover/click linkage between panes
+
+**Phase 2**
+
+- [ ] Re-translate per-block or full document with custom prompts
+- [ ] Local visit history and quick paste-text translation (fallback when
+  extraction fails)
+- [ ] Selection-based commands: Explain, Define terms, Summarize (and save as
+  notes)
+- [ ] Prompt templates and termbase setup; translation versioning (keep last
+  versions)
+
+**Phase 3**
+
+- [ ] On-demand AI insights and verification packs (claims checklist, internal
+  consistency)
+- [ ] Highlights, notes, and saved AI explanations
+- [ ] Link cards with bilingual summaries; optional web-browsing/RAG with
+  citations
+- [ ] Multi-model cross-check and refinement (enhanced mode)
+
+For detailed specifications, see
+[docs/feature-specifications.md](docs/feature-specifications.md).
+
+## Quick Start<a name="quick-start"></a>
+
+### Prerequisites<a name="prerequisites"></a>
+
+- Backend: Python 3.12+, FastAPI
+- Frontend: Node.js 22+, SvelteKit
+- Access: A valid API key from OpenAI, Anthropic, or other supported providers
+
+### Installation<a name="installation"></a>
 
 ```bash
+
 # Clone and open
+
 git clone https://github.com/grammy-jiang/Luminote.git
 cd Luminote
 
-# Explore product docs
-# - docs/purpose_and_functionality.md
-# - docs/pov_features.md
-
 # Run backend (FastAPI)
+
 cd backend
 python -m venv .venv
 . .venv/Scripts/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
 pip install -r requirements.txt
-copy .env.example .env   # or manually create .env
+
+# Configure environment
+
+cp .env.example .env  # Linux/Mac: cp; Windows: copy
+
+# Edit .env and set:
+
+#   LUMINOTE_TARGET_LANG (e.g., zh, en, ja)
+
+#   LUMINOTE_PROVIDER (e.g., openai, anthropic)
+
+#   LUMINOTE_MODEL (e.g., gpt-4o-mini, claude-3-5-sonnet)
+
+#   LUMINOTE_API_KEY (your API key)
+
 uvicorn app.main:app --reload --port 8000
+
 ```
-
-```powershell
-# Frontend (Svelte + Rollup, TypeScript)
-cd frontend
-npm install
-npm run dev          # builds and serves with live reload
-# in another terminal, run the backend: uvicorn app.main:app --reload --port 8000
-```
-
-Notes:
-- The UI expects the API at http://127.0.0.1:8000 by default. You can change it in the top‑right input (persisted in localStorage).
-- Minimal styling on purpose; focus is on the two‑pane interactions and API flow.
-- Main functions live on the primary view, with tabs for settings and history.
-
-### Initial Configuration (BYOK)
-
-Planned environment variables (final names may change):
-
-- `LUMINOTE_TARGET_LANG`: Target language (e.g., `zh`, `en`, `ja`).
-- `LUMINOTE_PROVIDER`: Provider id (e.g., `openai`, `azure_openai`, `anthropic`, `groq`).
-- `LUMINOTE_MODEL`: Model name (e.g., `gpt-4.1-mini`, `claude-3.5-sonnet`).
-- `LUMINOTE_API_KEY`: API key for the chosen provider.
-
-Notes:
-- Keys are stored locally for POV. Provide Test/Clear actions; hardening later.
-- Translation is single‑model initially; multi‑model features are out of scope for the POV.
-
-## Features
-
-Core POV (Phase 0):
-- Stable two‑pane translation with progressive, block‑level rendering
-- Single‑user local settings: target language, provider/model, BYOK key
-- Reader‑mode extraction (titles, paragraphs, lists, quotes, code, images)
-- Clear error handling (fetch failures, invalid keys, rate limits) and fallbacks
-
-Planned next steps:
-- Re‑translate per‑block/full document with a light prompt
-- Local history of visits
-- Paste‑text quick translate when fetch/extraction fails
-- Highlights/notes; save AI explanations (later phase)
-- On‑demand insights and verification that do not disrupt reading (later phase)
-
-See detailed product scope in docs.
-
-## Configuration
-
-User‑tunable settings (POV scope):
-- Target language
-- Provider and model (single model)
-- API key (BYOK)
-
-Optional behaviors:
-- Manual source‑language override
-- Lightweight re‑translate for style/terminology tweaks
-
-## Minimal API (POV‑ready)
-
-Internal API surface planned for the app backend:
-
-- `GET /health`: Connectivity and configuration checks (e.g., provider reachability)
-- `POST /fetch`: Retrieve raw content from URL via backend proxy
-- `POST /extract`: Parse into reading‑mode blocks (title, paragraphs, lists, quotes, code, images)
-- `POST /translate`: Translate blocks progressively using configured provider/model
-
-These endpoints are designed for reliability, cost control, and consistent UX.
-
-## Roadmap (Phasing Summary)
-
-- Phase 0 (POV v0.0)
-  - URL input; backend fetch + reader‑mode extraction
-  - Left original rendering; right translation (progressive)
-  - Local settings for target language/provider/model/API key
-  - Basic error handling; optional block hover/click linkage
-- Phase 0.5 (POV v0.1)
-  - Local history (recent visits)
-  - Re‑translate current block/full doc (light prompt)
-  - Paste‑text quick translate on failure
-- Phase 1 (POV v0.3)
-  - Highlights/notes; save AI explanations
-  - Dual context (Translation/Reading) and link cards
-  - On‑demand insights and verification (offline)
-  - Translation versioning (keep last 2)
-- Phase 2 (V1)
-  - Interactive login/Cloudflare (remote session) pre‑extraction
-  - Insights/verification with external retrieval + citations
-  - Finance: structured metric extraction; document comparisons
-  - History retrieval (keyword/vector)
-- Phase 3 (V2)
-  - PDF/EPUB support
-  - Multi‑model arbitration/debate (ROI‑gated)
-  - Optional multi‑user/team sharing/cloud sync
-
-## Developing
-
-Current layout:
-- `backend/`: FastAPI app, env-driven config (SQLite by default, Postgres-ready).
-- `frontend/`: Svelte + Rollup + TypeScript single-page UI with tabs (main/settings/history).
-- `docs/`: Product and POV documents (see docs/purpose_and_functionality.md).
-
-Standards (to be formalized in CONTRIBUTING):
-- TypeScript for frontend; Python with FastAPI for backend.
-- Lint/format to be added; keep PRs small and focused.
-
-## Building
-
-Backend: run via uvicorn (no separate build step yet).
-
-Frontend:
 
 ```bash
-npm run build
+
+# Frontend (Svelte + Rollup, TypeScript) - in a new terminal
+
+cd frontend
+npm install
+npm run dev  # serves at http://localhost:5000
+
 ```
 
-## Deploying / Publishing
+### Usage<a name="usage"></a>
 
-Not productionized yet. Target options:
-- Self-hosted FastAPI + static frontend on a small VM/container.
-- Later: CDN for frontend, API behind a gateway/load balancer.
+1. Enter a URL in the input field
+1. Click "Translate" to fetch and translate the content
+1. View original content (left) and translation (right) side-by-side
+1. Hover over blocks to see synchronized highlighting
+1. Configure settings in the top-right menu (language, provider, model)
 
-## Links
+## Documentation<a name="documentation"></a>
 
-- Product purpose & functionality: docs/purpose_and_functionality.md
-- POV features: docs/pov_features.md
-- Repository: https://github.com/grammy-jiang/Luminote
-- Issue tracker: https://github.com/grammy-jiang/Luminote/issues
+### Planning & Architecture<a name="planning--architecture"></a>
 
-For sensitive security issues, please contact the maintainer directly rather than filing a public issue.
+- **[Project Status](docs/PROJECT-STATUS.md)** ⭐ - Current progress, next steps,
+  and achievements
+- **[GitHub Issue Methodology](docs/github-issue-creation-methodology.md)** -
+  Systematic issue creation process
+- **[Feature Dependencies](docs/feature-dependency-analysis.md)** - Dependency
+  graphs and implementation batches
+- **[Infrastructure Requirements](docs/infrastructure-requirements.md)** -
+  Complete setup and tooling guide
+- **[Architecture Decision Records](docs/adr/)** - Key architectural choices and
+  rationale
 
-## Contributing
+### Feature Documentation<a name="feature-documentation"></a>
 
-Contributions are welcome! If you’d like to help:
-- Fork the repo and create a feature branch
-- Keep changes focused and add tests when reasonable
-- Open a pull request with a clear description and rationale
+- **[Feature Specifications](docs/feature-specifications.md)** - Comprehensive
+  specifications for all phases
+- **[API Reference](docs/API.md)** - Backend API endpoints and usage (coming
+  soon)
+- **[Architecture Overview](ARCHITECTURE.md)** - System architecture and design
+  patterns
 
-A full guide (coding style, commit conventions, branching model) will live in `CONTRIBUTING.md` when available.
+### Development<a name="development"></a>
 
-## Licensing
+- **[Contributing Guide](CONTRIBUTING.md)** - Setup, coding standards, and
+  workflow
+- **[Development Environment](docs/infrastructure-requirements.md#phase-0-infrastructure-setup-week-1)**
+  \- Local setup instructions
 
-The code in this project is licensed under the GNU General Public License v3.0 (GPL-3.0). See [LICENSE](LICENSE) for the full text. By contributing, you agree that your contributions will be licensed under GPL-3.0.
+## Support & Community<a name="support--community"></a>
 
+- Bug reports & feature requests:
+  [GitHub Issues](https://github.com/grammy-jiang/Luminote/issues)
+- Questions & discussions:
+  [GitHub Discussions](https://github.com/grammy-jiang/Luminote/discussions)
+- Security vulnerabilities: Contact the maintainer directly rather than filing
+  public issues
+- Status: This project is actively maintained; see
+  [CONTRIBUTING.md](CONTRIBUTING.md) for development info
+
+## Contributing<a name="contributing"></a>
+
+Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for:
+
+- Development setup
+- Coding style and conventions
+- Branching model and pull request workflow
+- How to report bugs and propose features
+
+## License<a name="license"></a>
+
+This project is licensed under the **GNU General Public License v3.0
+(GPL-3.0)**. See [LICENSE](LICENSE) for details. By contributing, you agree your
+contributions will be licensed under GPL-3.0.
