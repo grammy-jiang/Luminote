@@ -200,7 +200,7 @@ npm run dev  # serves at http://localhost:5000
 
 - **[Project Status](docs/PROJECT-STATUS.md)** ⭐ - Current progress, next steps,
   and achievements
-- **[GitHub Issue Methodology](docs/github-issue-creation-methodology.md)** -
+- **[GitHub Issue Methodology](docs/best_practices/github-issue-creation-methodology.md)** -
   Systematic issue creation process
 - **[Feature Dependencies](docs/feature-dependency-analysis.md)** - Dependency
   graphs and implementation batches
