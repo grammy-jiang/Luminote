@@ -140,6 +140,15 @@ cd backend && source .venv/bin/activate && luminote serve
 cd frontend && npm run dev
 ```
 
+**Verify setup:**
+
+- Backend: http://localhost:8000/health (should return `{"status": "ok"}`)
+- Frontend: http://localhost:5000 (should show the app)
+- API docs: http://localhost:8000/docs (interactive API documentation)
+
+**Troubleshooting:** If you encounter issues, see
+[docs/DEVELOPMENT.md](docs/DEVELOPMENT.md#troubleshooting) for solutions.
+
 **Manual Setup:**
 
 <details>
@@ -211,6 +220,8 @@ npm run dev  # serves at http://localhost:5000
 
 ### Development<a name="development"></a>
 
+- **[Development Guide](docs/DEVELOPMENT.md)** ⭐ - Comprehensive development
+  workflow and troubleshooting
 - **[Contributing Guide](CONTRIBUTING.md)** - Setup, coding standards, and
   workflow
 - **[Development Environment](docs/infrastructure-requirements.md#phase-0-infrastructure-setup-week-1)**
