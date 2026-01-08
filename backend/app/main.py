@@ -2,6 +2,7 @@
 Luminote FastAPI application entry point.
 """
 
+import time
 import uuid
 from collections.abc import AsyncIterator, Awaitable, Callable
 from contextlib import asynccontextmanager
@@ -45,6 +46,7 @@ def create_app() -> FastAPI:
         allow_credentials=True,
         allow_methods=["*"],
         allow_headers=["*"],
+        expose_headers=["X-Request-ID", "X-Response-Time"],
     )
 
     # Add request ID middleware
@@ -57,6 +59,34 @@ def create_app() -> FastAPI:
         request.state.request_id = request_id
         response = await call_next(request)
         response.headers["X-Request-ID"] = request_id
+        return response
+
+    # Add timing middleware
+    @fastapi_app.middleware("http")
+    async def add_timing(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        """Add response timing and log slow requests."""
+        start_time = time.perf_counter()
+        response = await call_next(request)
+        duration = time.perf_counter() - start_time
+
+        # Add X-Response-Time header in milliseconds
+        response.headers["X-Response-Time"] = f"{duration * 1000:.2f}ms"
+
+        # Log slow requests (>1s)
+        if duration > 1.0:
+            request_id = getattr(request.state, "request_id", "unknown")
+            logger.warning(
+                f"Slow request detected: {request.method} {request.url.path}",
+                extra={
+                    "request_id": request_id,
+                    "duration_ms": f"{duration * 1000:.2f}",
+                    "path": request.url.path,
+                    "method": request.method,
+                },
+            )
+
         return response
 
     # Register exception handlers
