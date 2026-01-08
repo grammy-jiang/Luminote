@@ -32,7 +32,7 @@ This directory contains GitHub Actions workflows for Continuous Integration and 
 
 **Jobs:**
 - **Frontend Quality Checks**: Runs linting, formatting, type checking, and tests
-  - Node.js 22 setup with npm caching
+  - Node.js 22 setup (caching disabled due to no package-lock.json)
   - Install dependencies with `npm install`
   - Run `npx svelte-kit sync` to generate `.svelte-kit` directory
   - Run `npm run lint` (ESLint)
@@ -161,7 +161,7 @@ When updating dependencies or tools:
 ## Future Improvements
 
 - [ ] Add deployment workflows (CD)
-- [ ] Add caching for faster builds
+- [ ] Add frontend npm caching (requires package-lock.json)
 - [ ] Add matrix testing for multiple Python/Node versions
 - [ ] Add security scanning (CodeQL, Dependabot)
 - [ ] Add performance benchmarks
