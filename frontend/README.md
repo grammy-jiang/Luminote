@@ -13,7 +13,7 @@ SvelteKit-based frontend for the Luminote translation workbench.
 
 ## Prerequisites
 
-- Node.js 22+ (current version: v20 also works)
+- Node.js 20+
 - npm 10+
 
 ## Quick Start
@@ -79,14 +79,14 @@ frontend/
 │   ├── lib/
 │   │   ├── components/     # Reusable Svelte components
 │   │   ├── stores/         # Svelte stores for state management
-│   │   └── utils/          # Utility functions and helpers
+│   │   ├── utils/          # Utility functions and helpers
+│   │   └── *.test.ts       # Test files co-located with the code they test
 │   ├── routes/             # SvelteKit pages and layouts
 │   │   ├── +layout.svelte  # Root layout
 │   │   └── +page.svelte    # Home page
 │   ├── app.html            # HTML template
 │   └── app.css             # Global styles (Tailwind)
 ├── static/                 # Static assets
-├── tests/                  # Test files
 └── [config files]          # Various configuration files
 ```
 
