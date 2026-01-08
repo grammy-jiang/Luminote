@@ -110,47 +110,72 @@ For detailed specifications, see
 
 ### Installation<a name="installation"></a>
 
+**Automated Setup (Recommended):**
+
 ```bash
+# Clone the repository
+git clone https://github.com/grammy-jiang/Luminote.git
+cd Luminote
 
+# Run the setup script
+./scripts/setup-dev.sh  # Linux/macOS
+# OR
+scripts\setup-dev.bat   # Windows
+
+# The script will:
+# - Check Python 3.12+ and Node.js 22+ are installed
+# - Set up backend virtual environment and install dependencies
+# - Install frontend dependencies
+# - Install pre-commit hooks
+# - Create .env files from examples
+```
+
+After setup completes, configure your API keys in `backend/.env`, then:
+
+```bash
+# Start backend (in one terminal)
+cd backend && source .venv/bin/activate && luminote serve
+
+# Start frontend (in another terminal)
+cd frontend && npm run dev
+```
+
+**Manual Setup:**
+
+<details>
+<summary>Click to expand manual installation steps</summary>
+
+```bash
 # Clone and open
-
 git clone https://github.com/grammy-jiang/Luminote.git
 cd Luminote
 
 # Run backend (FastAPI)
-
 cd backend
 python -m venv .venv
-. .venv/Scripts/activate  # Windows PowerShell: .venv\Scripts\Activate.ps1
+source .venv/bin/activate  # Windows: .venv\Scripts\activate.bat
 pip install -r requirements.txt
 
 # Configure environment
-
-cp .env.example .env  # Linux/Mac: cp; Windows: copy
+cp .env.example .env  # Windows: copy .env.example .env
 
 # Edit .env and set:
-
 #   LUMINOTE_TARGET_LANG (e.g., zh, en, ja)
-
 #   LUMINOTE_PROVIDER (e.g., openai, anthropic)
-
 #   LUMINOTE_MODEL (e.g., gpt-4o-mini, claude-3-5-sonnet)
-
 #   LUMINOTE_API_KEY (your API key)
 
 uvicorn app.main:app --reload --port 8000
-
 ```
 
 ```bash
-
 # Frontend (Svelte + Rollup, TypeScript) - in a new terminal
-
 cd frontend
 npm install
 npm run dev  # serves at http://localhost:5000
-
 ```
+
+</details>
 
 ### Usage<a name="usage"></a>
 
