@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+import app
 from app.config import get_settings
 from app.core.logging import setup_logging
 
@@ -26,16 +27,16 @@ def create_app() -> FastAPI:
     """Create and configure FastAPI application."""
     settings = get_settings()
 
-    app = FastAPI(
+    fastapi_app = FastAPI(
         title="Luminote API",
-        version="0.1.0",
+        version=app.__version__,
         lifespan=lifespan,
         docs_url="/docs",
         redoc_url="/redoc",
     )
 
     # Configure CORS
-    app.add_middleware(
+    fastapi_app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.CORS_ORIGINS,
         allow_credentials=True,
@@ -43,16 +44,16 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    return app
+    return fastapi_app
 
 
-app = create_app()
+fastapi_application = create_app()
 
 
-@app.get("/health")
+@fastapi_application.get("/health")
 async def health_check() -> dict[str, str]:
     """Health check endpoint."""
-    return {"status": "ok", "version": "0.1.0"}
+    return {"status": "ok", "version": app.__version__}
 
 
 def main() -> None:
@@ -60,7 +61,7 @@ def main() -> None:
     import uvicorn
 
     uvicorn.run(
-        "app.main:app",
+        "app.main:fastapi_application",
         host="0.0.0.0",
         port=8000,
         reload=True,

@@ -5,7 +5,7 @@ Pytest configuration and fixtures.
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
+from app.main import fastapi_application
 
 
 @pytest.fixture
@@ -16,4 +16,4 @@ def client() -> TestClient:
     Returns:
         TestClient instance
     """
-    return TestClient(app)
+    return TestClient(fastapi_application)
