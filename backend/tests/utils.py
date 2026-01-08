@@ -30,7 +30,7 @@ def validate_request_id(request_id: str) -> bool:
     """
     try:
         uuid_obj = uuid.UUID(request_id)
-        return str(uuid_obj) == request_id
+        return uuid_obj.version == 4 and str(uuid_obj) == request_id
     except (ValueError, AttributeError):
         return False
 
