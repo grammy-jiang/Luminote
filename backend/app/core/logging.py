@@ -10,7 +10,7 @@ from app.config import get_settings
 
 def setup_logging() -> None:
     """
-    Configure structured JSON logging.
+    Configure structured logging.
 
     Sets up logging with appropriate level and format.
     """

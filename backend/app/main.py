@@ -14,13 +14,12 @@ from app.core.logging import setup_logging
 
 
 @asynccontextmanager
-async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+async def lifespan(fastapi_app: FastAPI) -> AsyncIterator[None]:
     """Handle startup and shutdown events."""
     # Startup
     setup_logging()
     yield
     # Shutdown
-    pass
 
 
 def create_app() -> FastAPI:
@@ -60,11 +59,13 @@ def main() -> None:
     """Entry point for CLI command."""
     import uvicorn
 
+    settings = get_settings()
+
     uvicorn.run(
         "app.main:fastapi_application",
-        host="0.0.0.0",
-        port=8000,
-        reload=True,
+        host=settings.DEV_HOST,
+        port=settings.DEV_PORT,
+        reload=settings.DEV_RELOAD,
         log_level="info",
     )
 

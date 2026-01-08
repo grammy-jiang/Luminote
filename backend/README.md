@@ -42,12 +42,12 @@ This is the FastAPI backend for Luminote, an AI-powered translation and reading 
 4. **Start the development server:**
 
    ```bash
-   luminote serve
+   luminote
    ```
 
    Or directly:
    ```bash
-   uvicorn app.main:app --reload
+   uvicorn app.main:fastapi_application --reload
    ```
 
 5. **Test the health check:**

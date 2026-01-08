@@ -13,7 +13,6 @@ class Settings(BaseSettings):
     # API Configuration
     API_V1_PREFIX: str = "/api/v1"
     PROJECT_NAME: str = "Luminote"
-    VERSION: str = "0.1.0"
 
     # CORS Configuration
     CORS_ORIGINS: list[str] = [
@@ -23,6 +22,11 @@ class Settings(BaseSettings):
 
     # Logging
     LOG_LEVEL: str = "INFO"
+
+    # Development server configuration
+    DEV_HOST: str = "127.0.0.1"
+    DEV_PORT: int = 8000
+    DEV_RELOAD: bool = True
 
     model_config = SettingsConfigDict(
         env_file=".env",
