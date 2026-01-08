@@ -1,8 +1,14 @@
 # AGENTS.md — Luminote Development Playbook
 
-> Goal: make coding agents productive, safe, and aligned with Luminote's
-> architecture. This is the canonical guide for autonomous work on this
-> repository.
+> This file provides guidance to Claude Code (claude.ai/code) and other coding
+> agents when working with code in this repository. Goal: make coding agents
+> productive, safe, and aligned with Luminote's architecture.
+
+## Overview
+
+Luminote is an AI-powered two-pane translation workbench for fast, accurate
+understanding of web content. The project uses FastAPI (Python 3.12+) for the
+backend and is in active early development (Phase 0/1 implementation).
 
 ## 0) Non-negotiables (read this first)
 
@@ -57,22 +63,31 @@ isort app/ && black app/ && ruff check app/ --no-fix && mypy app/
 pytest -q  # Run with: pytest --cov=app --cov-report=html for coverage
 ```
 
+**Pre-commit hooks:**
+
+```bash
+pre-commit install  # Run once to enable hooks
+pre-commit run --all-files  # Manual run
+```
+
 ### Frontend (Node.js 22+)
 
-**Install dependencies:**
+**Note:** Frontend directory doesn't exist yet - it's planned for future phases.
+
+**Planned dependencies:**
 
 ```bash
 cd frontend
 npm install
 ```
 
-**Run development server:**
+**Planned development server:**
 
 ```bash
 npm run dev  # Serves at http://localhost:5000
 ```
 
-**Quality checks:**
+**Planned quality checks:**
 
 ```bash
 cd frontend
@@ -123,6 +138,17 @@ Luminote/
 
 ```
 
+### Entry points
+
+**Backend CLI command** (defined in `backend/pyproject.toml`):
+
+```toml
+[project.scripts]
+luminote = "app.main:main"
+```
+
+This allows `luminote serve` to run the development server via `uvicorn`.
+
 ### Key modules & their coverage requirements
 
 | Module          | Purpose                          | Coverage |
@@ -132,6 +158,80 @@ Luminote/
 | `app/services/` | AI providers, external services  | ≥85%     |
 | `app/schemas/`  | Pydantic models                  | ≥85%     |
 | Frontend tests  | Component & store tests          | ≥85%     |
+
+### Middleware Order (defined in main.py)
+
+Middleware executes in **reverse order of definition**:
+
+1. **Request ID middleware** (executes first) - adds unique X-Request-ID to each
+   request
+1. **Timing middleware** (executes last) - adds X-Response-Time header, logs
+   slow requests (>1s)
+1. **CORS middleware** - configured via settings.CORS_ORIGINS
+
+**Important:** Understanding this order is critical when debugging request flow
+or adding new middleware.
+
+### Exception Handling Pattern
+
+Custom exceptions inherit from `LuminoteException` (see `app/core/errors.py`):
+
+- Always include: `code`, `message`, `status_code`, `details`
+- Centralized handler in `main.py` adds `request_id` and logs appropriately
+- See ADR-004 for complete error handling patterns
+
+**Example:**
+
+```python
+from app.core.errors import LuminoteException
+
+raise LuminoteException(
+    code="INVALID_URL",
+    message="URL validation failed",
+    status_code=400,
+    details={"url": url, "reason": "Invalid scheme"}
+)
+```
+
+### Configuration Management
+
+Uses Pydantic Settings (`app/config.py`):
+
+- Loads from `.env` file (see `backend/.env.example`)
+- Cached via `@lru_cache` decorator
+- Access via `get_settings()`
+- Key settings: `API_V1_PREFIX`, `CORS_ORIGINS`, `LOG_LEVEL`, `DEV_*`
+
+### API Versioning (ADR-001)
+
+All API endpoints use `/api/v1/` prefix:
+
+- Health check: `/health` (no version prefix)
+- All other endpoints: `/api/v1/{resource}`
+- Use resource-based naming (e.g., `/api/v1/translations`, not
+  `/api/v1/translate`)
+
+### Testing Requirements
+
+**Coverage thresholds:**
+
+- `app/core/` modules: **≥95%** (strictly enforced)
+- All other modules: **≥85%**
+- Frontend tests: **≥85%** (when implemented)
+
+**Test markers** (defined in `pyproject.toml`):
+
+- `@pytest.mark.unit` - Fast, mocked dependencies
+- `@pytest.mark.smoke` - Critical path, happy path only
+- `@pytest.mark.e2e` - Full workflow with mocked external services
+
+**Test client fixture** (in `conftest.py`):
+
+```python
+def test_my_endpoint(client):
+    response = client.get("/health")
+    assert response.status_code == 200
+```
 
 ## 3) Working agreements for coding agents
 
@@ -336,6 +436,20 @@ Key principles:
 
 ## 6) Boundaries (what NOT to do)
 
+### Critical pitfalls to avoid
+
+1. **Don't expose API keys**: Backend handles all AI provider calls; frontend
+   never sees keys
+1. **Don't auto-trigger AI**: All AI operations must be explicit user actions
+1. **Don't replace translation pane**: Core UX principle - translation always
+   visible on right
+1. **Don't skip type hints**: Mypy strict mode requires complete annotations
+1. **Don't use generic exceptions**: Use `LuminoteException` hierarchy (ADR-004)
+1. **Don't forget request context**: Log with `request_id` from `request.state`
+1. **Don't test against real APIs**: Always mock external services
+
+### Files and dependencies
+
 - **Do not modify:**
 
   - `pyproject.toml` or `package.json` lock files (unless required by the change
@@ -351,12 +465,15 @@ Key principles:
   - Listing alternatives considered
   - Getting explicit approval from the user
 
+### Architecture violations
+
 - **Do not:**
 
   - Commit secrets (API keys, tokens, internal URLs)
   - Bypass BYOK design (e.g., storing user keys server-side)
   - Add automatic background AI calls
   - Replace the translation pane with alternative content
+  - Log API keys, tokens, or user data
 
 ## 7) Common tasks & how to handle them
 
@@ -488,6 +605,6 @@ Stop and ask the user if:
 
 ---
 
-**Last updated:** January 7, 2026
+**Last updated:** January 9, 2026
 **Applies to:** Luminote Phase 1 development (and beyond)
 ```
