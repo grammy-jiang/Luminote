@@ -30,7 +30,7 @@ global.IntersectionObserver = class IntersectionObserver {
 	constructor() {}
 	disconnect() {}
 	observe() {}
-	takeRecords() {
+	takeRecords(): IntersectionObserverEntry[] {
 		return [];
 	}
 	unobserve() {}
@@ -38,8 +38,11 @@ global.IntersectionObserver = class IntersectionObserver {
 
 // Mock ResizeObserver (not available in jsdom)
 global.ResizeObserver = class ResizeObserver {
-	constructor() {}
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	constructor(_callback: ResizeObserverCallback) {}
 	disconnect() {}
-	observe() {}
-	unobserve() {}
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	observe(_target: Element, _options?: ResizeObserverOptions) {}
+	// eslint-disable-next-line @typescript-eslint/no-unused-vars
+	unobserve(_target: Element) {}
 } as unknown as typeof ResizeObserver;

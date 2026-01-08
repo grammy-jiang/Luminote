@@ -3,10 +3,17 @@
  * Provides custom render functions, mock helpers, and test data generators.
  */
 
-import { render as testingLibraryRender, type RenderResult } from '@testing-library/svelte';
+import {
+	render as testingLibraryRender,
+	type RenderResult,
+	waitFor
+} from '@testing-library/svelte';
 import type { ComponentType, SvelteComponent } from 'svelte';
 import { writable, type Writable } from 'svelte/store';
 import { vi } from 'vitest';
+
+// Re-export waitFor from @testing-library/svelte for convenience
+export { waitFor };
 
 /**
  * Custom render function that wraps Testing Library's render
@@ -75,24 +82,6 @@ export const testData = {
 		request_id: 'error-request-id'
 	})
 };
-
-/**
- * Waits for a condition to be true, with timeout.
- * Useful for waiting for async operations in tests.
- */
-export async function waitFor(
-	condition: () => boolean,
-	timeout = 1000,
-	interval = 50
-): Promise<void> {
-	const startTime = Date.now();
-	while (!condition()) {
-		if (Date.now() - startTime > timeout) {
-			throw new Error('Timeout waiting for condition');
-		}
-		await new Promise((resolve) => setTimeout(resolve, interval));
-	}
-}
 
 /**
  * Creates a mock fetch function for testing API calls.
