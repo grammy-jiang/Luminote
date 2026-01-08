@@ -48,44 +48,44 @@ version_ge() {
 # Main setup process
 main() {
     print_header "Luminote Development Environment Setup"
-    
+
     # Step 1: Check prerequisites
     print_header "Step 1: Checking Prerequisites"
-    
+
     # Check Python version
     if ! command_exists python3; then
         print_error "Python 3 is not installed"
         echo "Please install Python 3.12 or higher from https://www.python.org/downloads/"
         exit 1
     fi
-    
+
     PYTHON_VERSION=$(python3 --version | cut -d' ' -f2)
     print_info "Found Python $PYTHON_VERSION"
-    
+
     if ! version_ge "$PYTHON_VERSION" "3.12.0"; then
         print_error "Python 3.12+ is required, but found $PYTHON_VERSION"
         echo "Please upgrade Python from https://www.python.org/downloads/"
         exit 1
     fi
     print_success "Python version check passed"
-    
+
     # Check Node.js version
     if ! command_exists node; then
         print_error "Node.js is not installed"
         echo "Please install Node.js 22+ from https://nodejs.org/"
         exit 1
     fi
-    
+
     NODE_VERSION=$(node --version | cut -d'v' -f2)
     print_info "Found Node.js v$NODE_VERSION"
-    
+
     if ! version_ge "$NODE_VERSION" "22.0.0"; then
         print_error "Node.js 22+ is required, but found v$NODE_VERSION"
         echo "Please upgrade Node.js from https://nodejs.org/"
         exit 1
     fi
     print_success "Node.js version check passed"
-    
+
     # Check if npm is available
     if ! command_exists npm; then
         print_error "npm is not installed"
@@ -93,12 +93,12 @@ main() {
         exit 1
     fi
     print_success "npm is available"
-    
+
     # Step 2: Backend setup
     print_header "Step 2: Setting Up Backend"
-    
+
     cd backend || exit 1
-    
+
     # Create virtual environment if it doesn't exist
     if [ ! -d ".venv" ]; then
         print_info "Creating Python virtual environment..."
@@ -107,18 +107,18 @@ main() {
     else
         print_warning "Virtual environment already exists, skipping creation"
     fi
-    
+
     # Activate virtual environment
     print_info "Activating virtual environment..."
     # shellcheck disable=SC1091
     source .venv/bin/activate
     print_success "Virtual environment activated"
-    
+
     # Upgrade pip
     print_info "Upgrading pip..."
     python -m pip install --upgrade pip > /dev/null 2>&1
     print_success "pip upgraded"
-    
+
     # Install backend dependencies
     print_info "Installing backend dependencies..."
     if [ -f "pyproject.toml" ]; then
@@ -137,7 +137,7 @@ main() {
         exit 1
     fi
     print_success "Backend dependencies installed"
-    
+
     # Create .env file if it doesn't exist
     if [ ! -f ".env" ]; then
         if [ -f ".env.example" ]; then
@@ -151,19 +151,19 @@ main() {
     else
         print_warning ".env file already exists, skipping creation"
     fi
-    
+
     cd .. || exit 1
-    
+
     # Step 3: Frontend setup
     print_header "Step 3: Setting Up Frontend"
-    
+
     cd frontend || exit 1
-    
+
     # Install frontend dependencies
     print_info "Installing frontend dependencies..."
     npm install
     print_success "Frontend dependencies installed"
-    
+
     # Create .env file if it doesn't exist
     if [ ! -f ".env" ]; then
         if [ -f ".env.example" ]; then
@@ -176,39 +176,42 @@ main() {
     else
         print_warning ".env file already exists, skipping creation"
     fi
-    
+
     cd .. || exit 1
-    
+
     # Step 4: Install pre-commit hooks
     print_header "Step 4: Installing Pre-commit Hooks"
-    
+
     # Install pre-commit if not already installed
     if ! command_exists pre-commit; then
         print_info "Installing pre-commit..."
         if command_exists uv; then
+            # shellcheck disable=SC1091
             cd backend && source .venv/bin/activate && uv pip install pre-commit && cd ..
         else
+            # shellcheck disable=SC1091
             cd backend && source .venv/bin/activate && pip install pre-commit && cd ..
         fi
         print_success "pre-commit installed"
     else
         print_success "pre-commit already installed"
     fi
-    
+
     # Install pre-commit hooks
     print_info "Installing pre-commit hooks..."
+    # shellcheck disable=SC1091
     cd backend && source .venv/bin/activate && pre-commit install && cd ..
     print_success "Pre-commit hooks installed"
-    
+
     # Step 5: Verify setup
     print_header "Step 5: Verifying Setup"
-    
+
     # Test backend
     print_info "Testing backend setup..."
     cd backend || exit 1
     # shellcheck disable=SC1091
     source .venv/bin/activate
-    
+
     # Check if pytest is available
     if python -c "import pytest" 2>/dev/null; then
         # Just check that tests can be collected (don't run them)
@@ -220,27 +223,27 @@ main() {
     else
         print_warning "pytest not installed, skipping backend test verification"
     fi
-    
+
     cd .. || exit 1
-    
+
     # Test frontend
     print_info "Testing frontend setup..."
     cd frontend || exit 1
-    
+
     # Check if npm test works (just check if the command exists)
     if npm run test -- --version > /dev/null 2>&1; then
         print_success "Frontend test environment is ready"
     else
         print_warning "Frontend test command check had issues"
     fi
-    
+
     cd .. || exit 1
-    
+
     # Final success message
     print_header "Setup Complete!"
-    
+
     echo -e "${GREEN}✓ Development environment setup completed successfully!${NC}\n"
-    
+
     echo "Next steps:"
     echo ""
     echo "1. Configure your API keys in backend/.env"
