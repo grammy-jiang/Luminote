@@ -49,19 +49,7 @@ def create_app() -> FastAPI:
         expose_headers=["X-Request-ID", "X-Response-Time"],
     )
 
-    # Add request ID middleware
-    @fastapi_app.middleware("http")
-    async def add_request_id(
-        request: Request, call_next: Callable[[Request], Awaitable[Response]]
-    ) -> Response:
-        """Add unique request ID to each request."""
-        request_id = str(uuid.uuid4())
-        request.state.request_id = request_id
-        response = await call_next(request)
-        response.headers["X-Request-ID"] = request_id
-        return response
-
-    # Add timing middleware
+    # Add timing middleware (defined first, executes last in the chain)
     @fastapi_app.middleware("http")
     async def add_timing(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
@@ -87,6 +75,18 @@ def create_app() -> FastAPI:
                 },
             )
 
+        return response
+
+    # Add request ID middleware (defined second, executes first in the chain)
+    @fastapi_app.middleware("http")
+    async def add_request_id(
+        request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        """Add unique request ID to each request."""
+        request_id = str(uuid.uuid4())
+        request.state.request_id = request_id
+        response = await call_next(request)
+        response.headers["X-Request-ID"] = request_id
         return response
 
     # Register exception handlers

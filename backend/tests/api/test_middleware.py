@@ -74,7 +74,8 @@ def test_slow_request_logging(client: TestClient) -> None:
     """Test that slow requests (>1s) are logged."""
     import asyncio
 
-    # Create a test endpoint that sleeps
+    # Create a test endpoint that sleeps (note: this endpoint persists on the
+    # shared application, but is necessary for testing timing behavior)
     from app.main import fastapi_application
 
     @fastapi_application.get("/slow-test")
@@ -93,20 +94,23 @@ def test_slow_request_logging(client: TestClient) -> None:
         assert "Slow request detected" in call_args[0][0]
         assert "extra" in call_args[1]
         assert "duration_ms" in call_args[1]["extra"]
+        # Verify the logged duration is >= 1000ms (threshold for slow requests)
+        duration_str = call_args[1]["extra"]["duration_ms"]
+        duration_value = float(duration_str)
+        assert (
+            duration_value >= 1000.0
+        ), f"Duration {duration_value}ms should be >= 1000ms"
 
 
-def test_cors_expose_headers(client: TestClient) -> None:
-    """Test that CORS exposes X-Request-ID and X-Response-Time headers."""
-    # Make a GET request with origin to verify expose headers
+def test_custom_headers_present(client: TestClient) -> None:
+    """Test that X-Request-ID and X-Response-Time headers are present."""
+    # Make a GET request with an Origin header to exercise CORS middleware
     response = client.get(
         "/health",
         headers={"Origin": "http://localhost:5000"},
     )
 
     assert response.status_code == 200
-    # The expose-headers should be in the actual response
-    # Note: OPTIONS might not show expose-headers, but GET requests should
-    # Actually, the TestClient may not always show expose-headers in preflight
-    # Let's just verify the headers are actually present
+    # These headers must be present so that they can be exposed to browsers via CORS
     assert "x-request-id" in response.headers
     assert "x-response-time" in response.headers
