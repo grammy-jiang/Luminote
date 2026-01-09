@@ -11,6 +11,23 @@ on:
       - 'frontend/**'
       - '.github/workflows/frontend.yml'
 jobs:
+  label-agent-pr:
+    name: Label Agent PRs
+    if: github.event_name == 'pull_request' && github.actor == 'github-actions[bot]' && startsWith(github.head_ref, 'copilot/')
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Add agent-generated label
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              labels: ['agent-generated']
+            });
   frontend-quality:
     name: Frontend Quality Checks
     runs-on: ubuntu-latest

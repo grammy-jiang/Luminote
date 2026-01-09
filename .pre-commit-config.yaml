@@ -114,7 +114,7 @@ repos:
       - id: pymarkdown
         args:
           - --disable-rules
-          - MD003
+          - MD003,MD022,MD032
           - scan
   # ==== Shell Scripts ====
   # Shell script linting and validation

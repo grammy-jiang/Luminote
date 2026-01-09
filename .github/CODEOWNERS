@@ -1,0 +1,50 @@
+# CODEOWNERS file for Luminote
+# https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+#
+# This file ensures that pull requests (including those from Copilot agents)
+# are automatically routed to appropriate reviewers based on file changes.
+#
+# Format: <path or pattern> <@username> or <team>
+# The last matching rule takes precedence.
+
+# =============================================================================
+# Backend (Python FastAPI)
+# =============================================================================
+/backend/app/api/                @grammy-jiang
+/backend/app/core/               @grammy-jiang
+/backend/app/services/           @grammy-jiang
+/backend/app/schemas/            @grammy-jiang
+/backend/tests/                  @grammy-jiang
+/backend/pyproject.toml          @grammy-jiang
+/backend/requirements.txt         @grammy-jiang
+
+# =============================================================================
+# Frontend (SvelteKit TypeScript)
+# =============================================================================
+/frontend/src/                   @grammy-jiang
+/frontend/package.json           @grammy-jiang
+/frontend/tsconfig.json          @grammy-jiang
+/frontend/vite.config.ts         @grammy-jiang
+
+# =============================================================================
+# Documentation
+# =============================================================================
+/docs/                           @grammy-jiang
+/README.md                       @grammy-jiang
+/CONTRIBUTING.md                 @grammy-jiang
+/ARCHITECTURE.md                 @grammy-jiang
+/AGENTS.md                       @grammy-jiang
+
+# =============================================================================
+# GitHub Configuration & CI/CD
+# =============================================================================
+/.github/workflows/              @grammy-jiang
+/.github/copilot-instructions.md @grammy-jiang
+/.github/instructions/           @grammy-jiang
+/.github/agents/                 @grammy-jiang
+/.pre-commit-config.yaml         @grammy-jiang
+
+# =============================================================================
+# Default (catch-all)
+# =============================================================================
+* @grammy-jiang
