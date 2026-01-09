@@ -1,6 +1,7 @@
 # Development Guide
 
-This guide provides comprehensive information for developers working on Luminote.
+This guide provides comprehensive information for developers working on
+Luminote.
 
 ## Table of Contents
 
@@ -54,31 +55,41 @@ Luminote follows a client-server architecture with clear separation of concerns:
 
 These principles guide all architectural decisions and feature development:
 
-1. **Two-pane reading is primary** — The translation pane is always visible on the right. Never replace it with alternative content.
+1. **Two-pane reading is primary** — The translation pane is always visible on
+   the right. Never replace it with alternative content.
 
-2. **On-demand AI, user-controlled cost** — All AI operations must be explicitly triggered by users. No automatic background AI calls.
+1. **On-demand AI, user-controlled cost** — All AI operations must be explicitly
+   triggered by users. No automatic background AI calls.
 
-3. **BYOK multi-provider** — Users bring their own API keys. Support multiple providers (OpenAI, Anthropic, etc.).
+1. **BYOK multi-provider** — Users bring their own API keys. Support multiple
+   providers (OpenAI, Anthropic, etc.).
 
-4. **Configurable governance** — Prompts and terminology are configurable per task type for consistency.
+1. **Configurable governance** — Prompts and terminology are configurable per
+   task type for consistency.
 
-5. **All AI outputs are versioned assets** — Every AI output is saved with full provenance (model, prompt version, referenced blocks) for replay and regeneration.
+1. **All AI outputs are versioned assets** — Every AI output is saved with full
+   provenance (model, prompt version, referenced blocks) for replay and
+   regeneration.
 
-6. **Compliance-first** — Never bypass authentication, anti-bot mechanisms, or paywalls automatically. All sessions are user-driven.
+1. **Compliance-first** — Never bypass authentication, anti-bot mechanisms, or
+   paywalls automatically. All sessions are user-driven.
 
 ### Key Abstractions
 
 Understanding these core concepts is essential for working with the codebase:
 
 - **Document** — Extracted and cleaned content from a URL
-- **Block** — Normalized content unit (paragraph, heading, list, quote, code, image)
+- **Block** — Normalized content unit (paragraph, heading, list, quote, code,
+  image)
 - **Translation** — Block-mapped translation with version tracking
 - **AI Job** — Any model request with prompt version and metadata
-- **Artifact** — Saved output from an AI Job (note, link card, verification, etc.)
+- **Artifact** — Saved output from an AI Job (note, link card, verification,
+  etc.)
 
 ### Technology Stack
 
 **Backend:**
+
 - **Runtime:** Python 3.12+ (required for modern type hints and performance)
 - **Framework:** FastAPI (async-first, automatic OpenAPI docs)
 - **Validation:** Pydantic v2 (data models and settings)
@@ -86,6 +97,7 @@ Understanding these core concepts is essential for working with the codebase:
 - **Package management:** uv (fast Python package installer)
 
 **Frontend:**
+
 - **Runtime:** Node.js 22+ (LTS with latest ECMAScript support)
 - **Framework:** SvelteKit 2.0 (SSR-capable, file-based routing)
 - **Language:** TypeScript (strict mode for type safety)
@@ -94,6 +106,7 @@ Understanding these core concepts is essential for working with the codebase:
 - **Testing:** Vitest (Vite-native test runner)
 
 **Code Quality:**
+
 - **Python:** isort, black, ruff, mypy, pytest
 - **TypeScript:** ESLint, Prettier, TypeScript compiler
 - **Pre-commit hooks:** Automated checks on every commit
@@ -107,7 +120,8 @@ All backend APIs follow RESTful conventions with versioning:
 - **Resource-based naming:** `/api/v1/translations`, not `/api/v1/translate`
 - **Request IDs:** Every request gets a unique `X-Request-ID` for tracing
 - **Error format:** Consistent JSON error responses (see ADR-004)
-- **Streaming:** Server-Sent Events (SSE) for progressive rendering (see ADR-002)
+- **Streaming:** Server-Sent Events (SSE) for progressive rendering (see
+  ADR-002)
 
 For detailed API specifications, see [docs/API.md](API.md).
 
@@ -115,17 +129,23 @@ For detailed API specifications, see [docs/API.md](API.md).
 
 All significant architectural decisions are documented in [docs/adr/](adr/):
 
-- [ADR-001: API Endpoint Structure](adr/001-api-endpoint-structure.md) — RESTful API conventions, request tracking
-- [ADR-002: Streaming Translation Architecture](adr/002-streaming-translation-architecture.md) — SSE for progressive rendering
-- [ADR-003: Client-Side Storage Strategy](adr/003-client-side-storage-strategy.md) — Local storage for settings
-- [ADR-004: Error Handling Patterns](adr/004-error-handling-patterns.md) — Standard error response format
-- [ADR-005: Frontend State Management](adr/005-frontend-state-management.md) — Svelte stores architecture
+- [ADR-001: API Endpoint Structure](adr/001-api-endpoint-structure.md) — RESTful
+  API conventions, request tracking
+- [ADR-002: Streaming Translation Architecture](adr/002-streaming-translation-architecture.md)
+  — SSE for progressive rendering
+- [ADR-003: Client-Side Storage Strategy](adr/003-client-side-storage-strategy.md)
+  — Local storage for settings
+- [ADR-004: Error Handling Patterns](adr/004-error-handling-patterns.md) —
+  Standard error response format
+- [ADR-005: Frontend State Management](adr/005-frontend-state-management.md) —
+  Svelte stores architecture
 
 ## Development Workflow
 
 ### Setting Up Your Environment
 
 **Prerequisites:**
+
 - Python 3.12 or higher
 - Node.js 22 or higher
 - Git
@@ -145,22 +165,25 @@ scripts\setup-dev.bat   # Windows
 ```
 
 The setup script will:
+
 1. Verify Python 3.12+ and Node.js 22+ are installed
-2. Create backend virtual environment and install dependencies
-3. Install frontend dependencies
-4. Install pre-commit hooks
-5. Create `.env` files from examples
-6. Verify the setup by collecting tests
+1. Create backend virtual environment and install dependencies
+1. Install frontend dependencies
+1. Install pre-commit hooks
+1. Create `.env` files from examples
+1. Verify the setup by collecting tests
 
 **Manual setup:**
 
-See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed manual setup instructions.
+See [CONTRIBUTING.md](../CONTRIBUTING.md) for detailed manual setup
+instructions.
 
 ### Daily Development Cycle
 
 **1. Start development servers:**
 
 Terminal 1 (Backend):
+
 ```bash
 cd backend
 source .venv/bin/activate  # Windows: .venv\Scripts\activate
@@ -170,6 +193,7 @@ luminote serve
 ```
 
 Terminal 2 (Frontend):
+
 ```bash
 cd frontend
 npm run dev
@@ -186,16 +210,18 @@ npm run dev
 **3. Run quality checks:**
 
 Backend:
+
 ```bash
 cd backend
-isort app/
-black app/
-ruff check app/ --no-fix
-mypy app/
-pytest
+uv run isort app/
+uv run black app/
+uv run ruff check app/ --no-fix
+uv run mypy app/
+uv run pytest
 ```
 
 Frontend:
+
 ```bash
 cd frontend
 npm run lint
@@ -206,7 +232,8 @@ npm test
 
 **4. Commit changes:**
 
-Pre-commit hooks will run automatically. If they fail, fix the issues and try again.
+Pre-commit hooks will run automatically. If they fail, fix the issues and try
+again.
 
 ```bash
 git add .
@@ -250,31 +277,31 @@ backend/
 **Adding a new API endpoint:**
 
 1. Create Pydantic schemas in `app/schemas/your_feature.py`
-2. Implement business logic in `app/services/your_service.py`
-3. Create the endpoint in `app/api/v1/endpoints/your_feature.py`
-4. Register the router in `app/api/v1/__init__.py`
-5. Add tests for schemas, service, and endpoint
-6. Update API documentation if needed
+1. Implement business logic in `app/services/your_service.py`
+1. Create the endpoint in `app/api/v1/endpoints/your_feature.py`
+1. Register the router in `app/api/v1/__init__.py`
+1. Add tests for schemas, service, and endpoint
+1. Update API documentation if needed
 
 **Running specific tests:**
 
 ```bash
 # Run all tests
-pytest
+uv run pytest
 
 # Run specific test file
-pytest backend/tests/api/test_health.py -v
+uv run pytest backend/tests/api/test_health.py -v
 
 # Run specific test function
-pytest backend/tests/api/test_health.py::test_health_endpoint -v
+uv run pytest backend/tests/api/test_health.py::test_health_endpoint -v
 
 # Run by marker
-pytest -m unit      # Unit tests only
-pytest -m smoke     # Smoke tests only
-pytest -m e2e       # End-to-end tests only
+uv run pytest -m unit      # Unit tests only
+uv run pytest -m smoke     # Smoke tests only
+uv run pytest -m e2e       # End-to-end tests only
 
 # Run with coverage
-pytest --cov=app --cov-report=html
+uv run pytest --cov=app --cov-report=html
 # Open htmlcov/index.html in browser to view coverage report
 ```
 
@@ -324,10 +351,10 @@ import { formatDate } from '$utils/date';
 **Creating a new component:**
 
 1. Create component file: `src/lib/components/YourComponent.svelte`
-2. Write the component with TypeScript: `<script lang="ts">`
-3. Add tests: `src/lib/components/YourComponent.test.ts`
-4. Update tests to ≥85% coverage
-5. Use the component in your pages
+1. Write the component with TypeScript: `<script lang="ts">`
+1. Add tests: `src/lib/components/YourComponent.test.ts`
+1. Update tests to ≥85% coverage
+1. Use the component in your pages
 
 **Running tests:**
 
@@ -351,9 +378,9 @@ npm test -- YourComponent.test.ts
 Use browser DevTools or VS Code debugger:
 
 1. Start dev server: `npm run dev`
-2. Open http://localhost:5000 in browser
-3. Open DevTools (F12)
-4. Add `debugger;` statement in code or use browser breakpoints
+1. Open http://localhost:5000 in browser
+1. Open DevTools (F12)
+1. Add `debugger;` statement in code or use browser breakpoints
 
 ### Configuration Management
 
@@ -378,11 +405,13 @@ DEV_PORT=8000
 DEV_RELOAD=true
 ```
 
-Configuration is loaded via Pydantic Settings (`app/config.py`) and cached for performance.
+Configuration is loaded via Pydantic Settings (`app/config.py`) and cached for
+performance.
 
 **Frontend configuration:**
 
-Frontend uses environment variables and runtime configuration. API endpoints and settings will be configurable in Phase 1.
+Frontend uses environment variables and runtime configuration. API endpoints and
+settings will be configurable in Phase 1.
 
 ## Branching Strategy
 
@@ -391,7 +420,8 @@ Frontend uses environment variables and runtime configuration. API endpoints and
 Luminote uses a simplified Git Flow with the following branch types:
 
 - **`main`** — Production-ready code. Always stable and deployable.
-- **`develop`** — Integration branch for features. Default branch for development.
+- **`develop`** — Integration branch for features. Default branch for
+  development.
 - **Feature branches** — For new features: `feature/short-description`
 - **Fix branches** — For bug fixes: `fix/short-description`
 - **Docs branches** — For documentation: `docs/short-description`
@@ -474,6 +504,7 @@ Follow [Conventional Commits](https://www.conventionalcommits.org/) format:
 ```
 
 **Types:**
+
 - `feat:` — New feature
 - `fix:` — Bug fix
 - `docs:` — Documentation changes
@@ -510,29 +541,35 @@ Fixes #42
 Every pull request must meet these requirements before merge:
 
 **✅ Code Quality:**
-- All quality checks pass (isort, black, ruff, mypy for Python; ESLint, Prettier, TypeScript for frontend)
+
+- All quality checks pass (isort, black, ruff, mypy for Python; ESLint,
+  Prettier, TypeScript for frontend)
 - No new linter warnings or errors
 - Code follows project conventions and patterns
 
 **✅ Testing:**
+
 - All existing tests pass
 - New tests added for new functionality
 - Coverage requirements met (core ≥95%, other ≥85%)
 - Tests are meaningful and not just for coverage
 
 **✅ Documentation:**
+
 - Code is well-commented where necessary
 - API changes documented in docs/API.md
 - README updated if needed
 - Architecture decisions recorded in ADRs (if significant)
 
 **✅ Functionality:**
+
 - Feature works as expected
 - No breaking changes (or clearly documented if necessary)
 - Edge cases handled
 - Error messages are clear and actionable
 
 **✅ PR Description:**
+
 - Clear title describing the change
 - Description explains **what**, **why**, and **how**
 - References related issues (e.g., "Closes #25")
@@ -542,12 +579,14 @@ Every pull request must meet these requirements before merge:
 ### Review Process
 
 **1. Author submits PR:**
+
 - Fill out the PR template completely
 - Self-review your changes first
 - Ensure all CI checks pass
 - Request reviewers (at least 1-2 people)
 
 **2. Reviewers provide feedback:**
+
 - Review within 1-2 business days
 - Focus on code quality, design, and maintainability
 - Ask questions if unclear
@@ -555,12 +594,14 @@ Every pull request must meet these requirements before merge:
 - Approve when satisfied
 
 **3. Author addresses feedback:**
+
 - Respond to all comments
 - Make requested changes
 - Push new commits (do not force-push during review)
 - Re-request review when ready
 
 **4. Merge:**
+
 - Maintainer merges when all requirements met
 - Use "Squash and merge" for clean history
 - Delete branch after merge
@@ -570,6 +611,7 @@ Every pull request must meet these requirements before merge:
 **For reviewers:**
 
 ✅ **Do:**
+
 - Be respectful and constructive
 - Explain the "why" behind suggestions
 - Acknowledge good work
@@ -577,6 +619,7 @@ Every pull request must meet these requirements before merge:
 - Use GitHub's suggestion feature for minor changes
 
 ❌ **Don't:**
+
 - Nitpick on personal style preferences
 - Block PRs on minor issues
 - Review your own code (get external review)
@@ -585,12 +628,14 @@ Every pull request must meet these requirements before merge:
 **For authors:**
 
 ✅ **Do:**
+
 - Respond to all comments (even if just "Done" or "Fixed")
 - Ask questions if feedback is unclear
 - Be open to suggestions
 - Thank reviewers for their time
 
 ❌ **Don't:**
+
 - Take feedback personally
 - Argue without understanding the concern
 - Mark conversations as resolved before reviewer agrees
@@ -599,30 +644,35 @@ Every pull request must meet these requirements before merge:
 ### Common Review Topics
 
 **Code structure:**
+
 - Is the code in the right module/layer?
 - Are abstractions appropriate?
 - Is the code DRY (Don't Repeat Yourself)?
 - Are there better patterns available?
 
 **Error handling:**
+
 - Are errors caught and handled appropriately?
 - Are error messages clear and actionable?
 - Is logging appropriate?
 - Are edge cases covered?
 
 **Testing:**
+
 - Are tests meaningful and comprehensive?
 - Do tests cover edge cases?
 - Are tests maintainable?
 - Is mocking appropriate?
 
 **Performance:**
+
 - Are there obvious performance issues?
 - Is the code efficient?
 - Are there unnecessary database/API calls?
 - Is caching appropriate?
 
 **Security:**
+
 - Are inputs validated?
 - Are secrets handled securely?
 - Is authentication/authorization correct?
@@ -632,29 +682,35 @@ Every pull request must meet these requirements before merge:
 
 ### Testing Philosophy
 
-Luminote follows a comprehensive testing strategy to ensure code quality and reliability:
+Luminote follows a comprehensive testing strategy to ensure code quality and
+reliability:
 
-1. **Test behavior, not implementation** — Focus on what the code does, not how it does it
-2. **Write tests first (TDD encouraged)** — Clarifies requirements and design
-3. **Keep tests simple and readable** — Tests are documentation
-4. **Mock external dependencies** — No real API calls, network requests, or database writes
-5. **Aim for high coverage** — But don't sacrifice quality for numbers
+1. **Test behavior, not implementation** — Focus on what the code does, not how
+   it does it
+1. **Write tests first (TDD encouraged)** — Clarifies requirements and design
+1. **Keep tests simple and readable** — Tests are documentation
+1. **Mock external dependencies** — No real API calls, network requests, or
+   database writes
+1. **Aim for high coverage** — But don't sacrifice quality for numbers
 
 ### Test Categories
 
 **Unit Tests** (mark with `@pytest.mark.unit`):
+
 - Test individual functions and classes in isolation
-- Fast execution (<1ms per test)
+- Fast execution (\<1ms per test)
 - Mock all dependencies
 - Focus on edge cases and error conditions
 
 **Smoke Tests** (mark with `@pytest.mark.smoke`):
+
 - Test critical paths with happy path data
 - Verify core functionality works end-to-end
 - Run before every deployment
-- Should complete in <10 seconds total
+- Should complete in \<10 seconds total
 
 **End-to-End Tests** (mark with `@pytest.mark.e2e`):
+
 - Test complete workflows across multiple components
 - Mock external services but not internal components
 - Verify integration between layers
@@ -719,13 +775,13 @@ def test_translation_workflow(client: TestClient, mock_openai):
     mock_openai.create_completion.return_value = {
         "choices": [{"text": "translated content"}]
     }
-    
+
     # Make request
     response = client.post("/api/v1/translate", json={
         "text": "hello world",
         "target_lang": "es"
     })
-    
+
     # Verify response
     assert response.status_code == 200
     assert "translated content" in response.json()["text"]
@@ -746,10 +802,10 @@ describe('Button component', () => {
 
   it('calls onClick handler when clicked', async () => {
     const onClick = vi.fn();
-    const { component } = render(Button, { 
-      props: { text: 'Click me', onClick } 
+    const { component } = render(Button, {
+      props: { text: 'Click me', onClick }
     });
-    
+
     await fireEvent.click(screen.getByText('Click me'));
     expect(onClick).toHaveBeenCalledOnce();
   });
@@ -806,11 +862,11 @@ def test_translation_service(mock_openai):
     mock_openai.return_value.completions.create.return_value = {
         "choices": [{"text": "translated"}]
     }
-    
+
     # Test your code
     service = TranslationService(api_key="test-key")
     result = service.translate("hello", target_lang="es")
-    
+
     # Verify
     assert result == "translated"
     mock_openai.return_value.completions.create.assert_called_once()
@@ -818,12 +874,13 @@ def test_translation_service(mock_openai):
 
 ### Running Tests in CI
 
-All tests run automatically on every pull request. You can also run them locally to verify before pushing:
+All tests run automatically on every pull request. You can also run them locally
+to verify before pushing:
 
 ```bash
 # Backend - run all checks
 cd backend
-isort app/ && black app/ && ruff check app/ --no-fix && mypy app/ && pytest
+uv run isort app/ && uv run black app/ && uv run ruff check app/ --no-fix && uv run mypy app/ && uv run pytest
 
 # Frontend - run all checks
 cd frontend
@@ -837,11 +894,13 @@ npm run lint && npm run format && npm run type-check && npm test
 #### Import errors or module not found
 
 **Symptom:**
+
 ```
 ModuleNotFoundError: No module named 'app'
 ```
 
 **Solution:**
+
 ```bash
 cd backend
 source .venv/bin/activate  # Activate virtual environment
@@ -851,11 +910,13 @@ uv pip install -e ".[dev]"  # Install in editable mode
 #### Port 8000 already in use
 
 **Symptom:**
+
 ```
 ERROR: [Errno 48] Address already in use
 ```
 
 **Solution:**
+
 ```bash
 # Find process using port 8000
 lsof -i :8000  # macOS/Linux
@@ -872,11 +933,13 @@ luminote serve --port 8001
 #### Tests failing with fixture errors
 
 **Symptom:**
+
 ```
 fixture 'client' not found
 ```
 
 **Solution:**
+
 - Ensure you're running pytest from the backend directory
 - Check that `conftest.py` exists and defines the fixture
 - Make sure `__init__.py` files exist in test directories
@@ -884,11 +947,13 @@ fixture 'client' not found
 #### Type checking errors with mypy
 
 **Symptom:**
+
 ```
 error: Cannot find implementation or library stub for module
 ```
 
 **Solution:**
+
 ```bash
 # Install type stubs
 uv pip install types-requests types-urllib3
@@ -903,11 +968,13 @@ ignore_missing_imports = true
 #### Port 5000 already in use
 
 **Symptom:**
+
 ```
 Port 5000 is in use
 ```
 
 **Solution:**
+
 ```bash
 # Find and kill process using port 5000
 lsof -i :5000  # macOS/Linux
@@ -921,11 +988,13 @@ taskkill /PID <PID> /F
 #### Node modules not found
 
 **Symptom:**
+
 ```
 Cannot find module '@sveltejs/kit'
 ```
 
 **Solution:**
+
 ```bash
 cd frontend
 rm -rf node_modules package-lock.json
@@ -935,11 +1004,13 @@ npm install
 #### TypeScript errors after update
 
 **Symptom:**
+
 ```
 Type error: Property 'xyz' does not exist on type...
 ```
 
 **Solution:**
+
 ```bash
 # Check types
 npm run type-check
@@ -953,11 +1024,13 @@ npm run build
 #### Vite build fails
 
 **Symptom:**
+
 ```
 ✘ [ERROR] Build failed
 ```
 
 **Solution:**
+
 ```bash
 # Clear cache
 rm -rf .svelte-kit
@@ -974,11 +1047,13 @@ npm run build
 #### Pre-commit hooks failing
 
 **Symptom:**
+
 ```
 pre-commit hook failed
 ```
 
 **Solution:**
+
 ```bash
 # Run hooks manually to see details
 pre-commit run --all-files
@@ -994,11 +1069,13 @@ git commit --no-verify -m "your message"
 #### Merge conflicts
 
 **Symptom:**
+
 ```
 CONFLICT (content): Merge conflict in file.py
 ```
 
 **Solution:**
+
 ```bash
 # Update your branch
 git fetch origin
@@ -1014,10 +1091,10 @@ git commit -m "resolve merge conflicts"
 
 #### Accidentally committed to main
 
-**Symptom:**
-You committed directly to main instead of a feature branch.
+**Symptom:** You committed directly to main instead of a feature branch.
 
 **Solution:**
+
 ```bash
 # Create a new branch from current state
 git branch feature/your-feature
@@ -1034,10 +1111,10 @@ git checkout feature/your-feature
 
 #### Environment variables not loading
 
-**Symptom:**
-Settings have default values instead of your .env values.
+**Symptom:** Settings have default values instead of your .env values.
 
 **Solution:**
+
 ```bash
 # Check .env file exists
 ls backend/.env
@@ -1054,10 +1131,10 @@ cat backend/.env
 
 #### Different behavior in development vs production
 
-**Symptom:**
-Code works locally but fails in CI or production.
+**Symptom:** Code works locally but fails in CI or production.
 
 **Solution:**
+
 - Check Python/Node.js versions match (Python 3.12+, Node.js 22+)
 - Ensure all dependencies are in requirements.txt or package.json
 - Check environment-specific configurations
@@ -1068,10 +1145,10 @@ Code works locally but fails in CI or production.
 
 #### Slow tests
 
-**Symptom:**
-Test suite takes several minutes to run.
+**Symptom:** Test suite takes several minutes to run.
 
 **Solution:**
+
 ```bash
 # Run only fast tests
 pytest -m unit
@@ -1086,10 +1163,10 @@ pytest --durations=10
 
 #### Slow development server
 
-**Symptom:**
-Backend or frontend server is slow to respond.
+**Symptom:** Backend or frontend server is slow to respond.
 
 **Solution:**
+
 - Check for infinite loops or blocking operations
 - Review logs for excessive logging
 - Ensure dev database is not too large (if applicable)
@@ -1100,10 +1177,15 @@ Backend or frontend server is slow to respond.
 
 If you're still stuck after trying these solutions:
 
-1. **Search existing issues:** Check [GitHub Issues](https://github.com/grammy-jiang/Luminote/issues) for similar problems
-2. **Check documentation:** Review [CONTRIBUTING.md](../CONTRIBUTING.md) and [ARCHITECTURE.md](../ARCHITECTURE.md)
-3. **Ask in discussions:** Post in [GitHub Discussions](https://github.com/grammy-jiang/Luminote/discussions)
-4. **Provide context:** Include error messages, logs, steps to reproduce, and what you've tried
+1. **Search existing issues:** Check
+   [GitHub Issues](https://github.com/grammy-jiang/Luminote/issues) for similar
+   problems
+1. **Check documentation:** Review [CONTRIBUTING.md](../CONTRIBUTING.md) and
+   [ARCHITECTURE.md](../ARCHITECTURE.md)
+1. **Ask in discussions:** Post in
+   [GitHub Discussions](https://github.com/grammy-jiang/Luminote/discussions)
+1. **Provide context:** Include error messages, logs, steps to reproduce, and
+   what you've tried
 
 ## Additional Resources
 
@@ -1120,13 +1202,16 @@ If you're still stuck after trying these solutions:
 - **[FastAPI Documentation](https://fastapi.tiangolo.com/)** — Backend framework
 - **[Pydantic Documentation](https://docs.pydantic.dev/)** — Data validation
 - **[Pytest Documentation](https://docs.pytest.org/)** — Testing framework
-- **[Python Type Hints](https://docs.python.org/3/library/typing.html)** — Type annotations
+- **[Python Type Hints](https://docs.python.org/3/library/typing.html)** — Type
+  annotations
 
 ### Frontend Resources
 
-- **[SvelteKit Documentation](https://kit.svelte.dev/docs)** — Frontend framework
+- **[SvelteKit Documentation](https://kit.svelte.dev/docs)** — Frontend
+  framework
 - **[Svelte Documentation](https://svelte.dev/docs)** — Component framework
-- **[TypeScript Documentation](https://www.typescriptlang.org/docs)** — Type system
+- **[TypeScript Documentation](https://www.typescriptlang.org/docs)** — Type
+  system
 - **[Tailwind CSS Documentation](https://tailwindcss.com/docs)** — Styling
 - **[Vitest Documentation](https://vitest.dev)** — Testing framework
 
@@ -1140,19 +1225,26 @@ If you're still stuck after trying these solutions:
 
 ### Learning Resources
 
-- **[Python 3.12 What's New](https://docs.python.org/3/whatsnew/3.12.html)** — Latest Python features
-- **[TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)** — TypeScript guide
+- **[Python 3.12 What's New](https://docs.python.org/3/whatsnew/3.12.html)** —
+  Latest Python features
+- **[TypeScript Handbook](https://www.typescriptlang.org/docs/handbook/intro.html)**
+  — TypeScript guide
 - **[REST API Best Practices](https://restfulapi.net/)** — API design
-- **[Git Flow](https://nvie.com/posts/a-successful-git-branching-model/)** — Branching model
+- **[Git Flow](https://nvie.com/posts/a-successful-git-branching-model/)** —
+  Branching model
 
 ### Community and Support
 
-- **[GitHub Issues](https://github.com/grammy-jiang/Luminote/issues)** — Bug reports and feature requests
-- **[GitHub Discussions](https://github.com/grammy-jiang/Luminote/discussions)** — Questions and discussions
-- **[Pull Requests](https://github.com/grammy-jiang/Luminote/pulls)** — Code contributions
+- **[GitHub Issues](https://github.com/grammy-jiang/Luminote/issues)** — Bug
+  reports and feature requests
+- **[GitHub Discussions](https://github.com/grammy-jiang/Luminote/discussions)**
+  — Questions and discussions
+- **[Pull Requests](https://github.com/grammy-jiang/Luminote/pulls)** — Code
+  contributions
 
----
+______________________________________________________________________
 
 **Last Updated:** January 8, 2026
 
-This guide is maintained by the Luminote development team. Contributions and improvements are welcome!
+This guide is maintained by the Luminote development team. Contributions and
+improvements are welcome!
