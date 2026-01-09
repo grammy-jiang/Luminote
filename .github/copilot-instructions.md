@@ -8,7 +8,7 @@
 **What:** AI-powered two-pane translation workbench for understanding web
 content. **Languages:** Python 3.12+ (FastAPI 0.109.0 backend), TypeScript +
 Svelte (SvelteKit frontend) **Status:** Active Phase 0/1 development. See
-[docs/PROJECT-STATUS.md](docs/PROJECT-STATUS.md). **Key Principle:** Two-pane
+[docs/PROJECT-STATUS.md](../docs/PROJECT-STATUS.md). **Key Principle:** Two-pane
 reading primary—translation always visible right pane.
 
 **Non-Negotiables:**
@@ -142,7 +142,7 @@ ______________________________________________________________________
 ## Error Handling & Logging
 
 **Use standard exception pattern** (see `backend/app/core/errors.py` and
-[ADR-004](docs/adr/004-error-handling-patterns.md)):
+[ADR-004](../docs/adr/004-error-handling-patterns.md)):
 
 ```python
 from app.core.errors import LuminoteException
@@ -193,12 +193,12 @@ ______________________________________________________________________
 
 ## Reference Documentation (Trust these first, search only if incomplete)
 
-1. **[AGENTS.md](AGENTS.md)** — Development playbook (613 lines)
-1. **[ARCHITECTURE.md](ARCHITECTURE.md)** — System architecture (140 lines)
-1. **[docs/adr/](docs/adr/)** — Architecture Decision Records (5 files)
-1. **[docs/API.md](docs/API.md)** — API specifications
-1. **[CONTRIBUTING.md](CONTRIBUTING.md)** — Full setup guide (601 lines)
-1. **[README.md](README.md)** — Project overview (257 lines)
+1. **[AGENTS.md](../AGENTS.md)** — Development playbook (613 lines)
+1. **[ARCHITECTURE.md](../ARCHITECTURE.md)** — System architecture (140 lines)
+1. **[docs/adr/](../docs/adr/)** — Architecture Decision Records (5 files)
+1. **[docs/API.md](../docs/API.md)** — API specifications
+1. **[CONTRIBUTING.md](../CONTRIBUTING.md)** — Full setup guide (601 lines)
+1. **[README.md](../README.md)** — Project overview (257 lines)
 
 ______________________________________________________________________
 
