@@ -100,6 +100,25 @@ class ExtractionError(ClientError):
         self.status_code = 422  # Override default 400 status
 
 
+class URLFetchError(ServerError):
+    """Failed to fetch URL content."""
+
+    def __init__(self, url: str, reason: str, status_code: int = 502) -> None:
+        """Initialize a URL fetch error.
+
+        Args:
+            url: The URL that failed to fetch
+            reason: The reason for the failure
+            status_code: HTTP status code (502 for unreachable, 504 for timeout)
+        """
+        super().__init__(
+            message=f"Failed to fetch URL {url}: {reason}",
+            code="URL_FETCH_ERROR",
+            details={"url": url, "reason": reason},
+        )
+        self.status_code = status_code
+
+
 class APIKeyError(ClientError):
     """API key validation or authentication error."""
 
