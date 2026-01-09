@@ -40,24 +40,26 @@
 				panes.
 			</p>
 
+			<h3 class="text-lg font-semibold text-gray-800 mb-3 mt-6">Setup Status:</h3>
+
 			<div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded my-4">
-				<h4 class="font-semibold text-blue-900 mb-2">✅ SvelteKit Initialized</h4>
+				<p class="font-semibold text-blue-900 mb-2">✅ SvelteKit Initialized</p>
 				<p class="text-blue-800 text-sm">TypeScript, Vite, and routing configured</p>
 			</div>
 
 			<div class="bg-green-50 border-l-4 border-green-500 p-4 rounded my-4">
-				<h4 class="font-semibold text-green-900 mb-2">✅ Tailwind CSS Working</h4>
+				<p class="font-semibold text-green-900 mb-2">✅ Tailwind CSS Working</p>
 				<p class="text-green-800 text-sm">Styling system active and responsive</p>
 			</div>
 
 			<div class="bg-purple-50 border-l-4 border-purple-500 p-4 rounded my-4">
-				<h4 class="font-semibold text-purple-900 mb-2">✅ Development Tools Ready</h4>
+				<p class="font-semibold text-purple-900 mb-2">✅ Development Tools Ready</p>
 				<p class="text-purple-800 text-sm">ESLint, Prettier, and Vitest configured</p>
 			</div>
 
 			{#if mounted}
 				<div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded my-4">
-					<h4 class="font-semibold text-yellow-900 mb-2">✅ Client-side Rendering</h4>
+					<p class="font-semibold text-yellow-900 mb-2">✅ Client-side Rendering</p>
 					<p class="text-yellow-800 text-sm">Svelte reactive features working</p>
 				</div>
 			{/if}
@@ -98,24 +100,26 @@
 
 			<p class="text-gray-700 mb-4">尝试独立于左侧窗格滚动此窗格。按Tab键在窗格之间切换焦点。</p>
 
+			<h3 class="text-lg font-semibold text-gray-800 mb-3 mt-6">设置状态：</h3>
+
 			<div class="bg-blue-50 border-l-4 border-blue-500 p-4 rounded my-4">
-				<h4 class="font-semibold text-blue-900 mb-2">✅ SvelteKit 已初始化</h4>
+				<p class="font-semibold text-blue-900 mb-2">✅ SvelteKit 已初始化</p>
 				<p class="text-blue-800 text-sm">TypeScript、Vite和路由已配置</p>
 			</div>
 
 			<div class="bg-green-50 border-l-4 border-green-500 p-4 rounded my-4">
-				<h4 class="font-semibold text-green-900 mb-2">✅ Tailwind CSS 工作正常</h4>
+				<p class="font-semibold text-green-900 mb-2">✅ Tailwind CSS 工作正常</p>
 				<p class="text-green-800 text-sm">样式系统活跃且响应式</p>
 			</div>
 
 			<div class="bg-purple-50 border-l-4 border-purple-500 p-4 rounded my-4">
-				<h4 class="font-semibold text-purple-900 mb-2">✅ 开发工具就绪</h4>
+				<p class="font-semibold text-purple-900 mb-2">✅ 开发工具就绪</p>
 				<p class="text-purple-800 text-sm">ESLint、Prettier和Vitest已配置</p>
 			</div>
 
 			{#if mounted}
 				<div class="bg-yellow-50 border-l-4 border-yellow-500 p-4 rounded my-4">
-					<h4 class="font-semibold text-yellow-900 mb-2">✅ 客户端渲染</h4>
+					<p class="font-semibold text-yellow-900 mb-2">✅ 客户端渲染</p>
 					<p class="text-yellow-800 text-sm">Svelte响应式功能工作正常</p>
 				</div>
 			{/if}

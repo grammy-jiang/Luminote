@@ -51,8 +51,8 @@ describe('DualPaneLayout Component', () => {
 		});
 	});
 
-	describe('Slots', () => {
-		it('renders default slot content when no slots provided', () => {
+	describe('Default Content', () => {
+		it('renders placeholder content when no slots provided', () => {
 			const { container } = render(DualPaneLayout);
 
 			// Verify placeholder content is shown
@@ -63,21 +63,6 @@ describe('DualPaneLayout Component', () => {
 	});
 
 	describe('Props', () => {
-		it('accepts initialSplit prop', () => {
-			const { container } = render(DualPaneLayout, {
-				props: { initialSplit: 60 }
-			});
-
-			// Component accepts the prop without errors
-			expect(container).toBeInTheDocument();
-		});
-
-		it('uses default initialSplit of 50', () => {
-			const { container } = render(DualPaneLayout);
-
-			expect(container).toBeInTheDocument();
-		});
-
 		it('accepts leftLabel prop', () => {
 			render(DualPaneLayout, {
 				props: { leftLabel: 'Custom Left' }
@@ -263,22 +248,6 @@ describe('DualPaneLayout Component', () => {
 	});
 
 	describe('Edge Cases', () => {
-		it('handles zero initialSplit', () => {
-			const { container } = render(DualPaneLayout, {
-				props: { initialSplit: 0 }
-			});
-
-			expect(container).toBeInTheDocument();
-		});
-
-		it('handles 100 initialSplit', () => {
-			const { container } = render(DualPaneLayout, {
-				props: { initialSplit: 100 }
-			});
-
-			expect(container).toBeInTheDocument();
-		});
-
 		it('handles empty label strings', () => {
 			render(DualPaneLayout, {
 				props: {

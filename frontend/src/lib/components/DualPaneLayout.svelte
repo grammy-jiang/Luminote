@@ -14,13 +14,8 @@
 	 * - Exported refs for programmatic control
 	 */
 
-	export let initialSplit: number = 50;
 	export let leftLabel: string = 'Source';
 	export let rightLabel: string = 'Translation';
-
-	// Use initialSplit for future resizable implementation
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	$: splitRatio = initialSplit;
 
 	let leftPane: HTMLDivElement;
 	let rightPane: HTMLDivElement;
@@ -30,13 +25,14 @@
 
 	/**
 	 * Handle keyboard navigation between panes
+	 * Only intercepts Tab when the pane container itself has focus, not child elements
 	 */
 	function handleKeydown(event: KeyboardEvent) {
 		if (event.key === 'Tab' && !event.shiftKey) {
 			const target = event.target as HTMLElement;
 
-			// If Tab is pressed in left pane, focus right pane
-			if (leftPane && leftPane.contains(target)) {
+			// Only intercept if the pane container itself has focus
+			if (target === leftPane) {
 				event.preventDefault();
 				rightPane?.focus();
 				activePane = 'right';
@@ -44,8 +40,8 @@
 		} else if (event.key === 'Tab' && event.shiftKey) {
 			const target = event.target as HTMLElement;
 
-			// If Shift+Tab is pressed in right pane, focus left pane
-			if (rightPane && rightPane.contains(target)) {
+			// Only intercept if the pane container itself has focus
+			if (target === rightPane) {
 				event.preventDefault();
 				leftPane?.focus();
 				activePane = 'left';
@@ -71,15 +67,31 @@
 
 	/**
 	 * Get reference to left pane element
+	 *
+	 * Note: This should only be called after the component has mounted.
+	 * @throws {Error} If called before the component has mounted
 	 */
-	export function getLeftPaneRef(): HTMLDivElement | undefined {
+	export function getLeftPaneRef(): HTMLDivElement {
+		if (!leftPane) {
+			throw new Error(
+				'Left pane ref is not available yet. Call this after the component has mounted.'
+			);
+		}
 		return leftPane;
 	}
 
 	/**
 	 * Get reference to right pane element
+	 *
+	 * Note: This should only be called after the component has mounted.
+	 * @throws {Error} If called before the component has mounted
 	 */
-	export function getRightPaneRef(): HTMLDivElement | undefined {
+	export function getRightPaneRef(): HTMLDivElement {
+		if (!rightPane) {
+			throw new Error(
+				'Right pane ref is not available yet. Call this after the component has mounted.'
+			);
+		}
 		return rightPane;
 	}
 </script>
