@@ -1,5 +1,4 @@
-"""
-Test error handling and response standardization.
+"""Test error handling and response standardization.
 
 Tests cover exception handlers and request ID tracking.
 """

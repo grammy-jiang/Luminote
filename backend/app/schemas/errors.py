@@ -1,5 +1,4 @@
-"""
-Error response schemas for standardized API responses.
+"""Error response schemas for standardized API responses.
 
 This module defines Pydantic models for error responses following ADR-004.
 """

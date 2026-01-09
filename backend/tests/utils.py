@@ -1,7 +1,7 @@
-"""
-Test utilities for Luminote backend.
+"""Test utilities for Luminote backend.
 
-Helper functions for test data generation, mock HTTP responses, and common test operations.
+Helper functions for test data generation, mock HTTP responses, and common test
+operations.
 """
 
 import uuid
@@ -9,8 +9,7 @@ from typing import Any
 
 
 def generate_request_id() -> str:
-    """
-    Generate a valid request ID (UUID v4).
+    """Generate a valid request ID (UUID v4).
 
     Returns:
         A UUID v4 string
@@ -19,8 +18,7 @@ def generate_request_id() -> str:
 
 
 def validate_request_id(request_id: str) -> bool:
-    """
-    Validate that a string is a valid UUID v4 request ID.
+    """Validate that a string is a valid UUID v4 request ID.
 
     Args:
         request_id: The request ID to validate
@@ -41,8 +39,7 @@ def create_mock_openai_response(
     role: str = "assistant",
     finish_reason: str = "stop",
 ) -> dict[str, Any]:
-    """
-    Create a mock OpenAI API response.
+    """Create a mock OpenAI API response.
 
     Args:
         content: The response content
@@ -74,8 +71,7 @@ def create_mock_anthropic_response(
     model: str = "claude-3-5-sonnet-20241022",
     stop_reason: str = "end_turn",
 ) -> dict[str, Any]:
-    """
-    Create a mock Anthropic API response.
+    """Create a mock Anthropic API response.
 
     Args:
         content: The response content
@@ -103,8 +99,7 @@ def create_mock_http_response(
     headers: dict[str, str] | None = None,
     text: str | None = None,
 ) -> dict[str, Any]:
-    """
-    Create a mock HTTP response for testing.
+    """Create a mock HTTP response for testing.
 
     Args:
         status_code: HTTP status code
@@ -131,8 +126,7 @@ def create_sample_content(
     url: str = "https://example.com/article",
     language: str = "en",
 ) -> dict[str, Any]:
-    """
-    Create sample content for testing extraction and translation.
+    """Create sample content for testing extraction and translation.
 
     Args:
         title: Article title
@@ -161,8 +155,7 @@ def create_translation_request(
     provider: str = "openai",
     model: str = "gpt-4",
 ) -> dict[str, Any]:
-    """
-    Create a sample translation request.
+    """Create a sample translation request.
 
     Args:
         text: Text to translate
@@ -190,8 +183,7 @@ def create_error_response(
     details: dict[str, Any] | None = None,
     request_id: str | None = None,
 ) -> dict[str, Any]:
-    """
-    Create a mock error response following ADR-004.
+    """Create a mock error response following ADR-004.
 
     Args:
         error: Error message

@@ -1,6 +1,4 @@
-"""
-Test health check endpoint.
-"""
+"""Test health check endpoint."""
 
 import pytest
 from fastapi.testclient import TestClient

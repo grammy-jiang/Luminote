@@ -1,6 +1,4 @@
-"""
-Pytest configuration and fixtures.
-"""
+"""Pytest configuration and fixtures."""
 
 from typing import Any
 
@@ -13,8 +11,7 @@ from tests.utils import create_mock_openai_response, create_sample_content
 
 @pytest.fixture
 def client() -> TestClient:
-    """
-    Create a test client for the FastAPI application.
+    """Create a test client for the FastAPI application.
 
     Returns:
         TestClient instance
@@ -24,8 +21,7 @@ def client() -> TestClient:
 
 @pytest.fixture
 def mock_openai_response() -> dict[str, Any]:
-    """
-    Create a mock OpenAI API response for testing.
+    """Create a mock OpenAI API response for testing.
 
     Returns:
         A dictionary mimicking OpenAI's response format
@@ -40,8 +36,7 @@ def mock_openai_response() -> dict[str, Any]:
 
 @pytest.fixture
 def sample_content() -> dict[str, Any]:
-    """
-    Create sample content for testing extraction and translation.
+    """Create sample content for testing extraction and translation.
 
     Returns:
         A dictionary with sample content data

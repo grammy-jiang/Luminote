@@ -1,5 +1,4 @@
-"""
-Example tests demonstrating fixture usage.
+"""Example tests demonstrating fixture usage.
 
 These tests demonstrate how to use the mock_openai_response and sample_content fixtures.
 """

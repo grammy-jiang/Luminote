@@ -1,6 +1,4 @@
-"""
-Structured logging configuration for Luminote.
-"""
+"""Structured logging configuration for Luminote."""
 
 import logging
 import sys
@@ -12,8 +10,7 @@ logger = logging.getLogger("app")
 
 
 def setup_logging() -> None:
-    """
-    Configure structured logging.
+    """Configure structured logging.
 
     Sets up logging with appropriate level and format.
     """
@@ -33,8 +30,7 @@ def setup_logging() -> None:
 
 
 def get_logger(name: str) -> logging.Logger:
-    """
-    Get a logger instance.
+    """Get a logger instance.
 
     Args:
         name: Logger name (typically __name__)

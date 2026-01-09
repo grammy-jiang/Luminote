@@ -1,6 +1,4 @@
-"""
-Application configuration using Pydantic Settings.
-"""
+"""Application configuration using Pydantic Settings."""
 
 from functools import lru_cache
 

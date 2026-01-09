@@ -1,5 +1,4 @@
-"""
-Luminote FastAPI Application.
+"""Luminote FastAPI Application.
 
 This package contains the main FastAPI application and all its components.
 """

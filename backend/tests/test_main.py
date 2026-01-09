@@ -1,5 +1,4 @@
-"""
-Test main application module.
+"""Test main application module.
 
 Tests cover application setup, lifespan events, and basic functionality.
 """

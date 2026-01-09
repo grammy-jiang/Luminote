@@ -1,5 +1,4 @@
-"""
-Test core error classes.
+"""Test core error classes.
 
 Tests cover custom exception hierarchy and error types.
 """

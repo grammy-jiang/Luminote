@@ -1,6 +1,4 @@
-"""
-Luminote FastAPI application entry point.
-"""
+"""Luminote FastAPI application entry point."""
 
 import time
 import uuid

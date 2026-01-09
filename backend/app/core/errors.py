@@ -1,5 +1,4 @@
-"""
-Custom exception classes for Luminote.
+"""Custom exception classes for Luminote.
 
 This module defines the exception hierarchy following ADR-004.
 """
@@ -17,8 +16,7 @@ class LuminoteException(Exception):
         status_code: int = 500,
         details: dict[str, Any] | None = None,
     ) -> None:
-        """
-        Initialize a Luminote exception.
+        """Initialize a Luminote exception.
 
         Args:
             message: Human-readable error message
