@@ -111,10 +111,12 @@ class ExtractionService:
                 url=url, reason="Request timeout", status_code=504
             ) from e
         except httpx.HTTPStatusError as e:
+            # Preserve the original HTTP status code for 404s
+            status_code = 404 if e.response.status_code == 404 else 502
             raise URLFetchError(
                 url=url,
                 reason=f"HTTP {e.response.status_code}",
-                status_code=502,
+                status_code=status_code,
             ) from e
         except httpx.NetworkError as e:
             raise URLFetchError(

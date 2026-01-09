@@ -45,3 +45,52 @@ class ExtractedContent(BaseModel):
         default_factory=lambda: datetime.now(UTC),
         description="Timestamp when extraction occurred",
     )
+
+
+class ExtractionRequest(BaseModel):
+    """Request model for content extraction."""
+
+    url: str = Field(
+        ...,
+        description="URL to extract content from",
+        min_length=1,
+        examples=["https://example.com/article"],
+    )
+
+
+class ExtractionMetadata(BaseModel):
+    """Metadata for extraction response."""
+
+    request_id: str = Field(..., description="Unique request identifier for tracing")
+    timestamp: datetime = Field(
+        default_factory=lambda: datetime.now(UTC),
+        description="Response timestamp",
+    )
+    processing_time: float = Field(
+        ..., description="Processing time in seconds", ge=0.0
+    )
+
+
+class ExtractionResponseData(BaseModel):
+    """Data payload for extraction response."""
+
+    url: str = Field(..., description="Source URL")
+    title: str = Field(..., description="Document title")
+    author: str | None = Field(None, description="Author name if available")
+    date_published: str | None = Field(
+        None, description="Publication date if available"
+    )
+    content_blocks: list[ContentBlock] = Field(
+        ..., description="List of structured content blocks"
+    )
+    metadata: dict[str, Any] = Field(
+        default_factory=dict, description="Additional extraction metadata"
+    )
+
+
+class ExtractionResponse(BaseModel):
+    """Response model for content extraction following ADR-001 envelope."""
+
+    success: bool = Field(True, description="Indicates if the request was successful")
+    data: ExtractionResponseData = Field(..., description="Extraction result data")
+    metadata: ExtractionMetadata = Field(..., description="Response metadata")
