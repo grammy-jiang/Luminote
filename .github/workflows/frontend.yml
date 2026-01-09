@@ -1,5 +1,4 @@
 name: Frontend CI
-
 on:
   pull_request:
     paths:
@@ -11,7 +10,6 @@ on:
     paths:
       - 'frontend/**'
       - '.github/workflows/frontend.yml'
-
 jobs:
   frontend-quality:
     name: Frontend Quality Checks
@@ -19,34 +17,25 @@ jobs:
     defaults:
       run:
         working-directory: frontend
-
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
-
       - name: Set up Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-
       - name: Install dependencies
         run: npm install
-
       - name: Run SvelteKit sync
         run: npx svelte-kit sync
-
       - name: Run ESLint
         run: npm run lint
-
       - name: Run Prettier check
         run: npm run format -- --check
-
       - name: Run TypeScript type checking
         run: npm run type-check
-
       - name: Run Vitest with coverage
         run: npm run test:coverage
-
       - name: Upload coverage reports to Codecov
         uses: codecov/codecov-action@v4
         with:
@@ -56,7 +45,6 @@ jobs:
           fail_ci_if_error: false
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
       - name: Upload coverage HTML report
         uses: actions/upload-artifact@v4
         if: always()
