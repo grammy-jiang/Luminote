@@ -44,35 +44,35 @@ command_exists() {
 version_ge() {
     local ver1="$1"
     local ver2="$2"
-    
+
     # If versions are identical, $1 is >= $2
     if [ "$ver1" = "$ver2" ]; then
         return 0
     fi
-    
+
     # Split versions into arrays on '.'
     IFS='.' read -ra ver1_parts <<< "$ver1"
     IFS='.' read -ra ver2_parts <<< "$ver2"
-    
+
     local len1="${#ver1_parts[@]}"
     local len2="${#ver2_parts[@]}"
     local max_len=$len1
     if [ "$len2" -gt "$max_len" ]; then
         max_len=$len2
     fi
-    
+
     # Compare each numeric component
     for ((i=0; i<max_len; i++)); do
         local part1=0
         local part2=0
-        
+
         if [ "$i" -lt "$len1" ]; then
             part1="${ver1_parts[i]}"
         fi
         if [ "$i" -lt "$len2" ]; then
             part2="${ver2_parts[i]}"
         fi
-        
+
         # Numeric comparison
         if [ "$part1" -gt "$part2" ]; then
             return 0
@@ -80,7 +80,7 @@ version_ge() {
             return 1
         fi
     done
-    
+
     # All components are equal
     return 0
 }

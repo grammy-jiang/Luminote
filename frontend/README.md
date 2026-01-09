@@ -14,7 +14,9 @@ SvelteKit-based frontend for the Luminote translation workbench.
 ## Prerequisites
 
 - **Node.js 22+** (LTS version recommended)
-  - **Note:** Node.js 22 is the project standard as specified in ARCHITECTURE.md and CONTRIBUTING.md. While Node.js 20 may work, 22+ is required for consistency and to ensure access to the latest features.
+  - **Note:** Node.js 22 is the project standard as specified in ARCHITECTURE.md
+    and CONTRIBUTING.md. While Node.js 20 may work, 22+ is required for
+    consistency and to ensure access to the latest features.
 - **npm 10+** (comes with Node.js)
 
 **Check your versions:**
@@ -27,12 +29,15 @@ npm --version   # Should be 10 or higher
 **Install Node.js 22:**
 
 If you don't have Node.js 22, install it from:
+
 - [Official Node.js website](https://nodejs.org/)
+
 - Or use a version manager like [nvm](https://github.com/nvm-sh/nvm):
+
   ```bash
   # Install nvm (macOS/Linux)
   curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.0/install.sh | bash
-  
+
   # Install and use Node.js 22
   nvm install 22
   nvm use 22
@@ -113,18 +118,18 @@ import { describe, it, expect, vi } from 'vitest';
 import Button from './Button.svelte';
 
 describe('Button component', () => {
-  it('renders with correct text', () => {
-    render(Button, { props: { text: 'Click me' } });
-    expect(screen.getByText('Click me')).toBeInTheDocument();
-  });
+    it('renders with correct text', () => {
+        render(Button, { props: { text: 'Click me' } });
+        expect(screen.getByText('Click me')).toBeInTheDocument();
+    });
 
-  it('calls onClick when clicked', async () => {
-    const onClick = vi.fn();
-    render(Button, { props: { text: 'Click', onClick } });
-    
-    await fireEvent.click(screen.getByText('Click'));
-    expect(onClick).toHaveBeenCalledOnce();
-  });
+    it('calls onClick when clicked', async () => {
+        const onClick = vi.fn();
+        render(Button, { props: { text: 'Click', onClick } });
+
+        await fireEvent.click(screen.getByText('Click'));
+        expect(onClick).toHaveBeenCalledOnce();
+    });
 });
 ```
 
@@ -215,7 +220,8 @@ import { formatDate } from '$utils/date';
 
 ### Commits
 
-- Run quality checks before committing: `npm run lint && npm run format && npm run type-check`
+- Run quality checks before committing:
+  `npm run lint && npm run format && npm run type-check`
 - Ensure dev server starts: `npm run dev`
 - Write clear commit messages using conventional commits format
 
@@ -227,7 +233,8 @@ The frontend communicates with the backend via HTTP REST API:
 - **API base path:** `/api/v1/`
 - **Health check:** http://localhost:8000/health
 
-**API endpoints will be configured in Phase 1.** For now, ensure both servers run simultaneously:
+**API endpoints will be configured in Phase 1.** For now, ensure both servers
+run simultaneously:
 
 ```bash
 # Terminal 1: Backend
@@ -240,17 +247,20 @@ cd frontend && npm run dev
 **CORS configuration:**
 
 The backend allows requests from the frontend origins. Default CORS origins:
+
 - `http://localhost:5000`
 - `http://127.0.0.1:5000`
 
 If you change the frontend port, update `backend/.env`:
+
 ```bash
 CORS_ORIGINS=http://localhost:5000,http://127.0.0.1:5000,http://localhost:5001
 ```
 
 ## Architecture
 
-The frontend follows a component-based architecture with clear separation of concerns:
+The frontend follows a component-based architecture with clear separation of
+concerns:
 
 ```
 ┌─────────────────────────────────────┐
@@ -283,41 +293,45 @@ The frontend follows a component-based architecture with clear separation of con
 
 **Key principles:**
 
-1. **Functional components** — Use Svelte's component syntax, avoid class components
-2. **Svelte stores for state** — Global state managed via Svelte stores (see ADR-005)
-3. **TypeScript strict mode** — All code must pass strict type checking
-4. **Co-located tests** — Tests live next to the code they test
-5. **Utility-first CSS** — Use Tailwind CSS classes, minimize custom CSS
+1. **Functional components** — Use Svelte's component syntax, avoid class
+   components
+1. **Svelte stores for state** — Global state managed via Svelte stores (see
+   ADR-005)
+1. **TypeScript strict mode** — All code must pass strict type checking
+1. **Co-located tests** — Tests live next to the code they test
+1. **Utility-first CSS** — Use Tailwind CSS classes, minimize custom CSS
 
-For architecture decisions, see [ADR-005: Frontend State Management](../docs/adr/005-frontend-state-management.md).
+For architecture decisions, see
+[ADR-005: Frontend State Management](../docs/adr/005-frontend-state-management.md).
 
 ## Development Workflow
 
 **Quick development cycle:**
 
 1. Start dev server: `npm run dev`
-2. Make changes to components/pages
-3. Browser auto-refreshes (HMR)
-4. Run tests: `npm test`
-5. Check types: `npm run type-check`
-6. Format code: `npm run format`
-7. Lint code: `npm run lint`
-8. Commit: `git commit -m "feat: your change"`
+1. Make changes to components/pages
+1. Browser auto-refreshes (HMR)
+1. Run tests: `npm test`
+1. Check types: `npm run type-check`
+1. Format code: `npm run format`
+1. Lint code: `npm run lint`
+1. Commit: `git commit -m "feat: your change"`
 
 **Adding a new component:**
 
 1. Create component: `src/lib/components/YourComponent.svelte`
-2. Write the component with TypeScript: `<script lang="ts">`
-3. Add tests: `src/lib/components/YourComponent.test.ts`
-4. Ensure ≥85% coverage: `npm run test:coverage`
-5. Use component in pages: `import YourComponent from '$components/YourComponent.svelte'`
+1. Write the component with TypeScript: `<script lang="ts">`
+1. Add tests: `src/lib/components/YourComponent.test.ts`
+1. Ensure ≥85% coverage: `npm run test:coverage`
+1. Use component in pages:
+   `import YourComponent from '$components/YourComponent.svelte'`
 
 **Adding a new store:**
 
 1. Create store: `src/lib/stores/yourStore.ts`
-2. Export store and methods
-3. Add tests: `src/lib/stores/yourStore.test.ts`
-4. Use in components: `import { yourStore } from '$stores/yourStore'`
+1. Export store and methods
+1. Add tests: `src/lib/stores/yourStore.test.ts`
+1. Use in components: `import { yourStore } from '$stores/yourStore'`
 
 For detailed workflow, see [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md).
 
@@ -332,9 +346,9 @@ Contributions are welcome! Please see:
 **Before contributing:**
 
 1. Read the contributing guidelines
-2. Set up your development environment
-3. Run all quality checks before submitting PR
-4. Ensure tests pass and coverage ≥85%
+1. Set up your development environment
+1. Run all quality checks before submitting PR
+1. Ensure tests pass and coverage ≥85%
 
 ## Documentation
 
@@ -365,6 +379,7 @@ taskkill /PID <PID> /F
 **Solution 2** — Use a different port (not recommended for this project):
 
 Edit `package.json`:
+
 ```json
 "scripts": {
   "dev": "vite dev --port 5001"
@@ -424,9 +439,9 @@ npm run build
 **Solution:**
 
 1. Check browser console for errors
-2. Restart dev server: `npm run dev`
-3. Clear browser cache (Ctrl+Shift+R or Cmd+Shift+R)
-4. Check file watcher limits (Linux):
+1. Restart dev server: `npm run dev`
+1. Clear browser cache (Ctrl+Shift+R or Cmd+Shift+R)
+1. Check file watcher limits (Linux):
    ```bash
    echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
    sudo sysctl -p
@@ -443,7 +458,8 @@ npm run build
 - Avoid relying on specific DOM order
 - Mock date/time if tests depend on it
 
-For more troubleshooting tips, see [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md#troubleshooting).
+For more troubleshooting tips, see
+[docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md#troubleshooting).
 
 ## Next Steps
 
@@ -455,18 +471,23 @@ This is the Phase 0 infrastructure setup. Phase 1 development will add:
 - Error handling UI
 - Loading states and progressive rendering
 
-See [docs/feature-specifications.md](../docs/feature-specifications.md) for detailed feature specs.
+See [docs/feature-specifications.md](../docs/feature-specifications.md) for
+detailed feature specs.
 
 ## Resources
 
-- **[SvelteKit Documentation](https://kit.svelte.dev/docs)** — Frontend framework
+- **[SvelteKit Documentation](https://kit.svelte.dev/docs)** — Frontend
+  framework
 - **[Svelte Documentation](https://svelte.dev/docs)** — Component framework
-- **[Tailwind CSS Documentation](https://tailwindcss.com/docs)** — Styling framework
-- **[TypeScript Documentation](https://www.typescriptlang.org/docs)** — Type system
+- **[Tailwind CSS Documentation](https://tailwindcss.com/docs)** — Styling
+  framework
+- **[TypeScript Documentation](https://www.typescriptlang.org/docs)** — Type
+  system
 - **[Vitest Documentation](https://vitest.dev)** — Testing framework
 
 ## License
 
-This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
+This project is licensed under the **GNU General Public License v3.0
+(GPL-3.0)**.
 
 See [LICENSE](../LICENSE) for details.

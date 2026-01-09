@@ -1,6 +1,7 @@
 # Luminote Backend
 
-This is the FastAPI backend for Luminote, an AI-powered translation and reading comprehension tool.
+This is the FastAPI backend for Luminote, an AI-powered translation and reading
+comprehension tool.
 
 ## Quick Start
 
@@ -39,24 +40,28 @@ pip install uv
    source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    ```
 
-   **Note:** The virtual environment must be activated in each new terminal session.
+   **Note:** The virtual environment must be activated in each new terminal
+   session.
 
-2. **Install dependencies:**
+1. **Install dependencies:**
 
    Using uv (recommended):
+
    ```bash
    uv pip install -e ".[dev]"
    ```
 
    Or using pip:
+
    ```bash
    pip install -r requirements.txt
    pip install -e ".[dev]"
    ```
 
-   The `-e` flag installs the package in editable mode, allowing you to modify code without reinstalling.
+   The `-e` flag installs the package in editable mode, allowing you to modify
+   code without reinstalling.
 
-3. **Configure environment:**
+1. **Configure environment:**
 
    ```bash
    cp .env.example .env
@@ -64,38 +69,44 @@ pip install uv
    ```
 
    **Required settings in `.env`:**
+
    - `API_V1_PREFIX` — API path prefix (default: `/api/v1`)
-   - `CORS_ORIGINS` — Allowed origins for CORS (default: `http://localhost:5000`)
+   - `CORS_ORIGINS` — Allowed origins for CORS (default:
+     `http://localhost:5000`)
    - `LOG_LEVEL` — Logging level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
    - `DEV_HOST` — Development server host (default: `127.0.0.1`)
    - `DEV_PORT` — Development server port (default: `8000`)
 
-4. **Start the development server:**
+1. **Start the development server:**
 
    ```bash
    luminote serve
    ```
 
    Or directly with uvicorn:
+
    ```bash
    uvicorn app.main:fastapi_application --reload --host 127.0.0.1 --port 8000
    ```
 
    The server will start at **http://localhost:8000** with auto-reload enabled.
 
-5. **Verify the setup:**
+1. **Verify the setup:**
 
    **Health check:**
+
    ```bash
    curl http://localhost:8000/health
    ```
 
    Expected response:
+
    ```json
    {"status": "ok", "version": "0.1.0"}
    ```
 
    **Interactive API documentation:**
+
    - Swagger UI: http://localhost:8000/docs
    - ReDoc: http://localhost:8000/redoc
 
@@ -112,7 +123,8 @@ These are automatically generated from your FastAPI routes and Pydantic models.
 
 ### Code Quality
 
-All code must pass quality checks before committing. Run these commands from the `backend/` directory:
+All code must pass quality checks before committing. Run these commands from the
+`backend/` directory:
 
 ```bash
 # Run all checks at once
@@ -265,20 +277,25 @@ This backend follows a layered architecture with clear separation of concerns:
 
 All significant architectural decisions are documented:
 
-- [ADR-001: API Endpoint Structure](../docs/adr/001-api-endpoint-structure.md) — RESTful conventions, versioning, request tracking
-- [ADR-002: Streaming Translation Architecture](../docs/adr/002-streaming-translation-architecture.md) — Server-Sent Events for progressive rendering
-- [ADR-004: Error Handling Patterns](../docs/adr/004-error-handling-patterns.md) — Standard error response format and exception hierarchy
+- [ADR-001: API Endpoint Structure](../docs/adr/001-api-endpoint-structure.md) —
+  RESTful conventions, versioning, request tracking
+- [ADR-002: Streaming Translation Architecture](../docs/adr/002-streaming-translation-architecture.md)
+  — Server-Sent Events for progressive rendering
+- [ADR-004: Error Handling Patterns](../docs/adr/004-error-handling-patterns.md)
+  — Standard error response format and exception hierarchy
 
 **Key principles:**
 
 1. **RESTful API with versioning** — All endpoints under `/api/v1/` prefix
-2. **Pydantic for validation** — Type-safe request/response models and settings
-3. **Custom exception hierarchy** — Consistent error handling via `LuminoteException`
-4. **Structured logging** — Request ID tracking for debugging
-5. **BYOK (Bring Your Own Key)** — Users provide API keys for AI providers
-6. **User-triggered AI operations only** — No automatic background AI calls
+1. **Pydantic for validation** — Type-safe request/response models and settings
+1. **Custom exception hierarchy** — Consistent error handling via
+   `LuminoteException`
+1. **Structured logging** — Request ID tracking for debugging
+1. **BYOK (Bring Your Own Key)** — Users provide API keys for AI providers
+1. **User-triggered AI operations only** — No automatic background AI calls
 
-For complete architecture documentation, see [ARCHITECTURE.md](../ARCHITECTURE.md).
+For complete architecture documentation, see
+[ARCHITECTURE.md](../ARCHITECTURE.md).
 
 ## Troubleshooting
 
@@ -287,6 +304,7 @@ For complete architecture documentation, see [ARCHITECTURE.md](../ARCHITECTURE.m
 **"ModuleNotFoundError: No module named 'app'"**
 
 Solution: Install the package in editable mode:
+
 ```bash
 cd backend
 source .venv/bin/activate
@@ -296,6 +314,7 @@ uv pip install -e ".[dev]"
 **"Port 8000 already in use"**
 
 Solution: Find and kill the process using port 8000:
+
 ```bash
 # macOS/Linux
 lsof -i :8000
@@ -311,7 +330,9 @@ luminote serve --port 8001
 
 **Tests failing with fixture errors**
 
-Solution: Ensure pytest is run from the backend directory and `conftest.py` exists:
+Solution: Ensure pytest is run from the backend directory and `conftest.py`
+exists:
+
 ```bash
 cd backend
 pytest -v
@@ -320,6 +341,7 @@ pytest -v
 **Type checking errors**
 
 Solution: Install type stubs for external libraries:
+
 ```bash
 uv pip install types-requests types-urllib3
 ```
@@ -327,31 +349,34 @@ uv pip install types-requests types-urllib3
 **Pre-commit hooks not running**
 
 Solution: Install pre-commit hooks:
+
 ```bash
 pip install pre-commit
 pre-commit install
 ```
 
-For more troubleshooting tips, see [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md#troubleshooting).
+For more troubleshooting tips, see
+[docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md#troubleshooting).
 
 ## Development Workflow
 
 **Quick development cycle:**
 
 1. Make code changes
-2. Run quality checks: `isort app/ && black app/ && ruff check app/ --no-fix && mypy app/`
-3. Run tests: `pytest -q`
-4. Test manually: `luminote serve` and visit http://localhost:8000/docs
-5. Commit: `git commit -m "feat: your change"`
+1. Run quality checks:
+   `isort app/ && black app/ && ruff check app/ --no-fix && mypy app/`
+1. Run tests: `pytest -q`
+1. Test manually: `luminote serve` and visit http://localhost:8000/docs
+1. Commit: `git commit -m "feat: your change"`
 
 **Adding a new API endpoint:**
 
 1. Define Pydantic schemas in `app/schemas/your_feature.py`
-2. Implement business logic in `app/services/your_service.py`
-3. Create the endpoint in `app/api/v1/endpoints/your_feature.py`
-4. Register the router in `app/api/v1/__init__.py`
-5. Add tests for all layers
-6. Update API documentation if needed
+1. Implement business logic in `app/services/your_service.py`
+1. Create the endpoint in `app/api/v1/endpoints/your_feature.py`
+1. Register the router in `app/api/v1/__init__.py`
+1. Add tests for all layers
+1. Update API documentation if needed
 
 For detailed workflow, see [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md).
 
@@ -365,7 +390,8 @@ Contributions are welcome! Please see [CONTRIBUTING.md](../CONTRIBUTING.md) for:
 - Pull request process and review guidelines
 - Commit message conventions
 
-Also review [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md) for detailed development workflows.
+Also review [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md) for detailed
+development workflows.
 
 ## Documentation
 
@@ -378,6 +404,7 @@ Also review [docs/DEVELOPMENT.md](../docs/DEVELOPMENT.md) for detailed developme
 
 ## License
 
-This project is licensed under the **GNU General Public License v3.0 (GPL-3.0)**.
+This project is licensed under the **GNU General Public License v3.0
+(GPL-3.0)**.
 
 See [LICENSE](../LICENSE) for details.
