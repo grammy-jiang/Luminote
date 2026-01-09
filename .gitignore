@@ -176,7 +176,7 @@ fabric.properties
 .LSOverride
 
 # Icon must end with two \r
-Icon
+Icon
 
 # Thumbnails
 ._*
@@ -442,7 +442,7 @@ $RECYCLE.BIN/
 ### Node.js / Frontend ###
 # Dependencies
 node_modules/
-package-lock.json
+# package-lock.json - COMMITTED for application (ensures consistent dependencies)
 
 # Build outputs
 .svelte-kit/
