@@ -1,6 +1,4 @@
-"""
-Test CORS and timing middleware.
-"""
+"""Test CORS and timing middleware."""
 
 from unittest.mock import patch
 
@@ -104,9 +102,9 @@ def test_slow_request_logging(client: TestClient) -> None:
         # Verify the logged duration is >= 1000ms (threshold for slow requests)
         duration_str = call_args[1]["extra"]["duration_ms"]
         duration_value = float(duration_str)
-        assert (
-            duration_value >= 1000.0
-        ), f"Duration {duration_value}ms should be >= 1000ms"
+        assert duration_value >= 1000.0, (
+            f"Duration {duration_value}ms should be >= 1000ms"
+        )
 
 
 @pytest.mark.unit

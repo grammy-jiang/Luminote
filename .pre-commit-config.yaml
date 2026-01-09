@@ -66,9 +66,10 @@ repos:
     hooks:
       - id: docformatter
         name: docformatter
-        entry: docformatter
+        entry: bash -c 'cd backend && uv run docformatter "${@#backend/}"' --
         language: system
         types: [python]
+        files: ^backend/
         args:
           - --in-place
           - --wrap-summaries
@@ -89,7 +90,7 @@ repos:
       - id: bandit
         args:
           - --configfile
-          - pyproject.toml
+          - backend/pyproject.toml
         additional_dependencies: ["bandit[toml]"]
   # ==== Documentation ====
   # Markdown and documentation tools
