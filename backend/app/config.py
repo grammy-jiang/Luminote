@@ -18,6 +18,9 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5000",
     ]
 
+    # Content Extraction Configuration
+    EXTRACTION_USER_AGENT: str = "Mozilla/5.0 (compatible; Luminote/1.0; +https://github.com/grammy-jiang/Luminote)"
+
     # Logging
     LOG_LEVEL: str = "INFO"
 
