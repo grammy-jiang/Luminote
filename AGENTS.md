@@ -18,6 +18,8 @@ backend and is in active early development (Phase 0/1 implementation).
   task. Avoid sweeping refactors unless explicitly requested.
 - **Always keep the repo green:** run the quality gates (Section 4) before
   marking work complete.
+- **Use `uv` for Python tooling:** run Python commands via `uv run …` to ensure
+  the project-managed environment is used (e.g., `uv run pytest`).
 - **Two-pane reading is primary:** never replace the translation pane with
   alternative content. This is Luminote's core UX principle.
 - **User-triggered AI only:** no automatic background AI calls. All AI
@@ -59,8 +61,8 @@ luminote serve  # Runs on http://localhost:8000 (defined in pyproject.toml)
 
 ```bash
 cd backend
-isort app/ && black app/ && ruff check app/ --no-fix && mypy app/
-pytest -q  # Run with: pytest --cov=app --cov-report=html for coverage
+uv run isort app/ && uv run black app/ && uv run ruff check app/ --no-fix && uv run mypy app/
+uv run pytest -q  # Run with: uv run pytest --cov=app --cov-report=html for coverage
 ```
 
 **Pre-commit hooks:**

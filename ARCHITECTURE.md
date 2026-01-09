@@ -51,7 +51,8 @@
 
 ### Backend (FastAPI)<a name="backend-fastapi"></a>
 
-- **Requirements:** Python 3.12+ with `uv` for dependency management
+- **Requirements:** Python 3.12+ with `uv` for dependency management (run
+  backend commands with `uv run …`)
 - **Entry point:** `luminote serve` command (defined in pyproject.toml)
 - **Endpoints:** health, fetch, extract, translate (see docs/API.md).
 - **Services:** Provider clients (OpenAI, Anthropic, etc.), extraction pipeline,

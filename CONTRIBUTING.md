@@ -6,7 +6,7 @@
   - [Project Structure](#project-structure)
     - [Key Modules](#key-modules)
   - [Local Development](#local-development)
-    - [Automated Setup (Recommended)](#automated-setup)
+    - [Automated Setup (Recommended)](#automated-setup-recommended)
     - [Manual Setup](#manual-setup)
     - [Backend Setup](#backend-setup)
     - [Frontend Setup](#frontend-setup)
@@ -106,9 +106,10 @@ Luminote/
 
 ## Local Development<a name="local-development"></a>
 
-### Automated Setup (Recommended)<a name="automated-setup"></a>
+### Automated Setup (Recommended)<a name="automated-setup-recommended"></a>
 
-The easiest way to set up your development environment is using the setup script:
+The easiest way to set up your development environment is using the setup
+script:
 
 ```bash
 # Clone the repository
@@ -162,7 +163,7 @@ If you prefer manual setup or need more control:
 1. **Start development server:**
 
    ```bash
-   luminote serve  # Runs on port 8000
+   uv run luminote serve  # Runs on port 8000 using the project environment
    ```
 
 ### Frontend Setup<a name="frontend-setup"></a>
@@ -182,8 +183,8 @@ If you prefer manual setup or need more control:
 
 ### Pre-commit Hooks Setup<a name="pre-commit-hooks-setup"></a>
 
-Pre-commit hooks automatically check your code quality before each commit. They help
-catch issues early and maintain consistent code standards.
+Pre-commit hooks automatically check your code quality before each commit. They
+help catch issues early and maintain consistent code standards.
 
 **Installation:**
 
@@ -193,8 +194,8 @@ catch issues early and maintain consistent code standards.
 
 cd backend
 source .venv/bin/activate  # Windows: .venv\Scripts\activate.bat
-pip install pre-commit
-pre-commit install
+uv pip install pre-commit
+uv run pre-commit install
 ```
 
 **Usage:**
@@ -220,6 +221,7 @@ git commit --no-verify -m "your message"
 The following checks run automatically on commit:
 
 - **Python Code Quality:**
+
   - `ruff` - Lint for code issues and style (with auto-fix)
   - `ruff-format` - Format code (replaces Black)
   - `pyupgrade` - Upgrade syntax for Python 3.12+
@@ -228,11 +230,13 @@ The following checks run automatically on commit:
   - `bandit` - Security vulnerability scanning
 
 - **Configuration Files:**
+
   - `yamlfmt` - Format YAML files
   - `toml-sort` - Sort and format TOML files
   - `yamllint` - Lint YAML files
 
 - **File Quality:**
+
   - Trailing whitespace removal
   - End-of-file fixes
   - JSON validation and formatting
@@ -240,15 +244,17 @@ The following checks run automatically on commit:
   - Case conflict detection
 
 - **Shell Scripts:**
+
   - `shellcheck` - Shell script linting
   - `bashate` - Bash script style checking
 
 - **Documentation:**
+
   - `mdformat` - Markdown formatting
   - `pymarkdown` - Markdown linting
 
-**Performance:** Hooks complete in <10 seconds on typical commits. First run may be
-slower as it sets up hook environments.
+**Performance:** Hooks complete in \<10 seconds on typical commits. First run
+may be slower as it sets up hook environments.
 
 ## Development Standards<a name="development-standards"></a>
 
@@ -275,25 +281,19 @@ Code must follow these standards:
 **Python:**
 
 ```bash
-
 cd backend
 
 # Format imports and code
-
-isort app/ && black app/
+uv run isort app/ && uv run black app/
 
 # Lint for issues
-
-ruff check app/ --no-fix
+uv run ruff check app/ --no-fix
 
 # Check type hints
-
-mypy app/
+uv run mypy app/
 
 # Run all checks
-
-isort app/ && black app/ && ruff check app/ --no-fix && mypy app/
-
+uv run isort app/ && uv run black app/ && uv run ruff check app/ --no-fix && uv run mypy app/
 ```
 
 **TypeScript:**
@@ -322,27 +322,21 @@ Coverage below these thresholds blocks pull requests.
 **Run tests:**
 
 ```bash
-
 cd backend
 
 # Run all tests
-
-pytest
+uv run pytest
 
 # Run with coverage report
-
-pytest --cov=app --cov-report=html
+uv run pytest --cov=app --cov-report=html
 
 # Run specific test type
-
-pytest -m unit   # Unit tests
-pytest -m smoke  # Smoke tests
-pytest -m e2e    # End-to-end tests
+uv run pytest -m unit   # Unit tests
+uv run pytest -m smoke  # Smoke tests
+uv run pytest -m e2e    # End-to-end tests
 
 # Test across all supported Python versions
-
-tox
-
+uv run tox
 ```
 
 **Test categories:**
@@ -393,10 +387,8 @@ uv pip install -e ".[dev]"
 **Build distributions:**
 
 ```bash
-
 cd backend
-python -m build
-
+uv run python -m build
 ```
 
 Creates in `backend/dist/`:
@@ -407,9 +399,7 @@ Creates in `backend/dist/`:
 **Run server:**
 
 ```bash
-
-luminote serve
-
+uv run luminote serve
 ```
 
 The `luminote serve` command is defined as an entry point in `pyproject.toml`
@@ -418,19 +408,15 @@ under `[project.scripts]`.
 **Test local build:**
 
 ```bash
-
-pip install backend/dist/luminote-*.whl
-luminote serve
-
+uv pip install backend/dist/luminote-*.whl
+uv run luminote serve
 ```
 
 **Upload to PyPI (maintainers only):**
 
 ```bash
-
 cd backend
-python -m twine upload dist/*
-
+uv run python -m twine upload dist/*
 ```
 
 ### Frontend Build<a name="frontend-build"></a>
@@ -521,8 +507,8 @@ codebase.
 
    ```bash
    # Backend
-   cd backend && pytest && isort app/ && black app/ && \
-     ruff check app/ --no-fix && mypy app/
+   cd backend && uv run pytest && uv run isort app/ && uv run black app/ && \
+     uv run ruff check app/ --no-fix && uv run mypy app/
 
    # Frontend
    cd frontend && npm test && npm run lint && npm run format
@@ -549,7 +535,7 @@ Every PR must:
 - Have a clear, descriptive title
 - Include a description explaining **what**, **why**, and **how**
 - Reference related issues
-- Pass all tests (pytest for Python, npm test for TypeScript)
+- Pass all tests (uv run pytest for Python, npm test for TypeScript)
 - Meet coverage requirements (core >95%, other >85%)
 - Pass code quality checks (isort, black, ruff, mypy for Python; ESLint,
   Prettier for TypeScript)

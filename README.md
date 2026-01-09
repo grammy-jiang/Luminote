@@ -130,11 +130,12 @@ scripts\setup-dev.bat   # Windows
 # - Create .env files from examples
 ```
 
-After setup completes, configure your API keys in `backend/.env`, then:
+After setup completes, configure your API keys in `backend/.env`, then (use
+`uv run` for Python commands to ensure the managed environment is used):
 
 ```bash
 # Start backend (in one terminal)
-cd backend && source .venv/bin/activate && luminote serve
+cd backend && uv run luminote serve
 
 # Start frontend (in another terminal)
 cd frontend && npm run dev
@@ -142,7 +143,8 @@ cd frontend && npm run dev
 
 **Verify setup:**
 
-- Backend: http://localhost:8000/health (should return `{"status": "ok", "version": "0.1.0"}`)
+- Backend: http://localhost:8000/health (should return
+  `{"status": "ok", "version": "0.1.0"}`) when run via `uv run luminote serve`
 - Frontend: http://localhost:5000 (should show the app)
 - API docs: http://localhost:8000/docs (interactive API documentation)
 
@@ -200,8 +202,8 @@ npm run dev  # serves at http://localhost:5000
 
 - **[Project Status](docs/PROJECT-STATUS.md)** ⭐ - Current progress, next steps,
   and achievements
-- **[GitHub Issue Methodology](docs/best_practices/github-issue-creation-methodology.md)** -
-  Systematic issue creation process
+- **[GitHub Issue Methodology](docs/best_practices/github-issue-creation-methodology.md)**
+  \- Systematic issue creation process
 - **[Feature Dependencies](docs/feature-dependency-analysis.md)** - Dependency
   graphs and implementation batches
 - **[Infrastructure Requirements](docs/infrastructure-requirements.md)** -
