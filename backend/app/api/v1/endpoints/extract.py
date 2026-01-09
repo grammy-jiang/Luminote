@@ -37,12 +37,10 @@ async def extract_content(
         ExtractionResponse with extracted content blocks and metadata
 
     Raises:
-        HTTPException: On validation or processing errors (handled by middleware)
-            - 400 (INVALID_URL): URL format is invalid
-            - 404 (URL_NOT_FOUND): URL returns 404
-            - 422 (EXTRACTION_FAILED): Content extraction failed
-            - 502 (URL_UNREACHABLE): Network error or unreachable host
-            - 504 (REQUEST_TIMEOUT): Request timed out
+        LuminoteException subclasses (handled by exception middleware), including:
+            - InvalidURLError: URL format is invalid
+            - URLFetchError: Network error, unreachable host, or non-200 response
+            - ExtractionError: Content extraction failed
     """
     start_time = time.perf_counter()
 

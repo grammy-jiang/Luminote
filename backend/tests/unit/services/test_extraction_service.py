@@ -136,7 +136,6 @@ async def test_fetch_url_http_error():
         assert "404" in exc_info.value.message
 
 
-
 @pytest.mark.unit
 async def test_fetch_url_network_error():
     """Test URL fetch network error handling."""
