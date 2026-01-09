@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 import app
+from app.api.v1.router import api_router
 from app.config import get_settings
 from app.core.errors import LuminoteException
 from app.core.logging import logger, setup_logging
@@ -188,6 +189,9 @@ def create_app() -> FastAPI:
             },
             headers={"X-Request-ID": request_id},
         )
+
+    # Include API v1 router
+    fastapi_app.include_router(api_router, prefix="/api/v1")
 
     return fastapi_app
 
