@@ -52,23 +52,9 @@ async def extract_content(
     # Extract content using the extraction service
     try:
         extracted_content = await extraction_service.extract(extraction_request.url)
-    except InvalidURLError as e:
-        # Re-raise with proper error code - will be caught by exception handler
-        raise e
-    except URLFetchError as e:
-        # Check if it's a 404 error
-        if "404" in e.details.get("reason", ""):
-            # Create a new URLFetchError with 404 status
-            raise URLFetchError(
-                url=e.details.get("url", extraction_request.url),
-                reason="URL not found",
-                status_code=404,
-            ) from e
-        # Re-raise other fetch errors as-is (502/504)
-        raise e
-    except ExtractionError as e:
-        # Re-raise extraction errors as-is (422)
-        raise e
+    except (InvalidURLError, URLFetchError, ExtractionError):
+        # Re-raise service exceptions as-is - they have proper status codes
+        raise
 
     processing_time = time.perf_counter() - start_time
 

@@ -132,8 +132,9 @@ async def test_fetch_url_http_error():
             await service._fetch_url("https://example.com/notfound")
 
         assert exc_info.value.code == "URL_FETCH_ERROR"
-        assert exc_info.value.status_code == 502
+        assert exc_info.value.status_code == 404  # 404 is preserved
         assert "404" in exc_info.value.message
+
 
 
 @pytest.mark.unit

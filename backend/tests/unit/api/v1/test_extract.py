@@ -154,7 +154,7 @@ def test_extract_url_not_found(client: TestClient) -> None:
         mock_extract.side_effect = URLFetchError(
             url="https://example.com/nonexistent",
             reason="HTTP 404",
-            status_code=502,  # Service sets 502 initially
+            status_code=404,
         )
 
         # Act
@@ -165,7 +165,6 @@ def test_extract_url_not_found(client: TestClient) -> None:
     data = response.json()
     assert data["code"] == "URL_FETCH_ERROR"
     assert "request_id" in data
-    assert "not found" in data["error"].lower()
 
 
 @pytest.mark.unit
