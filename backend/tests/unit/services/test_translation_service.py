@@ -283,9 +283,7 @@ async def test_translation_service_with_registered_provider():
     ProviderFactory.register_provider("custom", CustomTestProvider)
 
     try:
-        block = ContentBlock(
-            id="block-1", type="paragraph", text="Hello", metadata={}
-        )
+        block = ContentBlock(id="block-1", type="paragraph", text="Hello", metadata={})
 
         result = await service.translate_block(
             block=block,

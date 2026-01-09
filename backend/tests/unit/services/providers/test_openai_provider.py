@@ -31,7 +31,9 @@ async def test_openai_translate_success():
     with patch("httpx.AsyncClient") as mock_client:
         mock_post = AsyncMock()
         # Create a proper httpx.Response with a request
-        mock_request = httpx.Request("POST", "https://api.openai.com/v1/chat/completions")
+        mock_request = httpx.Request(
+            "POST", "https://api.openai.com/v1/chat/completions"
+        )
         mock_response = httpx.Response(
             status_code=200, json=mock_response_data, request=mock_request
         )
@@ -164,7 +166,9 @@ async def test_openai_translate_400_bad_request():
 
     with patch("httpx.AsyncClient") as mock_client:
         mock_post = AsyncMock()
-        mock_request = httpx.Request("POST", "https://api.openai.com/v1/chat/completions")
+        mock_request = httpx.Request(
+            "POST", "https://api.openai.com/v1/chat/completions"
+        )
         mock_response = httpx.Response(
             status_code=400,
             json={"error": {"message": "Invalid model specified"}},
@@ -179,7 +183,10 @@ async def test_openai_translate_400_bad_request():
 
         with pytest.raises(TranslationError) as exc_info:
             await provider.translate(
-                text="Hello", target_language="es", model="invalid-model", api_key="sk-test"
+                text="Hello",
+                target_language="es",
+                model="invalid-model",
+                api_key="sk-test",
             )
 
         assert exc_info.value.code == "TRANSLATION_ERROR"
@@ -238,9 +245,7 @@ async def test_openai_translate_429_error_json_parse_attempt():
         mock_response.status_code = 429
         mock_response.request = mock_request
         # Return valid JSON with retry info structure
-        mock_response.json.return_value = {
-            "error": {"message": "Rate limit exceeded"}
-        }
+        mock_response.json.return_value = {"error": {"message": "Rate limit exceeded"}}
 
         mock_post.side_effect = httpx.HTTPStatusError(
             message="Too Many Requests",
@@ -285,7 +290,9 @@ async def test_openai_translate_unexpected_response_format():
     with patch("httpx.AsyncClient") as mock_client:
         mock_post = AsyncMock()
         # Missing 'choices' key
-        mock_request = httpx.Request("POST", "https://api.openai.com/v1/chat/completions")
+        mock_request = httpx.Request(
+            "POST", "https://api.openai.com/v1/chat/completions"
+        )
         mock_response = httpx.Response(
             status_code=200, json={"usage": {"total_tokens": 30}}, request=mock_request
         )
