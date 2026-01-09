@@ -1,0 +1,460 @@
+name: Documentation Task
+description: >-
+  Template for creating or updating documentation (ADRs, API docs, guides, README)
+title: "[Docs] "
+labels: ["documentation"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Quick Start Commands
+        Use these commands to preview and validate documentation:
+  - type: textarea
+    id: quick_commands
+    attributes:
+      label: Validation Commands
+      description: >-
+        Commands to preview and check documentation (run these first!)
+      placeholder: |
+        # Preview markdown locally
+        # (Use VS Code markdown preview or markdown viewer)
+
+        # Check links
+        npm run check-links
+
+        # Lint markdown
+        pymarkdown scan docs/
+
+        # Check for broken references
+        grep -r "docs/" --include="*.md" | grep "FIXME\|TODO"
+      value: |
+        # Lint markdown
+        pymarkdown scan docs/
+
+        # Preview in browser
+        # Open file in VS Code or use markdown preview
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Context
+  - type: dropdown
+    id: doc_type
+    attributes:
+      label: Documentation Type
+      description: What kind of documentation is this?
+      options:
+        - "ADR (Architecture Decision Record)"
+        - "API Documentation"
+        - "Feature Specification"
+        - "User Guide / Tutorial"
+        - "Developer Guide"
+        - "README Update"
+        - "Code Comments / Docstrings"
+        - "CONTRIBUTING Update"
+    validations:
+      required: true
+  - type: textarea
+    id: current_state
+    attributes:
+      label: Current Documentation State
+      description: What documentation exists? What's missing or outdated?
+      placeholder: |
+        **Current State:**
+        - ADR-001 through ADR-005 exist and are up-to-date
+        - API documentation in `docs/api.md` is outdated (missing streaming
+          endpoints)
+        - No user guide for content extraction workflow
+
+        **Gaps:**
+        - New SSE streaming endpoint not documented
+        - Error response codes not listed
+        - No examples for common use cases
+
+        **Outdated Information:**
+        - README still mentions Phase 0 as current (we're in Phase 1)
+        - API examples use old non-streaming endpoint
+    validations:
+      required: true
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: Problem / Why This Documentation
+      description: Why is this documentation needed? Who is the audience?
+      placeholder: |
+        **Problem:**
+        New developers cannot understand how to use the streaming translation API because the documentation only covers the old synchronous endpoint.
+
+        **Audience:**
+        - Frontend developers integrating with the backend
+        - Future maintainers understanding the streaming architecture
+        - GitHub Copilot agents needing context for code generation
+
+        **Impact:**
+        - Slows down development (developers must read code instead of docs)
+        - Increases risk of incorrect API usage
+        - Harder for Copilot to generate correct integration code
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Documentation Request
+  - type: textarea
+    id: documentation_changes
+    attributes:
+      label: Specific Documentation Changes
+      description: Exactly what needs to be written or updated?
+      placeholder: |
+        **New Content:**
+        1. Add "Streaming Translation" section to `docs/api.md`
+        2. Document SSE endpoint: POST /api/v1/translate/stream
+        3. Include request/response examples with curl
+        4. Document SSE event types (data, error, done)
+        5. Add error codes and their meanings
+
+        **Updates:**
+        1. Update `README.md` - Change "Phase 0" to "Phase 1"
+        2. Update `docs/api.md` - Mark old endpoint as "Legacy (non-streaming)"
+        3. Update `CONTRIBUTING.md` - Add SSE testing guidelines
+
+        **New ADR:**
+        If applicable, create ADR-006 for [decision topic]
+    validations:
+      required: true
+  - type: textarea
+    id: content_outline
+    attributes:
+      label: Content Outline
+      description: Table of contents or section structure
+      placeholder: |
+        ## Streaming Translation API
+
+        ### Overview
+        - What is streaming translation?
+        - Benefits over synchronous translation
+        - When to use streaming vs non-streaming
+
+        ### Endpoint Details
+        - URL: POST /api/v1/translate/stream
+        - Headers required
+        - Request body schema
+        - Response format (SSE)
+
+        ### Event Types
+        - `data` event - Block translation completed
+        - `error` event - Translation error occurred
+        - `done` event - All blocks completed
+
+        ### Code Examples
+        - curl example
+        - Python example (requests library)
+        - TypeScript example (fetch + SSE)
+
+        ### Error Handling
+        - Error codes and meanings
+        - Retry strategies
+        - Connection management
+
+        ### Testing
+        - How to test SSE endpoints
+        - Example test code
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Acceptance Criteria
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Measurable Success Criteria
+      description: How do we know documentation is complete and correct?
+      placeholder: |
+        - [ ] All sections in outline are written
+        - [ ] Code examples are tested and work correctly
+        - [ ] All links are valid (no broken references)
+        - [ ] Markdown linting passes (pymarkdown)
+        - [ ] Examples include both success and error cases
+        - [ ] Documentation is clear and concise (no jargon without explanation)
+        - [ ] Screenshots/diagrams included where helpful
+        - [ ] Cross-references to related docs are added
+        - [ ] Reviewed by another developer for clarity
+        - [ ] Optimized for GitHub Copilot (structured, concrete examples)
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Files & Boundaries
+  - type: textarea
+    id: files_to_modify
+    attributes:
+      label: Files to Modify
+      description: Documentation files to create or update
+      placeholder: |
+        **Create:**
+        - `docs/guides/streaming-translation.md` - Comprehensive streaming guide
+        - `docs/adr/006-new-decision.md` - If creating new ADR
+
+        **Modify:**
+        - `docs/api.md` - Add streaming endpoint documentation
+        - `README.md` - Update project status and quick start
+        - `CONTRIBUTING.md` - Add SSE testing guidelines
+
+        **Reference (don't modify):**
+        - `docs/feature-specifications.md` - Source of truth for features
+        - `docs/adr/*.md` - Existing ADRs for context
+    validations:
+      required: true
+  - type: textarea
+    id: do_not_change
+    attributes:
+      label: Do Not Change
+      description: Documentation that must remain untouched
+      placeholder: |
+        **Never modify:**
+        - Existing ADRs (they are historical records)
+        - Feature specifications (update via separate process)
+        - LICENSE file
+
+        **Ask first before:**
+        - Restructuring documentation hierarchy
+        - Changing ADR numbering scheme
+        - Removing or archiving existing docs
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Implementation Guidance
+  - type: textarea
+    id: style_guide
+    attributes:
+      label: Documentation Style Guidelines
+      description: Writing style, formatting, tone
+      placeholder: |
+        **Writing Style:**
+        - Use active voice ("The service translates blocks" not "Blocks are
+          translated")
+        - Be concise (no filler words)
+        - Use present tense for current behavior
+        - Use code blocks for all code examples
+
+        **Formatting:**
+        - Use ATX-style headers (# ## ###)
+        - Maximum line length: 80-100 characters
+        - Use fenced code blocks with language tags
+        - Include blank lines between sections
+
+        **Code Examples:**
+        - Must be runnable (tested)
+        - Include comments explaining key parts
+        - Show both success and error cases
+        - Use realistic data (not "foo", "bar")
+
+        **Copilot Optimization:**
+        - Provide complete, concrete examples (not pseudocode)
+        - Include exact file paths and command-line examples
+        - List prerequisites and dependencies
+        - Show expected output
+      value: |
+        **Style:**
+        - Active voice, present tense
+        - Concise and clear
+        - Concrete examples, not pseudocode
+
+        **Format:**
+        - ATX headers (# ## ###)
+        - Fenced code blocks with language
+        - 80-100 char lines
+    validations:
+      required: false
+  - type: textarea
+    id: code_examples
+    attributes:
+      label: Documentation Examples
+      description: Sample content showing the expected documentation quality
+      placeholder: |
+        **API Endpoint Documentation Example:**
+
+        ````markdown
+        ## POST /api/v1/translate/stream
+
+        Streams translation results block-by-block using Server-Sent Events (SSE).
+
+        ### Request
+
+        **Headers:**
+        - `Content-Type: application/json`
+
+        **Body:**
+        ```json
+        {
+          "content_blocks": [
+            {
+              "id": "1",
+              "type": "paragraph",
+              "text": "Hello, world!"
+            }
+          ],
+          "target_language": "es",
+          "provider": "openai",
+          "model": "gpt-4",
+          "api_key": "sk-..."
+        }
+        ```
+
+        ### Response
+
+        **Headers:**
+        - `Content-Type: text/event-stream`
+        - `Cache-Control: no-cache`
+
+        **Body (SSE Stream):**
+        ```
+        data: >-
+          {"block_id": "1", "translated_text": "¡Hola, mundo!", "metadata":
+          {...}}
+
+        event: done
+        data: {}
+        ```
+
+        ### Error Response
+
+        ```
+        event: error
+        data: {"error": "Rate limit exceeded", "code": "RATE_LIMIT_EXCEEDED"}
+        ```
+
+        ### Example (curl)
+
+        ```bash
+        curl -N -X POST http://localhost:8000/api/v1/translate/stream \
+          -H "Content-Type: application/json" \
+          -d '{
+            "content_blocks": >-
+              [{"id": "1", "type": "paragraph", "text": "Hello"}],
+            "target_language": "es",
+            "provider": "openai",
+            "model": "gpt-4",
+            "api_key": "sk-test"
+          }'
+        ```
+        ````
+      value: ""
+  - type: textarea
+    id: validation_strategy
+    attributes:
+      label: Documentation Validation
+      description: How to verify documentation is correct
+      placeholder: |
+        **Accuracy Check:**
+        1. Run all code examples to verify they work
+        2. Check all links with `npm run check-links`
+        3. Verify API endpoints match actual implementation
+        4. Test curl commands against running server
+
+        **Quality Check:**
+        1. Run markdown linter: `pymarkdown scan docs/`
+        2. Check for broken cross-references
+        3. Verify all code blocks have language tags
+        4. Read aloud to check for clarity
+
+        **Peer Review:**
+        1. Ask another developer to read and provide feedback
+        2. Verify examples are clear and understandable
+        3. Check that terminology is consistent
+
+        **Success Criteria:**
+        - All code examples execute successfully
+        - No broken links
+        - Markdown linting passes
+        - Peer review approves clarity
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Dependencies & References
+  - type: textarea
+    id: related_code
+    attributes:
+      label: Related Code
+      description: What code is this documenting?
+      placeholder: |
+        **Code Being Documented:**
+        - `backend/app/api/v1/endpoints/translate.py` - Streaming endpoint
+        - `frontend/src/lib/utils/translation-stream.ts` - SSE client
+
+        **Related Issues:**
+        - Issue #XX: Implement streaming translation
+        - Issue #YY: Frontend SSE client
+
+        **Related Features:**
+        - Feature 1.2: Streaming Translation
+        - Feature 1.4: Translation Integration
+    validations:
+      required: false
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: ADRs, specs, external docs
+      placeholder: |
+        **Internal References:**
+        - ADR-002: Streaming Translation Architecture
+        - docs/feature-specifications.md - Feature 1.2
+        - docs/atomic-features.md - Atomic feature breakdown
+
+        **External References:**
+        - [MDN: Server-Sent
+          Events](https://developer.mozilla.org/en-US/docs/Web/API/Server-sent_events)
+        - [FastAPI Streaming
+          Responses](https://fastapi.tiangolo.com/advanced/custom-response/#streamingresponse)
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Additional Context
+  - type: textarea
+    id: diagrams_needed
+    attributes:
+      label: Diagrams or Screenshots
+      description: Visual aids to include
+      placeholder: |
+        **Diagrams Needed:**
+        - Sequence diagram: SSE streaming flow (Backend → Frontend)
+        - Architecture diagram: Translation service components
+
+        **Screenshots Needed:**
+        - Browser DevTools: Network tab showing SSE events
+        - Example UI: Progress bar during streaming translation
+
+        **Tools:**
+        - Use Mermaid for diagrams (renders in GitHub markdown)
+        - Use browser DevTools for screenshots
+    validations:
+      required: false
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Notes
+      description: Anything else about this documentation task?
+      placeholder: |
+        - This documentation will be used by GitHub Copilot for code generation
+        - Include concrete examples, not just descriptions
+        - Cross-reference related docs for easy navigation
+        - Update table of contents if adding new sections
+    validations:
+      required: false

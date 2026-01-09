@@ -1,0 +1,482 @@
+name: Integration Feature (Backend + Frontend)
+description: >-
+  Template for features requiring coordinated backend and frontend implementation
+title: "[Integration] "
+labels: ["integration", "backend", "frontend"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Quick Start Commands
+        Use these commands to validate your implementation:
+  - type: textarea
+    id: quick_commands
+    attributes:
+      label: Validation Commands
+      description: Commands to test the complete integration (run these first!)
+      placeholder: |
+        # Start both servers concurrently
+        # Terminal 1: Backend
+        cd backend && uvicorn app.main:app --reload
+
+        # Terminal 2: Frontend
+        cd frontend && npm run dev
+
+        # Run integration tests
+        cd backend && pytest tests/integration/ -v
+        cd frontend && npm run test:integration
+
+        # End-to-end smoke test
+        curl -X POST http://localhost:8000/api/v1/translate ...
+      value: |
+        # Terminal 1: Backend
+        cd backend && uvicorn app.main:app --reload
+
+        # Terminal 2: Frontend
+        cd frontend && npm run dev
+
+        # Run integration tests
+        pytest tests/integration/ -v
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Context
+  - type: textarea
+    id: existing_code
+    attributes:
+      label: Existing Backend & Frontend Code
+      description: What exists on both sides? How do they currently interact?
+      placeholder: |
+        **Backend State:**
+        - Translation API exists at POST /api/v1/translate
+        - Returns complete translations (non-streaming)
+        - Uses TranslationService in `app/services/translation_service.py`
+
+        **Frontend State:**
+        - TranslationPane component exists
+        - Uses fetch() for API calls
+        - Displays results after full response
+
+        **Current Integration:**
+        - Frontend → Backend: Single POST request
+        - Backend → Frontend: Complete response after all blocks done
+
+        **Related ADRs:**
+        - ADR-001: API Endpoint Structure
+        - ADR-002: Streaming Translation Architecture
+        - ADR-005: Frontend State Management
+    validations:
+      required: true
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: Problem / Why This Integration
+      description: >-
+        What user journey needs coordination between backend and frontend?
+      placeholder: |
+        Currently, streaming translation is implemented on the backend (SSE endpoint) but the frontend still uses the old non-streaming API.
+
+        User Impact:
+        - Users don't see progressive results despite backend support
+        - Poor UX for long documents
+        - Backend streaming capability is unused
+
+        This integration connects the backend SSE endpoint with the frontend SSE client for Feature 1.4 (Translation Integration).
+    validations:
+      required: true
+  - type: dropdown
+    id: feature_batch
+    attributes:
+      label: Implementation Batch
+      description: Which implementation batch does this belong to?
+      options:
+        - "Batch 1.1: Backend Core Foundation"
+        - "Batch 1.2: Frontend Foundation"
+        - "Batch 1.3: Content Extraction"
+        - "Batch 1.4: Translation Integration"
+        - "Batch 1.5: Progressive UI"
+        - "Batch 1.6: Pane Interaction"
+        - "Batch 1.7: Error Handling"
+        - "Batch 1.8: Configuration"
+        - "Batch 1.9: End-to-End Integration"
+        - "Other / Not in sequence"
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Change Request
+  - type: textarea
+    id: backend_changes
+    attributes:
+      label: Backend Changes Required
+      description: What needs to change on the backend?
+      placeholder: |
+        1. Ensure SSE endpoint is production-ready at POST /api/v1/translate/stream
+        2. Add request validation for streaming requests
+        3. Implement proper error handling (emit error events, don't crash stream)
+        4. Add integration tests that simulate frontend consumption
+        5. Document SSE event format in OpenAPI spec
+    validations:
+      required: true
+  - type: textarea
+    id: frontend_changes
+    attributes:
+      label: Frontend Changes Required
+      description: What needs to change on the frontend?
+      placeholder: |
+        1. Create SSE client utility in `lib/utils/translation-stream.ts`
+        2. Update translationStore to use SSE client instead of fetch
+        3. Handle SSE events: data (block), error, done
+        4. Update TranslationPane to show progressive results
+        5. Add error UI for failed blocks
+        6. Implement reconnection logic for dropped connections
+    validations:
+      required: true
+  - type: textarea
+    id: api_contract
+    attributes:
+      label: Integration Contract
+      description: >-
+        How do backend and frontend communicate? Request/response formats.
+      placeholder: |
+        **API Endpoint:**
+        POST /api/v1/translate/stream
+
+        **Request (Frontend → Backend):**
+        ```typescript
+        interface TranslationRequest {
+          content_blocks: ContentBlock[];
+          target_language: string;
+          provider: string;
+          model: string;
+          api_key: string;
+        }
+        ```
+
+        **Response (Backend → Frontend SSE):**
+        ```
+        # Block translation event
+        data: {"block_id": "1", "translated_text": "...", "metadata": {...}}\n\n
+
+        # Error event
+        event: error\ndata: {"error": "...", "code": "...", "block_id": "..."}\n\n
+
+        # Completion event
+        event: done\ndata: {}\n\n
+        ```
+
+        **Frontend Handling:**
+        ```typescript
+        streamTranslation(
+          request,
+          (block) => { /* update UI */ },
+          (error) => { /* show error */ },
+          () => { /* mark complete */ }
+        )
+        ```
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Acceptance Criteria
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Measurable Success Criteria
+      description: How do we know the integration works end-to-end?
+      placeholder: |
+        **Backend:**
+        - [ ] SSE endpoint streams events correctly
+        - [ ] Error events don't crash the stream
+        - [ ] "done" event sent after all blocks
+        - [ ] Backend integration tests pass
+
+        **Frontend:**
+        - [ ] SSE client connects and receives events
+        - [ ] UI updates progressively as blocks arrive
+        - [ ] Error blocks shown with retry option
+        - [ ] "done" event triggers completion state
+        - [ ] Frontend integration tests pass
+
+        **End-to-End:**
+        - [ ] User can translate a 10-block document and see progressive results
+        - [ ] Network interruption shows error and allows retry
+        - [ ] All blocks render correctly in translation pane
+        - [ ] Manual testing: Translate real content, observe progressive
+          rendering
+        - [ ] Integration test suite passes (backend + frontend)
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Files & Boundaries
+  - type: textarea
+    id: files_to_modify
+    attributes:
+      label: Files to Modify (Backend + Frontend)
+      description: Explicit list of all files across both layers
+      placeholder: |
+        **Backend:**
+        - `backend/app/api/v1/endpoints/translate.py` - SSE streaming endpoint
+        - `backend/tests/integration/test_streaming.py` - Integration tests
+
+        **Frontend:**
+        - `frontend/src/lib/utils/translation-stream.ts` - SSE client utility
+        - `frontend/src/lib/stores/translation.ts` - Update to use SSE
+        - `frontend/src/lib/components/TranslationPane.svelte` - Progressive
+          rendering
+        - `frontend/tests/integration/translation-flow.test.ts` - Integration
+          tests
+
+        **Shared:**
+        - Update API documentation in `docs/api.md`
+    validations:
+      required: true
+  - type: textarea
+    id: do_not_change
+    attributes:
+      label: Do Not Change
+      description: Files/patterns that must remain untouched across both layers
+      placeholder: |
+        **Backend - Never modify:**
+        - Database models
+        - Authentication logic
+        - Core exception hierarchy
+
+        **Frontend - Never modify:**
+        - Store structure patterns
+        - Global CSS variables
+        - TypeScript config
+
+        **Integration - Ask first before:**
+        - Changing API endpoint URLs
+        - Modifying response envelope format
+        - Adding new dependencies (backend or frontend)
+        - Changing error code constants
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Implementation Guidance
+  - type: textarea
+    id: implementation_order
+    attributes:
+      label: Implementation Order
+      description: Step-by-step sequence for implementing across layers
+      placeholder: |
+        **Phase 1: Backend Preparation**
+        1. Ensure SSE endpoint is complete and tested
+        2. Add integration test that simulates SSE client
+        3. Verify error handling works correctly
+
+        **Phase 2: Frontend SSE Client**
+        1. Create translation-stream.ts utility
+        2. Write unit tests for SSE client
+        3. Test with mock SSE server
+
+        **Phase 3: Store Integration**
+        1. Update translationStore to use SSE client
+        2. Test store with mock events
+        3. Ensure state updates correctly
+
+        **Phase 4: UI Integration**
+        1. Update TranslationPane for progressive rendering
+        2. Add error UI components
+        3. Test UI with mock store state
+
+        **Phase 5: End-to-End Testing**
+        1. Start both servers
+        2. Manual testing with real API
+        3. Run integration test suite
+        4. Performance testing with large documents
+    validations:
+      required: true
+  - type: textarea
+    id: code_examples
+    attributes:
+      label: Code Examples
+      description: Concrete examples showing both backend and frontend patterns
+      placeholder: |
+        **Backend SSE Pattern:**
+        ```python
+        @router.post("/stream")
+        async def stream_translation(request: TranslationRequest):
+            async def event_generator():
+                try:
+                    async for result in service.translate_blocks(...):
+                        yield f"data: {json.dumps(result.dict())}\n\n"
+                    yield "event: done\ndata: {}\n\n"
+                except Exception as e:
+                    yield f"event: error\ndata: {json.dumps({'error': str(e)})}\n\n"
+
+            return StreamingResponse(
+                event_generator(),
+                media_type="text/event-stream",
+                headers={"Cache-Control": "no-cache"}
+            )
+        ```
+
+        **Frontend SSE Client:**
+        ```typescript
+        export async function streamTranslation(
+          request: TranslationRequest,
+          onBlock: (block: BlockTranslation) => void,
+          onError: (error: Error) => void,
+          onComplete: () => void
+        ): Promise<void> {
+          const response = await fetch('/api/v1/translate/stream', {
+            method: 'POST',
+            body: JSON.stringify(request)
+          });
+
+          const reader = response.body?.getReader();
+          const decoder = new TextDecoder();
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value);
+            // Parse SSE events and call callbacks
+          }
+        }
+        ```
+
+        **Store Integration:**
+        ```typescript
+        export const translationStore = {
+          startTranslation: async (request: TranslationRequest) => {
+            await streamTranslation(
+              request,
+              (block) => update(s => ({ ...s, results: [...s.results, block] })),
+              (error) => update(s => ({ ...s, error: error.message })),
+              () => update(s => ({ ...s, isTranslating: false }))
+            );
+          }
+        };
+        ```
+      value: ""
+  - type: textarea
+    id: testing_strategy
+    attributes:
+      label: Testing Instructions
+      description: How to test the integration manually and automatically
+      placeholder: |
+        **Backend Integration Tests:**
+        ```bash
+        # Test SSE endpoint
+        cd backend
+        pytest tests/integration/test_streaming.py -v
+
+        # Manual curl test
+        curl -N -X POST http://localhost:8000/api/v1/translate/stream \
+          -H "Content-Type: application/json" \
+          -d '{"content_blocks":[...],...}'
+        ```
+
+        **Frontend Integration Tests:**
+        ```bash
+        # Test SSE client with mock backend
+        cd frontend
+        npm run test:integration
+
+        # Component integration tests
+        npm run test:unit -- TranslationPane
+        ```
+
+        **End-to-End Manual Test:**
+        1. Start backend: `cd backend && uvicorn app.main:app --reload`
+        2. Start frontend: `cd frontend && npm run dev`
+        3. Open http://localhost:5173
+        4. Paste multi-paragraph content
+        5. Click "Translate"
+        6. Observe progressive block-by-block rendering
+        7. Verify all blocks complete
+        8. Test error case: Use invalid API key, verify error UI
+
+        **Success Criteria:**
+        - All backend tests pass
+        - All frontend tests pass
+        - Manual end-to-end flow works smoothly
+        - No console errors
+        - Progressive rendering is smooth and responsive
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Dependencies & References
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: What must be completed before this integration?
+      placeholder: |
+        **Backend Dependencies:**
+        - Issue #XX: SSE streaming endpoint implementation
+        - Issue #YY: TranslationService async generator
+
+        **Frontend Dependencies:**
+        - Issue #ZZ: translationStore basic structure
+        - Issue #AA: TranslationPane component
+
+        **Blocks:**
+        - Feature 1.5: Progressive UI (needs this integration)
+        - Feature 1.6: Pane synchronization (builds on this)
+    validations:
+      required: false
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: ADRs, documentation, related issues
+      placeholder: |
+        - ADR-001: API Endpoint Structure
+        - ADR-002: Streaming Translation Architecture
+        - ADR-005: Frontend State Management
+        - docs/feature-specifications.md - Feature 1.4
+        - docs/atomic-features.md - Feature 1.4 details
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Additional Context
+  - type: textarea
+    id: performance_considerations
+    attributes:
+      label: Performance Considerations
+      description: Latency, throughput, resource usage
+      placeholder: |
+        - SSE connection may stay open for 30+ seconds for long documents
+        - Consider backpressure if client is slow to consume events
+        - Monitor memory usage for large document translations
+        - Test with 100+ block documents
+    validations:
+      required: false
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Notes
+      description: Anything else the implementer should know?
+      placeholder: |
+        - This is a critical integration point for the entire translation flow
+        - Thoroughly test error cases (network errors, invalid API keys, rate
+          limits)
+        - Consider adding telemetry for streaming performance
+        - Document the integration contract clearly for future maintainers
+    validations:
+      required: false

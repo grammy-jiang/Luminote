@@ -1,0 +1,407 @@
+name: Testing Task
+description: >-
+  Template for adding tests, improving coverage, or fixing test infrastructure
+title: "[Test] "
+labels: ["testing", "quality"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Quick Start Commands
+        Use these commands to run and verify tests:
+  - type: textarea
+    id: quick_commands
+    attributes:
+      label: Validation Commands
+      description: Commands to run tests and check coverage (run these first!)
+      placeholder: |
+        # Backend tests
+        cd backend
+        pytest tests/ -v
+        pytest --cov=app --cov-report=term-missing
+
+        # Frontend tests
+        cd frontend
+        npm run test:unit
+        npm run test:coverage
+
+        # Specific test file
+        pytest tests/services/test_translation.py -v
+        npm run test:unit -- TranslationPane.test.ts
+      value: |
+        # Run tests with coverage
+        cd backend && pytest --cov=app --cov-report=term-missing
+        cd frontend && npm run test:coverage
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Context
+  - type: dropdown
+    id: test_type
+    attributes:
+      label: Test Type
+      description: What kind of testing task is this?
+      options:
+        - "Unit Tests - Backend"
+        - "Unit Tests - Frontend"
+        - "Integration Tests - Backend"
+        - "Integration Tests - Frontend"
+        - "End-to-End Tests"
+        - "Coverage Improvement"
+        - "Test Infrastructure"
+        - "Performance Tests"
+    validations:
+      required: true
+  - type: textarea
+    id: current_coverage
+    attributes:
+      label: Current Test Coverage
+      description: What's the current state? What's missing?
+      placeholder: |
+        **Current Coverage:**
+        - `app/services/translation_service.py`: 45% (missing error cases)
+        - `app/api/v1/endpoints/translate.py`: 60% (missing edge cases)
+
+        **Missing Test Cases:**
+        - Error handling when provider API fails
+        - Edge case: empty content_blocks array
+        - Edge case: invalid target language
+        - Concurrent translation requests
+
+        **Coverage Goal:** >95% for core services, >85% for other modules
+    validations:
+      required: true
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: Problem / Why These Tests
+      description: What gaps do these tests fill? What bugs do they prevent?
+      placeholder: |
+        Currently, the translation service has only happy-path tests.
+        This leaves several critical error paths untested:
+
+        **Risk:**
+        - Provider API failures could crash the application
+        - Invalid inputs might not be caught early
+        - Edge cases could cause unexpected behavior in production
+
+        **Recent Bugs:**
+        - Issue #XX: Crash when API returns 429 (rate limit)
+        - Issue #YY: Incorrect handling of empty translations
+
+        These tests will prevent regression and ensure robust error handling.
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Test Cases
+  - type: textarea
+    id: test_cases
+    attributes:
+      label: Test Cases to Implement
+      description: List specific test cases with expected behavior
+      placeholder: |
+        **Error Handling Tests:**
+        1. `test_translation_service_api_failure`
+           - Given: Provider API returns 500
+           - When: translate_blocks() is called
+           - Then: Raises ProviderAPIError with details
+
+        2. `test_translation_service_rate_limit`
+           - Given: Provider API returns 429
+           - When: translate_blocks() is called
+           - Then: Raises RateLimitError with retry_after
+
+        3. `test_translation_service_invalid_api_key`
+           - Given: Invalid API key
+           - When: translate_blocks() is called
+           - Then: Raises AuthenticationError
+
+        **Edge Case Tests:**
+        1. `test_empty_content_blocks`
+           - Given: content_blocks = []
+           - When: translate_blocks() is called
+           - Then: Returns empty list (no API calls)
+
+        2. `test_very_long_text_block`
+           - Given: Block with 10,000 characters
+           - When: translate_blocks() is called
+           - Then: Successfully chunks and translates
+
+        **Happy Path Tests:**
+        1. `test_successful_translation`
+           - Given: Valid request
+           - When: translate_blocks() is called
+           - Then: Returns translated blocks with metadata
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Acceptance Criteria
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Measurable Success Criteria
+      description: How do we know testing is complete?
+      placeholder: |
+        - [ ] All test cases listed above are implemented
+        - [ ] All tests pass consistently (no flaky tests)
+        - [ ] Coverage for translation_service.py increases to >95%
+        - [ ] Coverage for translate.py endpoint increases to >85%
+        - [ ] Tests run in <5 seconds (fast feedback)
+        - [ ] Tests are isolated (no shared state, can run in parallel)
+        - [ ] Test output is clear (descriptive test names, good error messages)
+        - [ ] CI pipeline passes with new tests
+        - [ ] No regressions in existing tests
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Files & Boundaries
+  - type: textarea
+    id: files_to_modify
+    attributes:
+      label: Files to Modify
+      description: Test files to create or update
+      placeholder: |
+        **Create:**
+        - `backend/tests/services/test_translation_service_errors.py` -
+          Error case tests
+        - `backend/tests/api/v1/test_translate_edge_cases.py` -
+          Edge case tests
+
+        **Modify:**
+        - `backend/tests/services/test_translation_service.py` -
+          Add missing coverage
+        - `backend/tests/conftest.py` - Add new fixtures for error simulation
+
+        **Do Not Modify:**
+        - Application code in `app/` (this is a testing-only task)
+    validations:
+      required: true
+  - type: textarea
+    id: do_not_change
+    attributes:
+      label: Do Not Change
+      description: What must remain untouched
+      placeholder: |
+        **Never modify:**
+        - Application code (only fix bugs if absolutely necessary,
+          create separate issue)
+        - Test configuration in pytest.ini unless required
+        - Existing passing tests (don't break them)
+
+        **Ask first before:**
+        - Adding new test dependencies
+        - Changing test runner configuration
+        - Modifying fixture scope or structure
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Implementation Guidance
+  - type: textarea
+    id: code_examples
+    attributes:
+      label: Test Code Examples
+      description: Concrete test patterns to follow
+      placeholder: |
+        **Error Handling Test Pattern:**
+        ```python
+        import pytest
+        from app.services.translation_service import TranslationService
+        from app.exceptions import ProviderAPIError
+
+        @pytest.mark.asyncio
+        async def test_translation_service_api_failure(mock_provider):
+            # Arrange
+            mock_provider.translate.side_effect = Exception("API Error")
+            service = TranslationService()
+
+            # Act & Assert
+            with pytest.raises(ProviderAPIError) as exc_info:
+                await service.translate_blocks(
+                    content_blocks=[{"id": "1", "text": "Hello"}],
+                    target_language="es",
+                    provider="openai",
+                    model="gpt-4",
+                    api_key="test-key"
+                )
+
+            assert "API Error" in str(exc_info.value)
+            assert exc_info.value.code == "PROVIDER_API_ERROR"
+        ```
+
+        **Edge Case Test Pattern:**
+        ```python
+        @pytest.mark.asyncio
+        async def test_empty_content_blocks():
+            service = TranslationService()
+
+            result = await service.translate_blocks(
+                content_blocks=[],
+                target_language="es",
+                provider="openai",
+                model="gpt-4",
+                api_key="test-key"
+            )
+
+            assert result == []
+            # Verify no API calls were made
+        ```
+
+        **Frontend Test Pattern:**
+        ```typescript
+        import { render, screen } from '@testing-library/svelte';
+        import { translationStore } from '$lib/stores/translation';
+        import TranslationPane from './TranslationPane.svelte';
+
+        test('shows error message when translation fails', async () => {
+          translationStore.set({
+            error: 'API rate limit exceeded',
+            isTranslating: false,
+            currentBlock: 0,
+            totalBlocks: 0,
+            results: []
+          });
+
+          render(TranslationPane);
+
+          expect(screen.getByText(/rate limit exceeded/i))
+            .toBeInTheDocument();
+          expect(screen.getByRole('button', { name: /retry/i }))
+            .toBeInTheDocument();
+        });
+        ```
+      value: ""
+  - type: textarea
+    id: testing_strategy
+    attributes:
+      label: Testing & Validation
+      description: How to verify the tests themselves are correct
+      placeholder: |
+        **Run New Tests:**
+        ```bash
+        # Run specific test file
+        pytest tests/services/test_translation_service_errors.py -v
+
+        # Run with coverage
+        pytest tests/services/test_translation_service_errors.py \
+          --cov=app.services.translation_service \
+          --cov-report=term-missing
+        ```
+
+        **Verify Coverage Improvement:**
+        ```bash
+        # Before: Check baseline coverage
+        pytest --cov=app.services.translation_service --cov-report=term-missing
+
+        # After: Check improved coverage
+        # Should show >95% for translation_service.py
+        ```
+
+        **Verify Tests Are Robust:**
+        1. Run tests 10 times: `for i in {1..10}; do pytest tests/...; done`
+        2. Ensure no flaky failures
+        3. Verify tests run in isolation: `pytest --randomly-order`
+
+        **Success Criteria:**
+        - All new tests pass
+        - Coverage targets met
+        - No flaky tests
+        - Tests run fast (<5s)
+        - CI pipeline passes
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Dependencies & References
+  - type: textarea
+    id: code_under_test
+    attributes:
+      label: Code Under Test
+      description: What code are you testing? Link to files/issues.
+      placeholder: |
+        **Files Being Tested:**
+        - `app/services/translation_service.py` - Translation service
+        - `app/api/v1/endpoints/translate.py` - Translation endpoint
+
+        **Related Issues:**
+        - Issue #XX: Bug - Crash on API failure
+        - Issue #YY: Feature - Streaming translation (needs tests)
+
+        **Related ADRs:**
+        - ADR-004: Error Handling Patterns
+    validations:
+      required: false
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: Testing guides, coverage reports, CI config
+      placeholder: |
+        - docs/CONTRIBUTING.md - Testing standards
+        - Coverage report: `pytest --cov-report=html` (see htmlcov/)
+        - CI config: `.github/workflows/test.yml`
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Additional Context
+  - type: textarea
+    id: fixtures_needed
+    attributes:
+      label: Test Fixtures Needed
+      description: Mock objects, test data, helper functions
+      placeholder: |
+        **New Fixtures:**
+        ```python
+        @pytest.fixture
+        def mock_openai_error():
+            \"\"\"Simulates OpenAI API error response.\"\"\"
+            return {
+                "error": {
+                    "message": "Rate limit exceeded",
+                    "type": "rate_limit_error",
+                    "code": "rate_limit_exceeded"
+                }
+            }
+
+        @pytest.fixture
+        def sample_long_text():
+            \"\"\"Provides 10,000 character text for edge case testing.\"\"\"
+            return "Lorem ipsum " * 1000
+        ```
+
+        **Existing Fixtures to Use:**
+        - `mock_translation_service` (from conftest.py)
+        - `sample_content_blocks` (from conftest.py)
+    validations:
+      required: false
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Notes
+      description: Anything else about this testing task?
+      placeholder: |
+        - Focus on error paths and edge cases (happy path already covered)
+        - Ensure tests are deterministic (no time-based flakiness)
+        - Use descriptive test names that explain the scenario
+        - Mock external API calls (don't make real API requests in tests)
+    validations:
+      required: false

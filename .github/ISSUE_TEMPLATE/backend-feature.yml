@@ -1,0 +1,323 @@
+name: Backend Feature Implementation
+description: >-
+  Template for implementing backend features, API endpoints, or services
+title: "[Backend] "
+labels: ["backend", "feature"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Quick Start Commands
+        Use these commands to validate your implementation:
+  - type: textarea
+    id: quick_commands
+    attributes:
+      label: Validation Commands
+      description: Commands to quickly test this feature (run these first!)
+      placeholder: |
+        # Start the backend server
+        cd backend && uvicorn app.main:app --reload
+
+        # Run specific tests
+        pytest tests/api/test_example.py -v
+
+        # Check code quality
+        ruff check app/
+        mypy app/
+      value: |
+        # Start the backend server
+        cd backend && uvicorn app.main:app --reload
+
+        # Run specific tests
+        pytest tests/ -v
+
+        # Check code quality
+        ruff check app/
+        mypy app/
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Context
+  - type: textarea
+    id: existing_code
+    attributes:
+      label: Existing Code & Architecture
+      description: What code/patterns already exist? What does this build upon?
+      placeholder: |
+        Current state:
+        - The translation service exists in
+          `app/services/translation_service.py`
+        - We use the provider pattern defined in ADR-001
+        - Error handling follows the exception hierarchy in ADR-004
+
+        Related ADRs:
+        - ADR-001: API Endpoint Structure
+        - ADR-004: Error Handling Patterns
+    validations:
+      required: true
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: Problem / Why This Change
+      description: What problem does this solve? Why is it needed now?
+      placeholder: |
+        Currently, users cannot translate content in streaming mode,
+        which creates a poor UX for long documents.
+
+        Impact:
+        - Users wait 30+ seconds before seeing any results
+        - No progress indication during translation
+        - Poor perception of performance
+
+        This is needed for Phase 1 Feature 1.2 (streaming translation).
+    validations:
+      required: true
+  - type: dropdown
+    id: feature_batch
+    attributes:
+      label: Implementation Batch
+      description: Which implementation batch does this belong to?
+      options:
+        - "Batch 1.1: Backend Core Foundation"
+        - "Batch 1.2: Frontend Foundation"
+        - "Batch 1.3: Content Extraction"
+        - "Batch 1.4: Translation Integration"
+        - "Batch 1.5: Progressive UI"
+        - "Batch 1.6: Pane Interaction"
+        - "Batch 1.7: Error Handling"
+        - "Batch 1.8: Configuration"
+        - "Batch 1.9: End-to-End Integration"
+        - "Other / Not in sequence"
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Change Request
+  - type: textarea
+    id: specific_changes
+    attributes:
+      label: Specific Changes Required
+      description: Exactly what needs to be implemented? Be specific.
+      placeholder: |
+        1. Create SSE endpoint at POST /api/v1/translate/stream
+        2. Implement async generator that yields block translations
+        3. Add error event handling for failed blocks
+        4. Return "done" event when all blocks complete
+        5. Set correct headers: Content-Type: text/event-stream,
+           Cache-Control: no-cache
+    validations:
+      required: true
+  - type: textarea
+    id: api_contract
+    attributes:
+      label: API Contract (if applicable)
+      description: Request/response formats, endpoint signature
+      placeholder: |
+        **Endpoint:** POST /api/v1/translate/stream
+
+        **Request:**
+        ```json
+        {
+          "content_blocks": [
+            {"id": "1", "type": "paragraph", "text": "Hello world"}
+          ],
+          "target_language": "es",
+          "provider": "openai",
+          "model": "gpt-4",
+          "api_key": "sk-..."
+        }
+        ```
+
+        **Response (SSE stream):**
+        ```
+        data: {"block_id": "1", "translated_text": "Hola mundo"}\n\n
+        event: done\ndata: {}\n\n
+        ```
+      value: ""
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Acceptance Criteria
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Measurable Success Criteria
+      description: How do we know this is complete and correct?
+      placeholder: |
+        - [ ] Endpoint accepts TranslationRequest with content_blocks array
+        - [ ] Streams translation events as SSE (text/event-stream)
+        - [ ] Each block triggers one "data" event with translation
+        - [ ] Final "done" event sent when all blocks complete
+        - [ ] Errors emit "error" event but don't crash stream
+        - [ ] Test user can curl endpoint and see streaming response
+        - [ ] Unit tests cover success, partial failure, and complete failure
+        - [ ] Code passes ruff, mypy, and test coverage >95%
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Files & Boundaries
+  - type: textarea
+    id: files_to_modify
+    attributes:
+      label: Files to Modify
+      description: Explicit list of files to create or modify
+      placeholder: |
+        **Create:**
+        - `backend/app/api/v1/endpoints/translate.py` -
+          SSE streaming endpoint
+        - `backend/tests/api/v1/test_translate_stream.py` -
+          Test streaming endpoint
+
+        **Modify:**
+        - `backend/app/api/v1/router.py` - Add translate router
+        - `backend/app/services/translation_service.py` -
+          Add translate_blocks async generator
+    validations:
+      required: true
+  - type: textarea
+    id: do_not_change
+    attributes:
+      label: Do Not Change
+      description: Files/patterns that must remain untouched
+      placeholder: |
+        **Never modify:**
+        - Database schema files
+        - Authentication middleware
+        - Core exception classes (app/exceptions.py)
+
+        **Ask first before:**
+        - Changing API endpoint URLs
+        - Modifying response envelope structure
+        - Adding new dependencies to pyproject.toml
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Implementation Guidance
+  - type: textarea
+    id: code_examples
+    attributes:
+      label: Code Examples & Patterns
+      description: Concrete code snippets showing the expected pattern
+      placeholder: |
+        **SSE Endpoint Pattern (from ADR-002):**
+        ```python
+        from fastapi.responses import StreamingResponse
+        import json
+
+        @router.post("/stream")
+        async def stream_translation(request: TranslationRequest):
+            async def event_generator():
+                try:
+                    async for result in service.translate_blocks(...):
+                        yield f"data: {json.dumps(result.dict())}\n\n"
+                    yield "event: done\ndata: {}\n\n"
+                except Exception as e:
+                    error_data = {"error": str(e), "code": "TRANSLATION_ERROR"}
+                    yield f"event: error\ndata: {json.dumps(error_data)}\n\n"
+
+            return StreamingResponse(
+                event_generator(),
+                media_type="text/event-stream",
+                headers={"Cache-Control": "no-cache"}
+            )
+        ```
+      value: ""
+  - type: textarea
+    id: testing_strategy
+    attributes:
+      label: Testing Instructions
+      description: How to test this feature manually and automatically
+      placeholder: |
+        **Unit Tests:**
+        ```bash
+        # Run specific test file
+        pytest tests/api/v1/test_translate_stream.py -v
+
+        # Check coverage
+        pytest tests/api/v1/test_translate_stream.py \
+          --cov=app.api.v1.endpoints.translate \
+          --cov-report=term-missing
+        ```
+
+        **Manual Testing:**
+        ```bash
+        # Start server
+        cd backend && uvicorn app.main:app --reload
+
+        # Test with curl (should see streaming events)
+        curl -N -X POST \
+          http://localhost:8000/api/v1/translate/stream \
+          -H "Content-Type: application/json" \
+          -d '{"content_blocks":[{"id":"1","type":"paragraph",
+               "text":"Hello"}],"target_language":"es",
+               "provider":"openai","model":"gpt-4",
+               "api_key":"sk-test"}'
+        ```
+
+        **Success Criteria:**
+        - Curl shows progressive "data:" events
+        - Final "event: done" appears
+        - All tests pass with >95% coverage
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Dependencies & References
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: What must be completed before this? What does this block?
+      placeholder: |
+        **Depends on:**
+        - Issue #123: Basic translation service implementation
+        - Infrastructure: FastAPI server running
+
+        **Blocks:**
+        - Issue #125: Frontend SSE client
+        - Issue #126: Progressive translation UI
+    validations:
+      required: false
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: ADRs, documentation, related issues
+      placeholder: |
+        - ADR-002: Streaming Translation Architecture
+        - docs/feature-specifications.md - Feature 1.2
+        - docs/atomic-features.md - Feature 1.1
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Additional Context
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Notes
+      description: Anything else the implementer should know?
+      placeholder: |
+        - The SSE connection may be kept alive for 30+ seconds
+          for long documents
+        - Consider backpressure if client is slow to consume
+        - Remember to disable nginx buffering
+          (X-Accel-Buffering: no)
+    validations:
+      required: false

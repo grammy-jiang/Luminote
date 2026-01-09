@@ -1,0 +1,396 @@
+name: Frontend Component Implementation
+description: >-
+  Template for implementing Svelte components, pages, or UI features
+title: "[Frontend] "
+labels: ["frontend", "component"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        ## Quick Start Commands
+        Use these commands to validate your implementation:
+  - type: textarea
+    id: quick_commands
+    attributes:
+      label: Validation Commands
+      description: Commands to quickly test this component (run these first!)
+      placeholder: |
+        # Start dev server with HMR
+        cd frontend && npm run dev
+
+        # Run component tests
+        npm run test:unit
+
+        # Type check
+        npm run check
+
+        # Lint
+        npm run lint
+      value: |
+        # Start dev server
+        cd frontend && npm run dev
+
+        # Run tests
+        npm run test:unit
+
+        # Type check
+        npm run check
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Context
+  - type: textarea
+    id: existing_code
+    attributes:
+      label: Existing Components & Patterns
+      description: >-
+        What components/stores/patterns already exist? What does this build upon?
+      placeholder: |
+        Current state:
+        - The TranslationPane component exists in
+          `src/lib/components/TranslationPane.svelte`
+        - We use the configStore pattern from ADR-005 for state management
+        - UI components follow the structure in `src/lib/components/`
+
+        Related ADRs:
+        - ADR-005: Frontend State Management Approach
+        - ADR-003: Client-Side Storage Strategy
+
+        Existing stores:
+        - `$lib/stores/config.ts` - Configuration state
+        - `$lib/stores/ui.ts` - UI state (modals, panes)
+    validations:
+      required: true
+  - type: textarea
+    id: problem_statement
+    attributes:
+      label: Problem / Why This Component
+      description: What user need does this address? Why is it needed?
+      placeholder: |
+        Currently, users cannot see translation progress while long documents are being translated.
+
+        User Impact:
+        - No visual feedback during translation
+        - Users don't know if the system is working
+        - Perceived performance is poor
+
+        This component provides real-time progress indication for Feature 1.5 (Progressive UI).
+    validations:
+      required: true
+  - type: dropdown
+    id: component_type
+    attributes:
+      label: Component Type
+      description: What kind of component is this?
+      options:
+        - "Page Component (routes/)"
+        - "Layout Component"
+        - "UI Component (lib/components/)"
+        - "Store (lib/stores/)"
+        - "Utility (lib/utils/)"
+        - "API Client (lib/api/)"
+    validations:
+      required: true
+  - type: dropdown
+    id: feature_batch
+    attributes:
+      label: Implementation Batch
+      description: Which implementation batch does this belong to?
+      options:
+        - "Batch 1.1: Backend Core Foundation"
+        - "Batch 1.2: Frontend Foundation"
+        - "Batch 1.3: Content Extraction"
+        - "Batch 1.4: Translation Integration"
+        - "Batch 1.5: Progressive UI"
+        - "Batch 1.6: Pane Interaction"
+        - "Batch 1.7: Error Handling"
+        - "Batch 1.8: Configuration"
+        - "Batch 1.9: End-to-End Integration"
+        - "Other / Not in sequence"
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Change Request
+  - type: textarea
+    id: specific_changes
+    attributes:
+      label: Specific Changes Required
+      description: Exactly what needs to be implemented? Be specific.
+      placeholder: |
+        1. Create TranslationProgress component in `src/lib/components/`
+        2. Subscribe to translationStore for current/total blocks
+        3. Display progress bar with percentage
+        4. Show "Translating block X of Y" text
+        5. Add smooth CSS transition for progress bar updates
+        6. Handle edge cases: 0 blocks, 100% completion
+    validations:
+      required: true
+  - type: textarea
+    id: component_interface
+    attributes:
+      label: Component Props & Events
+      description: Component API - props, events, slots
+      placeholder: |
+        **Props:**
+        ```typescript
+        interface Props {
+          // Optional: override store subscription
+          currentBlock?: number;
+          totalBlocks?: number;
+          // Visual variant
+          variant?: 'bar' | 'circular' | 'minimal';
+        }
+        ```
+
+        **Events:**
+        ```typescript
+        // Dispatched when user clicks cancel
+        on:cancel={() => void}
+        ```
+
+        **Slots:**
+        - `default` - Optional custom content below progress bar
+      value: ""
+  - type: textarea
+    id: state_management
+    attributes:
+      label: State Management
+      description: Which stores to use? What local state is needed?
+      placeholder: |
+        **Store Subscriptions:**
+        - `$translationStore.currentBlock` - Current block being translated
+        - `$translationStore.totalBlocks` - Total blocks to translate
+        - `$translationStore.isTranslating` - Whether translation is active
+
+        **Local State:**
+        ```typescript
+        let showDetails = false; // Toggle for detailed view
+        ```
+
+        **Derived Values:**
+        ```typescript
+        $: progress = $translationStore.totalBlocks > 0
+          ? ($translationStore.currentBlock / $translationStore.totalBlocks) * 100
+          : 0;
+        ```
+      value: ""
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Acceptance Criteria
+  - type: textarea
+    id: acceptance_criteria
+    attributes:
+      label: Measurable Success Criteria
+      description: How do we know this is complete and correct?
+      placeholder: |
+        - [ ] Component renders without errors in dev mode
+        - [ ] Progress bar updates smoothly as currentBlock increments
+        - [ ] Percentage text shows "0%" at start, "100%" at completion
+        - [ ] Component handles edge case: totalBlocks = 0 (shows "No blocks")
+        - [ ] CSS transitions work smoothly (300ms ease-in-out)
+        - [ ] Component is accessible (ARIA labels, keyboard navigation)
+        - [ ] TypeScript types are correct (no `any` types)
+        - [ ] Component tests pass with >85% coverage
+        - [ ] ESLint and Prettier pass with no warnings
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Files & Boundaries
+  - type: textarea
+    id: files_to_modify
+    attributes:
+      label: Files to Modify
+      description: Explicit list of files to create or modify
+      placeholder: |
+        **Create:**
+        - `frontend/src/lib/components/TranslationProgress.svelte` - Main
+          component
+        - `frontend/src/lib/components/TranslationProgress.test.ts` - Unit tests
+
+        **Modify:**
+        - `frontend/src/routes/+page.svelte` - Import and use component
+        - `frontend/src/lib/components/index.ts` - Export component
+    validations:
+      required: true
+  - type: textarea
+    id: do_not_change
+    attributes:
+      label: Do Not Change
+      description: Files/patterns that must remain untouched
+      placeholder: |
+        **Never modify:**
+        - Store structure in `lib/stores/` (use existing stores)
+        - Global CSS variables in `app.css`
+        - TypeScript config in `tsconfig.json`
+
+        **Ask first before:**
+        - Adding new npm dependencies
+        - Creating new stores
+        - Changing global layout structure
+        - Modifying API endpoint URLs
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Implementation Guidance
+  - type: textarea
+    id: code_examples
+    attributes:
+      label: Code Examples & Patterns
+      description: Concrete code snippets showing the expected pattern
+      placeholder: |
+        **Component Structure (from ADR-005):**
+        ```svelte
+        <!-- src/lib/components/TranslationProgress.svelte -->
+        <script lang="ts">
+          import { translationStore } from '$lib/stores/translation';
+
+          // Props
+          interface Props {
+            variant?: 'bar' | 'circular';
+          }
+          let { variant = 'bar' }: Props = $props();
+
+          // Derived state
+          $: progress = $translationStore.totalBlocks > 0
+            ? ($translationStore.currentBlock / $translationStore.totalBlocks) * 100
+            : 0;
+        </script>
+
+        <div class="progress-container">
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: {progress}%"></div>
+          </div>
+          <span class="progress-text">
+            {progress.toFixed(0)}% ({$translationStore.currentBlock}/{$translationStore.totalBlocks})
+          </span>
+        </div>
+
+        <style>
+          .progress-fill {
+            transition: width 300ms ease-in-out;
+          }
+        </style>
+        ```
+
+        **Testing Pattern:**
+        ```typescript
+        import { render } from '@testing-library/svelte';
+        import { translationStore } from '$lib/stores/translation';
+        import TranslationProgress from './TranslationProgress.svelte';
+
+        test('shows correct percentage', () => {
+          translationStore.set({ currentBlock: 5, totalBlocks: 10, ... });
+          const { getByText } = render(TranslationProgress);
+          expect(getByText('50%')).toBeInTheDocument();
+        });
+        ```
+      value: ""
+  - type: textarea
+    id: testing_strategy
+    attributes:
+      label: Testing Instructions
+      description: How to test this component manually and automatically
+      placeholder: |
+        **Unit Tests:**
+        ```bash
+        # Run component tests
+        npm run test:unit src/lib/components/TranslationProgress.test.ts
+
+        # Check coverage
+        npm run test:coverage
+        ```
+
+        **Manual Testing:**
+        ```bash
+        # Start dev server
+        npm run dev
+
+        # In browser:
+        1. Navigate to http://localhost:5173
+        2. Open browser DevTools console
+        3. Trigger translation (paste content, click translate)
+        4. Observe progress bar updating smoothly
+        5. Verify percentage text updates (0% → 100%)
+        6. Check accessibility: Tab navigation, screen reader announcements
+        ```
+
+        **Success Criteria:**
+        - All unit tests pass
+        - Progress bar animates smoothly in browser
+        - No console errors or warnings
+        - ESLint and TypeScript pass with no issues
+    validations:
+      required: true
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Dependencies & References
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Dependencies
+      description: What must be completed before this? What does this block?
+      placeholder: |
+        **Depends on:**
+        - Issue #XX: translationStore implementation
+        - Issue #YY: Basic layout structure
+
+        **Blocks:**
+        - Issue #ZZ: Complete translation UI
+        - Feature 1.5: Progressive UI rendering
+    validations:
+      required: false
+  - type: textarea
+    id: references
+    attributes:
+      label: References
+      description: ADRs, documentation, related issues
+      placeholder: |
+        - ADR-005: Frontend State Management Approach
+        - docs/feature-specifications.md - Feature 1.5
+        - docs/atomic-features.md - Feature 1.12
+    validations:
+      required: false
+  - type: markdown
+    attributes:
+      value: |
+        ---
+        ## Additional Context
+  - type: textarea
+    id: accessibility
+    attributes:
+      label: Accessibility Requirements
+      description: ARIA labels, keyboard navigation, screen reader support
+      placeholder: |
+        - Add `role="progressbar"` to progress bar element
+        - Include `aria-valuenow`, `aria-valuemin`, `aria-valuemax` attributes
+        - Ensure sufficient color contrast (WCAG AA)
+        - Test with screen reader (NVDA/JAWS)
+    validations:
+      required: false
+  - type: textarea
+    id: additional_context
+    attributes:
+      label: Additional Notes
+      description: Anything else the implementer should know?
+      placeholder: |
+        - Consider adding a "Cancel" button for long translations
+        - Progress bar should be visible above the fold
+        - Match existing design system colors and spacing
+    validations:
+      required: false
