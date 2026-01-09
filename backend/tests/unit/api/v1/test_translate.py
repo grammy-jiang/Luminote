@@ -24,9 +24,9 @@ def test_translate_success(client: TestClient) -> None:
             },
         ],
         "target_language": "es",
-        "provider": "openai",
-        "model": "gpt-4",
-        "api_key": "sk-test-key-12345",
+        "provider": "mock",  # Use mock provider for unit tests
+        "model": "test-model",
+        "api_key": "test-key",
     }
 
     # Act
@@ -45,17 +45,18 @@ def test_translate_success(client: TestClient) -> None:
     translated_blocks = data["data"]["translated_blocks"]
     assert len(translated_blocks) == 2
 
-    # Check first block
+    # Check first block (mock provider prefixes with language code)
     assert translated_blocks[0]["id"] == "block-1"
     assert translated_blocks[0]["type"] == "paragraph"
-    assert translated_blocks[0]["text"] == "[TRANSLATED] Hello, world!"
-    assert translated_blocks[0]["metadata"]["provider"] == "openai"
-    assert translated_blocks[0]["metadata"]["model"] == "gpt-4"
+    assert translated_blocks[0]["text"] == "[ES] Hello, world!"
+    assert translated_blocks[0]["metadata"]["provider"] == "mock"
+    assert translated_blocks[0]["metadata"]["model"] == "test-model"
+    assert "tokens_used" in translated_blocks[0]["metadata"]
 
     # Check second block
     assert translated_blocks[1]["id"] == "block-2"
     assert translated_blocks[1]["type"] == "heading"
-    assert translated_blocks[1]["text"] == "[TRANSLATED] Welcome"
+    assert translated_blocks[1]["text"] == "[ES] Welcome"
 
     # Check metadata
     assert "request_id" in data["metadata"]
@@ -74,9 +75,9 @@ def test_translate_missing_content_blocks(client: TestClient) -> None:
     # Arrange
     request_data = {
         "target_language": "es",
-        "provider": "openai",
-        "model": "gpt-4",
-        "api_key": "sk-test-key",
+        "provider": "mock",
+        "model": "test-model",
+        "api_key": "test-key",
     }
 
     # Act
@@ -96,9 +97,9 @@ def test_translate_empty_content_blocks(client: TestClient) -> None:
     request_data = {
         "content_blocks": [],  # Empty array
         "target_language": "es",
-        "provider": "openai",
-        "model": "gpt-4",
-        "api_key": "sk-test-key",
+        "provider": "mock",
+        "model": "test-model",
+        "api_key": "test-key",
     }
 
     # Act
@@ -121,8 +122,8 @@ def test_translate_invalid_provider(client: TestClient) -> None:
         ],
         "target_language": "es",
         "provider": "invalid_provider",  # Invalid provider
-        "model": "gpt-4",
-        "api_key": "sk-test-key",
+        "model": "test-model",
+        "api_key": "test-key",
     }
 
     # Act
@@ -150,9 +151,9 @@ def test_translate_invalid_block_type(client: TestClient) -> None:
             }
         ],
         "target_language": "es",
-        "provider": "openai",
-        "model": "gpt-4",
-        "api_key": "sk-test-key",
+        "provider": "mock",
+        "model": "test-model",
+        "api_key": "test-key",
     }
 
     # Act
@@ -172,9 +173,9 @@ def test_translate_missing_target_language(client: TestClient) -> None:
         "content_blocks": [
             {"id": "1", "type": "paragraph", "text": "Hello", "metadata": {}}
         ],
-        "provider": "openai",
-        "model": "gpt-4",
-        "api_key": "sk-test-key",
+        "provider": "mock",
+        "model": "test-model",
+        "api_key": "test-key",
     }
 
     # Act
@@ -195,9 +196,9 @@ def test_translate_invalid_language_code(client: TestClient) -> None:
             {"id": "1", "type": "paragraph", "text": "Hello", "metadata": {}}
         ],
         "target_language": "eng",  # 3 letters - invalid
-        "provider": "openai",
-        "model": "gpt-4",
-        "api_key": "sk-test-key",
+        "provider": "mock",
+        "model": "test-model",
+        "api_key": "test-key",
     }
 
     # Act
@@ -218,9 +219,9 @@ def test_translate_language_code_with_non_alphabetic(client: TestClient) -> None
             {"id": "1", "type": "paragraph", "text": "Hello", "metadata": {}}
         ],
         "target_language": "e1",  # Contains digit - invalid
-        "provider": "openai",
-        "model": "gpt-4",
-        "api_key": "sk-test-key",
+        "provider": "mock",
+        "model": "test-model",
+        "api_key": "test-key",
     }
 
     # Act
@@ -244,9 +245,9 @@ def test_translate_empty_text(client: TestClient) -> None:
             {"id": "1", "type": "paragraph", "text": "", "metadata": {}}  # Empty text
         ],
         "target_language": "es",
-        "provider": "openai",
-        "model": "gpt-4",
-        "api_key": "sk-test-key",
+        "provider": "mock",
+        "model": "test-model",
+        "api_key": "test-key",
     }
 
     # Act
@@ -267,8 +268,8 @@ def test_translate_missing_api_key(client: TestClient) -> None:
             {"id": "1", "type": "paragraph", "text": "Hello", "metadata": {}}
         ],
         "target_language": "es",
-        "provider": "openai",
-        "model": "gpt-4",
+        "provider": "mock",
+        "model": "test-model",
     }
 
     # Act
@@ -293,9 +294,9 @@ def test_translate_multiple_blocks_preserves_order(client: TestClient) -> None:
             {"id": "block-5", "type": "code", "text": "Fifth", "metadata": {}},
         ],
         "target_language": "fr",
-        "provider": "anthropic",
-        "model": "claude-3-5-sonnet-20241022",
-        "api_key": "sk-ant-test",
+        "provider": "mock",
+        "model": "test-model",
+        "api_key": "test-key",
     }
 
     # Act
@@ -316,16 +317,16 @@ def test_translate_multiple_blocks_preserves_order(client: TestClient) -> None:
 
 @pytest.mark.unit
 def test_translate_anthropic_provider(client: TestClient) -> None:
-    """Test translation request with Anthropic provider."""
+    """Test translation request with mock provider."""
     # Arrange
     request_data = {
         "content_blocks": [
             {"id": "1", "type": "paragraph", "text": "Test", "metadata": {}}
         ],
         "target_language": "de",
-        "provider": "anthropic",
-        "model": "claude-3-5-sonnet-20241022",
-        "api_key": "sk-ant-test",
+        "provider": "mock",
+        "model": "test-model",
+        "api_key": "test-key",
     }
 
     # Act
@@ -334,4 +335,4 @@ def test_translate_anthropic_provider(client: TestClient) -> None:
     # Assert
     assert response.status_code == 200
     data = response.json()
-    assert data["data"]["translated_blocks"][0]["metadata"]["provider"] == "anthropic"
+    assert data["data"]["translated_blocks"][0]["metadata"]["provider"] == "mock"

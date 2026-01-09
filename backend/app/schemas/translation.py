@@ -72,7 +72,7 @@ class TranslationRequest(BaseModel):
         Raises:
             ValueError: If the provider is not supported
         """
-        supported_providers = ["openai", "anthropic"]
+        supported_providers = ["openai", "anthropic", "mock"]
         provider_lower = v.lower()
         if provider_lower not in supported_providers:
             raise ValueError(
