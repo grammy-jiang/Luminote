@@ -118,18 +118,18 @@ import { describe, it, expect, vi } from 'vitest';
 import Button from './Button.svelte';
 
 describe('Button component', () => {
-	it('renders with correct text', () => {
-		render(Button, { props: { text: 'Click me' } });
-		expect(screen.getByText('Click me')).toBeInTheDocument();
-	});
+    it('renders with correct text', () => {
+        render(Button, { props: { text: 'Click me' } });
+        expect(screen.getByText('Click me')).toBeInTheDocument();
+    });
 
-	it('calls onClick when clicked', async () => {
-		const onClick = vi.fn();
-		render(Button, { props: { text: 'Click', onClick } });
+    it('calls onClick when clicked', async () => {
+        const onClick = vi.fn();
+        render(Button, { props: { text: 'Click', onClick } });
 
-		await fireEvent.click(screen.getByText('Click'));
-		expect(onClick).toHaveBeenCalledOnce();
-	});
+        await fireEvent.click(screen.getByText('Click'));
+        expect(onClick).toHaveBeenCalledOnce();
+    });
 });
 ```
 

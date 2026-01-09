@@ -210,6 +210,32 @@ def test_translate_invalid_language_code(client: TestClient) -> None:
 
 
 @pytest.mark.unit
+def test_translate_language_code_with_non_alphabetic(client: TestClient) -> None:
+    """Test translation request with non-alphabetic characters in language code."""
+    # Arrange
+    request_data = {
+        "content_blocks": [
+            {"id": "1", "type": "paragraph", "text": "Hello", "metadata": {}}
+        ],
+        "target_language": "e1",  # Contains digit - invalid
+        "provider": "openai",
+        "model": "gpt-4",
+        "api_key": "sk-test-key",
+    }
+
+    # Act
+    response = client.post("/api/v1/translate", json=request_data)
+
+    # Assert
+    assert response.status_code == 422
+    data = response.json()
+    assert data["code"] == "VALIDATION_ERROR"
+    errors = data["details"]["errors"]
+    assert any("target_language" in error["field"] for error in errors)
+    assert any("only letters" in error["message"] for error in errors)
+
+
+@pytest.mark.unit
 def test_translate_empty_text(client: TestClient) -> None:
     """Test translation request with empty text in block."""
     # Arrange
