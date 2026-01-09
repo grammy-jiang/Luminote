@@ -12,8 +12,8 @@ from pydantic import BaseModel, Field
 class ContentBlock(BaseModel):
     """A single content block extracted from a document.
 
-    This is the extraction version that supports image blocks.
-    For translation, the type must be one of the non-image types.
+    This is the extraction version that supports image blocks. For translation, the type
+    must be one of the non-image types.
     """
 
     id: str = Field(..., description="Unique identifier for the content block")

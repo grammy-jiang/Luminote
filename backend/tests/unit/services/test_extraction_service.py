@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import httpx
 import pytest
+from bs4 import BeautifulSoup
 
 from app.core.errors import ExtractionError, InvalidURLError, URLFetchError
 from app.services.extraction_service import ExtractionService
@@ -384,8 +385,6 @@ def test_extract_metadata():
     </html>
     """
 
-    from bs4 import BeautifulSoup
-
     soup = BeautifulSoup(html, "lxml")
     metadata = service._extract_metadata(soup, {})
 
@@ -497,8 +496,8 @@ async def test_extract_no_content():
 async def test_extract_real_article():
     """Integration test with a real URL.
 
-    This test is marked as integration and requires internet access.
-    It can be skipped in CI/CD environments.
+    This test is marked as integration and requires internet access. It can be skipped
+    in CI/CD environments.
     """
     service = ExtractionService()
 
@@ -646,8 +645,6 @@ def test_extract_metadata_json_ld_author():
     </html>
     """
 
-    from bs4 import BeautifulSoup
-
     soup = BeautifulSoup(html, "lxml")
     metadata = service._extract_metadata(soup, {})
 
@@ -673,8 +670,6 @@ def test_extract_metadata_json_ld_author_string():
         <body>Content</body>
     </html>
     """
-
-    from bs4 import BeautifulSoup
 
     soup = BeautifulSoup(html, "lxml")
     metadata = service._extract_metadata(soup, {})
@@ -702,8 +697,6 @@ def test_extract_metadata_json_ld_date():
     </html>
     """
 
-    from bs4 import BeautifulSoup
-
     soup = BeautifulSoup(html, "lxml")
     metadata = service._extract_metadata(soup, {})
 
@@ -726,8 +719,6 @@ def test_extract_metadata_invalid_json_ld():
     </html>
     """
 
-    from bs4 import BeautifulSoup
-
     soup = BeautifulSoup(html, "lxml")
     metadata = service._extract_metadata(soup, {})
 
@@ -748,8 +739,6 @@ def test_extract_metadata_date_meta_tag():
         <body>Content</body>
     </html>
     """
-
-    from bs4 import BeautifulSoup
 
     soup = BeautifulSoup(html, "lxml")
     metadata = service._extract_metadata(soup, {})

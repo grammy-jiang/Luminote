@@ -3,6 +3,7 @@
 This module provides functionality to extract clean, reader-mode content from URLs.
 """
 
+import json
 import re
 import uuid
 from typing import Any
@@ -13,23 +14,39 @@ from bs4 import BeautifulSoup
 from readability import Document
 
 from app.core.errors import ExtractionError, InvalidURLError, URLFetchError
+from app.core.logging import get_logger
 from app.schemas.extraction import ContentBlock, ExtractedContent
+
+logger = get_logger(__name__)
 
 
 class ExtractionService:
     """Service for extracting structured content from URLs.
 
-    Uses Mozilla Readability for article extraction and BeautifulSoup
-    for HTML parsing and block detection.
+    Uses Mozilla Readability for article extraction and BeautifulSoup for HTML parsing
+    and block detection.
     """
 
-    def __init__(self, timeout: float = 30.0) -> None:
+    def __init__(self, timeout: float = 30.0, user_agent: str | None = None) -> None:
         """Initialize the extraction service.
 
         Args:
             timeout: Request timeout in seconds (default: 30)
+            user_agent: User-Agent header for HTTP requests (optional)
         """
         self.timeout = timeout
+        self.user_agent = user_agent or self._get_default_user_agent()
+
+    def _get_default_user_agent(self) -> str:
+        """Get default User-Agent from settings.
+
+        Returns:
+            Default User-Agent string
+        """
+        from app.config import get_settings
+
+        settings = get_settings()
+        return settings.EXTRACTION_USER_AGENT
 
     def _validate_url(self, url: str) -> None:
         """Validate URL format.
@@ -75,9 +92,7 @@ class ExtractionService:
                 response = await client.get(
                     url,
                     follow_redirects=True,
-                    headers={
-                        "User-Agent": "Mozilla/5.0 (compatible; Luminote/1.0; +https://github.com/grammy-jiang/Luminote)"
-                    },
+                    headers={"User-Agent": self.user_agent},
                 )
                 response.raise_for_status()
 
@@ -220,7 +235,7 @@ class ExtractionService:
 
             # Join items with newlines for text representation
             text = "\n".join(
-                f"• {item}" if element.name == "ul" else f"{i+1}. {item}"
+                f"• {item}" if element.name == "ul" else f"{i + 1}. {item}"
                 for i, item in enumerate(items)
             )
 
@@ -321,8 +336,6 @@ class ExtractionService:
             json_ld = soup.find("script", attrs={"type": "application/ld+json"})
             if json_ld:
                 try:
-                    import json
-
                     data = json.loads(json_ld.string)
                     if isinstance(data, dict) and "author" in data:
                         author_data = data["author"]
@@ -331,6 +344,7 @@ class ExtractionService:
                         elif isinstance(author_data, str):
                             author = author_data
                 except Exception:
+                    # Ignore invalid JSON-LD - metadata is optional
                     pass
 
         if author:
@@ -350,12 +364,11 @@ class ExtractionService:
             json_ld = soup.find("script", attrs={"type": "application/ld+json"})
             if json_ld:
                 try:
-                    import json
-
                     data = json.loads(json_ld.string)
                     if isinstance(data, dict):
                         date_published = data.get("datePublished")
                 except Exception:
+                    # Ignore invalid JSON-LD - metadata is optional
                     pass
 
         if date_published:
@@ -387,6 +400,10 @@ class ExtractionService:
         try:
             readability_data = self._extract_with_readability(html, url)
         except Exception as e:
+            logger.error(
+                "Readability extraction failed",
+                extra={"url": url, "error": str(e), "error_type": type(e).__name__},
+            )
             raise ExtractionError(
                 url=url, reason=f"Readability extraction failed: {str(e)}"
             ) from e
