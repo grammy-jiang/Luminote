@@ -58,8 +58,8 @@ class ProviderFactory:
 class TranslationService:
     """Translation service with multi-provider support.
 
-    This service abstracts provider differences and provides a unified interface
-    for translating content blocks.
+    This service abstracts provider differences and provides a unified interface for
+    translating content blocks.
     """
 
     async def translate_block(

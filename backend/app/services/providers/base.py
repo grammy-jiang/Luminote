@@ -20,8 +20,8 @@ class TranslationResult(BaseModel):
 class BaseProvider(ABC):
     """Abstract base class for translation providers.
 
-    All provider implementations (OpenAI, Anthropic, etc.) must inherit from this
-    class and implement the translate method.
+    All provider implementations (OpenAI, Anthropic, etc.) must inherit from this class
+    and implement the translate method.
     """
 
     @abstractmethod
