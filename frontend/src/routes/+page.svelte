@@ -3,13 +3,22 @@
 	import { onMount } from 'svelte';
 
 	let mounted = false;
+	let splitRatio = 50;
 
 	onMount(() => {
 		mounted = true;
 	});
+
+	function handleSplitChange(event: CustomEvent<{ leftWidth: number; rightWidth: number }>) {
+		splitRatio = event.detail.leftWidth;
+	}
 </script>
 
-<DualPaneLayout leftLabel="Source Content" rightLabel="Translation">
+<DualPaneLayout
+	leftLabel="Source Content"
+	rightLabel="Translation"
+	on:splitChange={handleSplitChange}
+>
 	<!-- Left pane: Source content -->
 	<div slot="left" class="p-6 space-y-6">
 		<div class="mb-8">
@@ -29,11 +38,30 @@
 
 			<ul class="list-disc list-inside space-y-2 text-gray-700 mb-4">
 				<li>Two-pane layout with independent scrolling</li>
+				<li>Draggable divider for resizing panes</li>
+				<li>Keyboard shortcuts (Ctrl+Arrow keys to resize)</li>
 				<li>Responsive design (stacks vertically on mobile)</li>
 				<li>Keyboard navigation (Tab to switch panes)</li>
 				<li>Accessible with ARIA labels</li>
-				<li>Configurable split ratio</li>
+				<li>localStorage persistence for split ratio</li>
 			</ul>
+
+			<div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded my-4">
+				<p class="font-semibold text-indigo-900 mb-2">🎯 Try the Draggable Divider!</p>
+				<p class="text-indigo-800 text-sm mb-2">
+					Drag the vertical divider between panes to resize them.
+				</p>
+				<p class="text-indigo-800 text-sm mb-2">
+					Use <kbd class="px-2 py-1 bg-indigo-200 rounded">Ctrl</kbd> +
+					<kbd class="px-2 py-1 bg-indigo-200 rounded">←</kbd> /
+					<kbd class="px-2 py-1 bg-indigo-200 rounded">→</kbd> to adjust in 5% increments.
+				</p>
+				<p class="text-indigo-800 text-sm">
+					Current split: <strong>{splitRatio.toFixed(0)}%</strong> / <strong
+						>{(100 - splitRatio).toFixed(0)}%</strong
+					>
+				</p>
+			</div>
 
 			<p class="text-gray-700 mb-4">
 				Try scrolling this pane independently from the right pane. Press Tab to switch focus between
@@ -92,11 +120,28 @@
 
 			<ul class="list-disc list-inside space-y-2 text-gray-700 mb-4">
 				<li>独立滚动的双窗格布局</li>
+				<li>可拖动分隔线调整窗格大小</li>
+				<li>键盘快捷键（Ctrl+方向键调整大小）</li>
 				<li>响应式设计（移动端垂直堆叠）</li>
 				<li>键盘导航（Tab键切换窗格）</li>
 				<li>带有ARIA标签的无障碍访问</li>
-				<li>可配置的分割比例</li>
+				<li>localStorage持久化分割比例</li>
 			</ul>
+
+			<div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 rounded my-4">
+				<p class="font-semibold text-indigo-900 mb-2">🎯 试试可拖动的分隔线！</p>
+				<p class="text-indigo-800 text-sm mb-2">拖动窗格之间的垂直分隔线来调整它们的大小。</p>
+				<p class="text-indigo-800 text-sm mb-2">
+					使用 <kbd class="px-2 py-1 bg-indigo-200 rounded">Ctrl</kbd> +
+					<kbd class="px-2 py-1 bg-indigo-200 rounded">←</kbd> /
+					<kbd class="px-2 py-1 bg-indigo-200 rounded">→</kbd> 按5%增量调整。
+				</p>
+				<p class="text-indigo-800 text-sm">
+					当前分割：<strong>{splitRatio.toFixed(0)}%</strong> / <strong
+						>{(100 - splitRatio).toFixed(0)}%</strong
+					>
+				</p>
+			</div>
 
 			<p class="text-gray-700 mb-4">尝试独立于左侧窗格滚动此窗格。按Tab键在窗格之间切换焦点。</p>
 

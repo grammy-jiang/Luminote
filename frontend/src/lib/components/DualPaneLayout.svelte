@@ -42,7 +42,7 @@
 	let initialized = false;
 
 	// Load split ratio from localStorage on mount or when persistKey changes
-	$: if (!initialized && persistKey) {
+	$: if (!initialized && persistKey && typeof window !== 'undefined') {
 		const saved = localStorage.getItem(persistKey);
 		if (saved) {
 			const parsed = parseFloat(saved);
@@ -55,7 +55,9 @@
 
 	// Save split ratio to localStorage
 	function saveSplitRatio() {
-		localStorage.setItem(persistKey, leftWidth.toString());
+		if (typeof window !== 'undefined') {
+			localStorage.setItem(persistKey, leftWidth.toString());
+		}
 		dispatch('splitChange', {
 			leftWidth: leftWidth,
 			rightWidth: 100 - leftWidth
