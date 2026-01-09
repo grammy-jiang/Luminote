@@ -1,5 +1,6 @@
 """Pytest configuration and fixtures."""
 
+import unittest
 from typing import Any
 
 import pytest
@@ -7,6 +8,18 @@ from fastapi.testclient import TestClient
 
 from app.main import fastapi_application
 from tests.utils import create_mock_openai_response, create_sample_content
+
+
+class FixtureAttrs:
+    """Type-only mixin for injected pytest fixtures.
+
+    These attributes are populated by the autouse fixture below for unittest.TestCase
+    subclasses.
+    """
+
+    client: TestClient
+    mock_openai_response: dict[str, Any]
+    sample_content: dict[str, Any]
 
 
 @pytest.fixture
@@ -48,3 +61,25 @@ def sample_content() -> dict[str, Any]:
         url="https://example.com/test-article",
         language="en",
     )
+
+
+@pytest.fixture(autouse=True)
+def _inject_unittest_fixtures(
+    request: pytest.FixtureRequest,
+    client: TestClient,
+    mock_openai_response: dict[str, Any],
+    sample_content: dict[str, Any],
+) -> None:
+    """Inject pytest fixtures into unittest.TestCase subclasses.
+
+    Pytest does not pass fixtures as parameters to unittest.TestCase methods.
+    Following pytest's documented pattern, this autouse fixture attaches the
+    commonly used fixtures to TestCase classes so tests can access them via
+    ``self`` (e.g., ``self.client``).
+    """
+
+    test_class = request.cls
+    if test_class is not None and issubclass(test_class, unittest.TestCase):
+        test_class.client = client
+        test_class.mock_openai_response = mock_openai_response
+        test_class.sample_content = sample_content
