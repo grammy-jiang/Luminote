@@ -3,10 +3,6 @@
 	import SourcePane from '$lib/components/SourcePane.svelte';
 	import TranslationPane from '$lib/components/TranslationPane.svelte';
 	import type { ContentBlock } from '$lib/types/api';
-	import { onMount } from 'svelte';
-
-	let mounted = false;
-	let splitRatio = 50;
 
 	// Sample content blocks for demonstration
 	const sourceBlocks: ContentBlock[] = [
@@ -122,21 +118,9 @@
 			metadata: {}
 		}
 	];
-
-	onMount(() => {
-		mounted = true;
-	});
-
-	function handleSplitChange(event: CustomEvent<{ leftWidth: number; rightWidth: number }>) {
-		splitRatio = event.detail.leftWidth;
-	}
 </script>
 
-<DualPaneLayout
-	leftLabel="Source Content"
-	rightLabel="Translation"
-	on:splitChange={handleSplitChange}
->
+<DualPaneLayout leftLabel="Source Content" rightLabel="Translation">
 	<!-- Left pane: Source content with keyboard navigation -->
 	<div slot="left">
 		<SourcePane blocks={sourceBlocks} />
@@ -147,12 +131,3 @@
 		<TranslationPane blocks={translationBlocks} />
 	</div>
 </DualPaneLayout>
-
-<style>
-	:global(body) {
-		margin: 0;
-		padding: 0;
-		height: 100vh;
-		overflow: hidden;
-	}
-</style>

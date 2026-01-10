@@ -1,6 +1,7 @@
 # Keyboard Shortcuts
 
-Luminote supports comprehensive keyboard navigation for power users who want to navigate content without using a mouse.
+Luminote supports comprehensive keyboard navigation for power users who want to
+navigate content without using a mouse.
 
 ## Block Navigation
 
@@ -14,11 +15,13 @@ Luminote supports comprehensive keyboard navigation for power users who want to 
 ### Between Panes
 
 - **Tab** - Switch focus from left pane (Source) to right pane (Translation)
-- **Shift + Tab** - Switch focus from right pane (Translation) to left pane (Source)
+- **Shift + Tab** - Switch focus from right pane (Translation) to left pane
+  (Source)
 
 ### Cross-Pane Navigation
 
-- **Enter** or **Space** - When focused on a block, jump to the corresponding block in the other pane
+- **Enter** or **Space** - When focused on a block, jump to the corresponding
+  block in the other pane
   - From Source pane → Scrolls to matching block in Translation pane
   - From Translation pane → Scrolls to matching block in Source pane
 
@@ -31,7 +34,8 @@ Luminote supports comprehensive keyboard navigation for power users who want to 
 
 - Focused blocks have a **blue outline** (`outline: 2px solid #3b82f6`)
 - Navigated blocks have a **pulse animation** for visual feedback
-- Highlighted blocks (from cross-pane navigation) have a **yellow background** with orange outline
+- Highlighted blocks (from cross-pane navigation) have a **yellow background**
+  with orange outline
 
 ## Accessibility Features
 
@@ -43,21 +47,27 @@ Luminote supports comprehensive keyboard navigation for power users who want to 
 
 ## Tips for Keyboard Users
 
-1. **Start with Tab**: Press Tab to focus the left pane, then use Arrow keys to navigate blocks
-2. **Jump Quickly**: Use Home/End to quickly reach the first or last block
-3. **Cross-Reference**: Press Enter on a source block to see its translation instantly
-4. **Adjust Layout**: Use Ctrl + Arrow keys to resize panes to your preference
-5. **Sequential Navigation**: Navigate through all blocks using Arrow Down repeatedly
+1. **Start with Tab**: Press Tab to focus the left pane, then use Arrow keys to
+   navigate blocks
+1. **Jump Quickly**: Use Home/End to quickly reach the first or last block
+1. **Cross-Reference**: Press Enter on a source block to see its translation
+   instantly
+1. **Adjust Layout**: Use Ctrl + Arrow keys to resize panes to your preference
+1. **Sequential Navigation**: Navigate through all blocks using Arrow Down
+   repeatedly
 
 ## Browser Compatibility
 
 These keyboard shortcuts work in all modern browsers:
+
 - Chrome/Edge (v90+)
 - Firefox (v88+)
 - Safari (v14+)
 
 ## Known Limitations
 
-- Browser extensions or operating system shortcuts may conflict with some keyboard shortcuts
-- Some screen readers may announce navigation differently depending on configuration
+- Browser extensions or operating system shortcuts may conflict with some
+  keyboard shortcuts
+- Some screen readers may announce navigation differently depending on
+  configuration
 - In mobile browsers, keyboard shortcuts require an external keyboard

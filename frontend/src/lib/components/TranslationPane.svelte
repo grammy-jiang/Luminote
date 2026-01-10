@@ -2,6 +2,11 @@
 	import { createEventDispatcher, onDestroy, getContext } from 'svelte';
 	import type { ContentBlock } from '$lib/types/api';
 	import type { Writable } from 'svelte/store';
+	import {
+		navigateToAdjacentBlock,
+		navigateToFirstBlock,
+		navigateToLastBlock
+	} from '$lib/utils/keyboard-navigation';
 
 	/**
 	 * TranslationPane Component
@@ -109,63 +114,14 @@
 			dispatch('blockClick', { blockId });
 		} else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
 			event.preventDefault();
-			navigateToAdjacentBlock(blockId, event.key === 'ArrowDown' ? 'next' : 'previous');
+			navigateToAdjacentBlock(blocks, blockId, event.key === 'ArrowDown' ? 'next' : 'previous');
 		} else if (event.key === 'Home') {
 			event.preventDefault();
-			navigateToFirstBlock();
+			navigateToFirstBlock(blocks);
 		} else if (event.key === 'End') {
 			event.preventDefault();
-			navigateToLastBlock();
+			navigateToLastBlock(blocks);
 		}
-	}
-
-	/**
-	 * Navigate to the adjacent block (next or previous).
-	 */
-	function navigateToAdjacentBlock(currentBlockId: string, direction: 'next' | 'previous') {
-		const currentIndex = blocks.findIndex((block) => block.id === currentBlockId);
-		if (currentIndex === -1) return;
-
-		const targetIndex = direction === 'next' ? currentIndex + 1 : currentIndex - 1;
-		if (targetIndex >= 0 && targetIndex < blocks.length) {
-			const targetBlock = blocks[targetIndex];
-			focusBlock(targetBlock.id);
-		}
-	}
-
-	/**
-	 * Navigate to the first block.
-	 */
-	function navigateToFirstBlock() {
-		if (blocks.length > 0) {
-			focusBlock(blocks[0].id);
-		}
-	}
-
-	/**
-	 * Navigate to the last block.
-	 */
-	function navigateToLastBlock() {
-		if (blocks.length > 0) {
-			focusBlock(blocks[blocks.length - 1].id);
-		}
-	}
-
-	/**
-	 * Focus a specific block by its ID.
-	 */
-	function focusBlock(blockId: string) {
-		// Use setTimeout to ensure DOM is updated
-		setTimeout(() => {
-			const blockElement = document.querySelector(`[data-block-id="${blockId}"]`) as HTMLElement;
-			if (blockElement) {
-				blockElement.focus();
-				// Scroll into view if needed (check if function exists for test compatibility)
-				if (typeof blockElement.scrollIntoView === 'function') {
-					blockElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-				}
-			}
-		}, 0);
 	}
 
 	/**
