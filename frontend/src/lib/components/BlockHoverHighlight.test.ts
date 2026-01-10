@@ -435,6 +435,8 @@ describe('Block Hover Highlighting', () => {
 
 			vi.useRealTimers();
 		});
+	});
+
 	describe('Integration with DualPaneLayout', () => {
 		it('coordinates hover highlighting between panes via context', async () => {
 			vi.useFakeTimers();

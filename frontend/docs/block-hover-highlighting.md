@@ -179,12 +179,12 @@ CSS transitions apply visual highlight
 
 ```svelte
 <script>
-    import DualPaneLayout from './DualPaneLayout.svelte';
-    import SourcePane from './SourcePane.svelte';
-    import TranslationPane from './TranslationPane.svelte';
+	import DualPaneLayout from './DualPaneLayout.svelte';
+	import SourcePane from './SourcePane.svelte';
+	import TranslationPane from './TranslationPane.svelte';
 
-    let sourceBlocks = [...];
-    let translationBlocks = [...];
+	let sourceBlocks = []; // Your source content blocks
+	let translationBlocks = []; // Your translated content blocks
 </script>
 
 <DualPaneLayout>
