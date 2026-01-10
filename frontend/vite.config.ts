@@ -24,6 +24,7 @@ export default defineConfig({
 				'src/lib/api/config.ts', // API configuration (will be tested when API endpoints are implemented)
 				'src/lib/api/extraction.ts', // Extraction API service (will be tested when extraction feature is implemented)
 				'src/lib/api/translation.ts', // Translation API service (will be tested when translation feature is implemented)
+				'src/lib/utils/streaming.example.ts', // Example/reference implementation (documentation)
 				'**/*.d.ts',
 				'**/*.config.{js,ts}',
 				'**/node_modules/**',
