@@ -2,12 +2,39 @@
  * Unit tests for DualPaneLayout component.
  */
 
-import { describe, it, expect } from 'vitest';
-import { render } from '../test-utils';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { render, waitFor } from '../test-utils';
 import { screen, fireEvent } from '@testing-library/svelte';
 import DualPaneLayout from './DualPaneLayout.svelte';
 
+// Mock localStorage
+const localStorageMock = (() => {
+	let store: Record<string, string> = {};
+
+	return {
+		getItem: (key: string) => store[key] || null,
+		setItem: (key: string, value: string) => {
+			store[key] = value.toString();
+		},
+		removeItem: (key: string) => {
+			delete store[key];
+		},
+		clear: () => {
+			store = {};
+		}
+	};
+})();
+
+Object.defineProperty(window, 'localStorage', {
+	value: localStorageMock
+});
+
 describe('DualPaneLayout Component', () => {
+	beforeEach(() => {
+		// Clear localStorage before each test
+		localStorageMock.clear();
+	});
+
 	describe('Rendering', () => {
 		it('renders two panes', () => {
 			render(DualPaneLayout);
@@ -272,6 +299,429 @@ describe('DualPaneLayout Component', () => {
 			// Both panes have the same long label, so we use getAllBy
 			const regions = screen.getAllByRole('region', { name: longLabel });
 			expect(regions).toHaveLength(2);
+		});
+	});
+
+	describe('Draggable Divider', () => {
+		it('renders divider with separator role', () => {
+			render(DualPaneLayout);
+
+			const divider = screen.getByRole('separator');
+			expect(divider).toBeInTheDocument();
+			expect(divider).toHaveAttribute('aria-label', 'Resize panes');
+			expect(divider).toHaveAttribute('aria-orientation', 'vertical');
+		});
+
+		it('divider has correct ARIA attributes', () => {
+			render(DualPaneLayout, {
+				props: { minPaneWidth: 20 }
+			});
+
+			const divider = screen.getByRole('separator');
+			expect(divider).toHaveAttribute('aria-valuenow', '50');
+			expect(divider).toHaveAttribute('aria-valuemin', '20');
+			expect(divider).toHaveAttribute('aria-valuemax', '80');
+		});
+
+		it('applies hovering class on mouse enter', async () => {
+			const { container } = render(DualPaneLayout);
+
+			const divider = container.querySelector('.divider');
+			expect(divider).toBeInTheDocument();
+
+			await fireEvent.mouseEnter(divider!);
+			expect(divider).toHaveClass('hovering');
+
+			await fireEvent.mouseLeave(divider!);
+			expect(divider).not.toHaveClass('hovering');
+		});
+
+		it('applies dragging class during mouse drag', async () => {
+			const { container } = render(DualPaneLayout);
+
+			const divider = container.querySelector('.divider');
+			expect(divider).toBeInTheDocument();
+
+			await fireEvent.mouseDown(divider!);
+			expect(divider).toHaveClass('dragging');
+
+			await fireEvent.mouseUp(window);
+			expect(divider).not.toHaveClass('dragging');
+		});
+
+		it('updates pane widths during drag', async () => {
+			const { container } = render(DualPaneLayout);
+
+			const divider = container.querySelector('.divider');
+			const layoutContainer = container.querySelector('.dual-pane-layout');
+
+			// Mock getBoundingClientRect
+			vi.spyOn(layoutContainer!, 'getBoundingClientRect').mockReturnValue({
+				left: 0,
+				width: 1000,
+				top: 0,
+				right: 1000,
+				bottom: 600,
+				height: 600,
+				x: 0,
+				y: 0,
+				toJSON: () => {}
+			});
+
+			await fireEvent.mouseDown(divider!);
+
+			// Simulate mouse move to 30% position
+			await fireEvent.mouseMove(window, { clientX: 300 });
+
+			const leftPane = container.querySelector('.left-pane');
+			const rightPane = container.querySelector('.right-pane');
+
+			// Check that width is updated (approximately 30%)
+			const leftWidth = leftPane?.getAttribute('style');
+			expect(leftWidth).toContain('width:');
+			expect(leftWidth).toContain('30%');
+
+			const rightWidth = rightPane?.getAttribute('style');
+			expect(rightWidth).toContain('width:');
+			expect(rightWidth).toContain('70%');
+
+			await fireEvent.mouseUp(window);
+		});
+
+		it('enforces minimum pane width constraint', async () => {
+			const { container, component } = render(DualPaneLayout, {
+				props: { minPaneWidth: 20 }
+			});
+
+			const divider = container.querySelector('.divider');
+			const layoutContainer = container.querySelector('.dual-pane-layout');
+
+			vi.spyOn(layoutContainer!, 'getBoundingClientRect').mockReturnValue({
+				left: 0,
+				width: 1000,
+				top: 0,
+				right: 1000,
+				bottom: 600,
+				height: 600,
+				x: 0,
+				y: 0,
+				toJSON: () => {}
+			});
+
+			await fireEvent.mouseDown(divider!);
+
+			// Try to drag to 10% (below minimum)
+			await fireEvent.mouseMove(window, { clientX: 100 });
+			await fireEvent.mouseUp(window);
+
+			// Should be clamped to minimum (20%)
+			const ratio = component.getSplitRatio();
+			expect(ratio).toBeGreaterThanOrEqual(20);
+		});
+
+		it('enforces maximum pane width constraint', async () => {
+			const { container, component } = render(DualPaneLayout, {
+				props: { minPaneWidth: 20 }
+			});
+
+			const divider = container.querySelector('.divider');
+			const layoutContainer = container.querySelector('.dual-pane-layout');
+
+			vi.spyOn(layoutContainer!, 'getBoundingClientRect').mockReturnValue({
+				left: 0,
+				width: 1000,
+				top: 0,
+				right: 1000,
+				bottom: 600,
+				height: 600,
+				x: 0,
+				y: 0,
+				toJSON: () => {}
+			});
+
+			await fireEvent.mouseDown(divider!);
+
+			// Try to drag to 90% (above maximum of 80%)
+			await fireEvent.mouseMove(window, { clientX: 900 });
+			await fireEvent.mouseUp(window);
+
+			// Should be clamped to maximum (80%)
+			const ratio = component.getSplitRatio();
+			expect(ratio).toBeLessThanOrEqual(80);
+		});
+	});
+
+	describe('Touch Support', () => {
+		it('handles touch drag events', async () => {
+			const { container } = render(DualPaneLayout);
+
+			const divider = container.querySelector('.divider');
+			const layoutContainer = container.querySelector('.dual-pane-layout');
+
+			vi.spyOn(layoutContainer!, 'getBoundingClientRect').mockReturnValue({
+				left: 0,
+				width: 1000,
+				top: 0,
+				right: 1000,
+				bottom: 600,
+				height: 600,
+				x: 0,
+				y: 0,
+				toJSON: () => {}
+			});
+
+			await fireEvent.touchStart(divider!);
+			expect(divider).toHaveClass('dragging');
+
+			// Simulate touch move
+			await fireEvent.touchMove(window, {
+				touches: [{ clientX: 400 }]
+			});
+
+			await fireEvent.touchEnd(window);
+			expect(divider).not.toHaveClass('dragging');
+		});
+	});
+
+	describe('Keyboard Shortcuts', () => {
+		it('decreases left pane width with Ctrl+ArrowLeft', async () => {
+			const { component } = render(DualPaneLayout);
+
+			const initialRatio = component.getSplitRatio();
+
+			await fireEvent.keyDown(window, {
+				key: 'ArrowLeft',
+				ctrlKey: true
+			});
+
+			const newRatio = component.getSplitRatio();
+			expect(newRatio).toBe(initialRatio - 5);
+		});
+
+		it('increases left pane width with Ctrl+ArrowRight', async () => {
+			const { component } = render(DualPaneLayout);
+
+			const initialRatio = component.getSplitRatio();
+
+			await fireEvent.keyDown(window, {
+				key: 'ArrowRight',
+				ctrlKey: true
+			});
+
+			const newRatio = component.getSplitRatio();
+			expect(newRatio).toBe(initialRatio + 5);
+		});
+
+		it('respects minimum width with keyboard shortcuts', async () => {
+			const { component } = render(DualPaneLayout, {
+				props: { minPaneWidth: 20 }
+			});
+
+			// Set to minimum width
+			component.setSplitRatio(20);
+
+			// Try to decrease below minimum
+			await fireEvent.keyDown(window, {
+				key: 'ArrowLeft',
+				ctrlKey: true
+			});
+
+			const ratio = component.getSplitRatio();
+			expect(ratio).toBe(20);
+		});
+
+		it('respects maximum width with keyboard shortcuts', async () => {
+			const { component } = render(DualPaneLayout, {
+				props: { minPaneWidth: 20 }
+			});
+
+			// Set to maximum width (80%)
+			component.setSplitRatio(80);
+
+			// Try to increase above maximum
+			await fireEvent.keyDown(window, {
+				key: 'ArrowRight',
+				ctrlKey: true
+			});
+
+			const ratio = component.getSplitRatio();
+			expect(ratio).toBe(80);
+		});
+	});
+
+	describe('localStorage Persistence', () => {
+		it('saves split ratio to localStorage on drag end', async () => {
+			const { container } = render(DualPaneLayout, {
+				props: { persistKey: 'test-split' }
+			});
+
+			const divider = container.querySelector('.divider');
+			const layoutContainer = container.querySelector('.dual-pane-layout');
+
+			vi.spyOn(layoutContainer!, 'getBoundingClientRect').mockReturnValue({
+				left: 0,
+				width: 1000,
+				top: 0,
+				right: 1000,
+				bottom: 600,
+				height: 600,
+				x: 0,
+				y: 0,
+				toJSON: () => {}
+			});
+
+			await fireEvent.mouseDown(divider!);
+			await fireEvent.mouseMove(window, { clientX: 600 });
+			await fireEvent.mouseUp(window);
+
+			const saved = localStorage.getItem('test-split');
+			expect(saved).toBeTruthy();
+			expect(parseFloat(saved!)).toBeCloseTo(60, 0);
+		});
+
+		it('restores split ratio from localStorage on mount', async () => {
+			localStorage.setItem('test-split-restore', '65');
+
+			const { component } = render(DualPaneLayout, {
+				props: { persistKey: 'test-split-restore' }
+			});
+
+			// Wait for the component to read from localStorage
+			await waitFor(() => {
+				expect(component.getSplitRatio()).toBe(65);
+			});
+		});
+
+		it('uses default split ratio if localStorage is empty', () => {
+			const { component } = render(DualPaneLayout, {
+				props: { persistKey: 'non-existent-key' }
+			});
+
+			const ratio = component.getSplitRatio();
+			expect(ratio).toBe(50);
+		});
+
+		it('ignores invalid localStorage values', () => {
+			localStorage.setItem('test-invalid', 'not-a-number');
+
+			const { component } = render(DualPaneLayout, {
+				props: { persistKey: 'test-invalid' }
+			});
+
+			const ratio = component.getSplitRatio();
+			expect(ratio).toBe(50); // Should use default
+		});
+
+		it('ignores localStorage values outside valid range', () => {
+			localStorage.setItem('test-out-of-range', '95');
+
+			const { component } = render(DualPaneLayout, {
+				props: { persistKey: 'test-out-of-range', minPaneWidth: 20 }
+			});
+
+			const ratio = component.getSplitRatio();
+			expect(ratio).toBe(50); // Should use default
+		});
+	});
+
+	describe('Custom Events', () => {
+		it('dispatches splitChange event on drag end', async () => {
+			const { container, component } = render(DualPaneLayout);
+
+			let eventFired = false;
+			let eventDetail: { leftWidth: number; rightWidth: number } | undefined;
+
+			component.$on(
+				'splitChange',
+				(event: CustomEvent<{ leftWidth: number; rightWidth: number }>) => {
+					eventFired = true;
+					eventDetail = event.detail;
+				}
+			);
+
+			const divider = container.querySelector('.divider');
+			const layoutContainer = container.querySelector('.dual-pane-layout');
+
+			vi.spyOn(layoutContainer!, 'getBoundingClientRect').mockReturnValue({
+				left: 0,
+				width: 1000,
+				top: 0,
+				right: 1000,
+				bottom: 600,
+				height: 600,
+				x: 0,
+				y: 0,
+				toJSON: () => {}
+			});
+
+			await fireEvent.mouseDown(divider!);
+			await fireEvent.mouseMove(window, { clientX: 400 });
+			await fireEvent.mouseUp(window);
+
+			expect(eventFired).toBe(true);
+			expect(eventDetail).toBeDefined();
+			expect(eventDetail!.leftWidth).toBeCloseTo(40, 0);
+			expect(eventDetail!.rightWidth).toBeCloseTo(60, 0);
+		});
+
+		it('dispatches splitChange event on keyboard resize', async () => {
+			const { component } = render(DualPaneLayout);
+
+			let eventFired = false;
+
+			component.$on('splitChange', () => {
+				eventFired = true;
+			});
+
+			await fireEvent.keyDown(window, {
+				key: 'ArrowRight',
+				ctrlKey: true
+			});
+
+			expect(eventFired).toBe(true);
+		});
+	});
+
+	describe('Programmatic Control', () => {
+		it('exports getSplitRatio method', () => {
+			const { component } = render(DualPaneLayout);
+
+			expect(typeof component.getSplitRatio).toBe('function');
+			expect(component.getSplitRatio()).toBe(50);
+		});
+
+		it('exports setSplitRatio method', () => {
+			const { component } = render(DualPaneLayout);
+
+			expect(typeof component.setSplitRatio).toBe('function');
+
+			component.setSplitRatio(60);
+			expect(component.getSplitRatio()).toBe(60);
+		});
+
+		it('setSplitRatio enforces constraints', () => {
+			const { component } = render(DualPaneLayout, {
+				props: { minPaneWidth: 20 }
+			});
+
+			// Try to set below minimum
+			component.setSplitRatio(10);
+			expect(component.getSplitRatio()).toBe(20);
+
+			// Try to set above maximum
+			component.setSplitRatio(90);
+			expect(component.getSplitRatio()).toBe(80);
+		});
+
+		it('setSplitRatio saves to localStorage', () => {
+			const { component } = render(DualPaneLayout, {
+				props: { persistKey: 'test-programmatic' }
+			});
+
+			component.setSplitRatio(70);
+
+			const saved = localStorage.getItem('test-programmatic');
+			expect(saved).toBe('70');
 		});
 	});
 });
