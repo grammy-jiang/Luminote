@@ -802,7 +802,8 @@ async def test_extract_block_parsing_failure():
 
 @pytest.mark.unit
 async def test_news_article():
-    """Test news article extraction with headlines, byline, pull quotes, and captions."""
+    """Test news article extraction with headlines, byline, pull quotes, and
+    captions."""
     service = ExtractionService()
 
     # Load news article fixture

@@ -210,8 +210,28 @@ class ExtractionService:
         current = element
         while current:
             # Check tag names
-            if current.name in ["nav", "aside"]:
+            if current.name == "nav":
                 return True
+
+            # For aside elements, check if they're pull quotes before filtering
+            if current.name == "aside":
+                # Check if this aside contains pull quote indicators
+                aside_classes = current.get("class", [])
+                if isinstance(aside_classes, list):
+                    aside_class_str = " ".join(aside_classes).lower()
+                    # If aside has pull quote classes, don't filter it
+                    if any(
+                        keyword in aside_class_str
+                        for keyword in ["pull", "pullquote", "highlight"]
+                    ):
+                        # This is a pull quote aside, don't filter
+                        pass
+                    else:
+                        # Regular aside (sidebar), filter it out
+                        return True
+                else:
+                    # No classes, treat as regular aside
+                    return True
 
             # Check class names
             classes = current.get("class", [])
@@ -456,13 +476,17 @@ class ExtractionService:
         json_ld = soup.find("script", attrs={"type": "application/ld+json"})
         if json_ld:
             try:
-                data = json.loads(json_ld.string)
+                data = json.loads(json_ld.string or "")
                 if isinstance(data, dict):
                     article_type = data.get("@type", "")
                     if article_type == "NewsArticle":
                         return "news"
-            except Exception:
-                pass
+            except (TypeError, json.JSONDecodeError, ValueError) as exc:
+                # Best-effort JSON-LD parsing; log and continue on invalid JSON
+                logger.debug(
+                    "Failed to parse JSON-LD while detecting article type",
+                    exc_info=exc,
+                )
 
         # Check Open Graph type
         og_type = soup.find("meta", attrs={"property": "og:type"})
@@ -486,7 +510,7 @@ class ExtractionService:
         byline_elem = soup.find(class_=re.compile(r"byline", re.I))
         if byline_elem:
             text = byline_elem.get_text(strip=True)
-            return str(text) if text else None
+            return text if text else None
 
         # Look for author span/element in common locations
         author_elem = soup.find(class_=re.compile(r"author", re.I))
@@ -497,8 +521,8 @@ class ExtractionService:
                 # Get text with some whitespace preserved to check for "by"
                 parent_text = parent.get_text(separator=" ", strip=True)
                 # Check if it contains "by" or similar patterns (case insensitive)
-                if re.search(r"\bby\b", str(parent_text), re.I):
-                    return str(parent_text) if parent_text else None
+                if re.search(r"\bby\b", parent_text, re.I):
+                    return parent_text if parent_text else None
 
         return None
 
