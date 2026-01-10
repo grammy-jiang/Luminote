@@ -254,7 +254,7 @@
 	let isScrolling = false;
 	let scrollAnimationController: AbortController | null = null;
 	let navigationAnnouncementElement: HTMLDivElement;
-	
+
 	// Track timeout IDs for cleanup
 	let announcementTimeout: ReturnType<typeof setTimeout> | null = null;
 	let pulseAnimationTimeout: ReturnType<typeof setTimeout> | null = null;
