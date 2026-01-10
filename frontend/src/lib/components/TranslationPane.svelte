@@ -229,7 +229,7 @@
 			{#if block.type === 'paragraph'}
 				<div class="block-wrapper" class:block-loading={blockLoading}>
 					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
+					<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 					<p
 						id={block.id}
 						data-block-id={block.id}
@@ -286,7 +286,7 @@
 				{@const language = getCodeLanguage(block.metadata)}
 				<div class="block-wrapper" class:block-loading={blockLoading}>
 					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
+					<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 					<pre
 						id={block.id}
 						data-block-id={block.id}
@@ -316,7 +316,7 @@
 				<div class="block-wrapper" class:block-loading={blockLoading}>
 					{#if ordered}
 						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-						<!-- svelte-ignore a11y-click-events-have-key-events -->
+						<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 						<ol
 							id={block.id}
 							data-block-id={block.id}
@@ -338,7 +338,7 @@
 						</ol>
 					{:else}
 						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-						<!-- svelte-ignore a11y-click-events-have-key-events -->
+						<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 						<ul
 							id={block.id}
 							data-block-id={block.id}
@@ -368,7 +368,7 @@
 			{:else if block.type === 'quote'}
 				<div class="block-wrapper" class:block-loading={blockLoading}>
 					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
+					<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 					<blockquote
 						id={block.id}
 						data-block-id={block.id}
@@ -401,7 +401,7 @@
 				{#if src}
 					<div class="block-wrapper" class:block-loading={blockLoading}>
 						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-						<!-- svelte-ignore a11y-click-events-have-key-events -->
+						<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 						<figure
 							id={block.id}
 							data-block-id={block.id}
@@ -697,7 +697,5 @@
 
 	.block-hoverable:hover {
 		opacity: 0.9;
-	}
-</style>
 	}
 </style>

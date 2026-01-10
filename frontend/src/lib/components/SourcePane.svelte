@@ -182,7 +182,7 @@
 		{#each blocks as block (block.id)}
 			{#if block.type === 'paragraph'}
 				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 				<p
 					id={block.id}
 					data-block-id={block.id}
@@ -223,7 +223,7 @@
 			{:else if block.type === 'code'}
 				{@const language = getCodeLanguage(block.metadata)}
 				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 				<pre
 					id={block.id}
 					data-block-id={block.id}
@@ -245,7 +245,7 @@
 				{@const ordered = isOrderedList(block.metadata)}
 				{#if ordered}
 					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
+					<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 					<ol
 						id={block.id}
 						data-block-id={block.id}
@@ -266,7 +266,7 @@
 					</ol>
 				{:else}
 					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
+					<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 					<ul
 						id={block.id}
 						data-block-id={block.id}
@@ -288,7 +288,7 @@
 				{/if}
 			{:else if block.type === 'quote'}
 				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-				<!-- svelte-ignore a11y-click-events-have-key-events -->
+				<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 				<blockquote
 					id={block.id}
 					data-block-id={block.id}
@@ -313,7 +313,7 @@
 				{@const height = block.metadata.height ? Number(block.metadata.height) : undefined}
 				{#if src}
 					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
-					<!-- svelte-ignore a11y-click-events-have-key-events -->
+					<!-- svelte-ignore a11y-no-noninteractive-element-interactions -->
 					<figure
 						id={block.id}
 						data-block-id={block.id}
