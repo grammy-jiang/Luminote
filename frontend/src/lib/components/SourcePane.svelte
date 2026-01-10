@@ -2,6 +2,11 @@
 	import { createEventDispatcher, onDestroy, getContext } from 'svelte';
 	import type { ContentBlock } from '$lib/types/api';
 	import type { Writable } from 'svelte/store';
+	import {
+		navigateToAdjacentBlock,
+		navigateToFirstBlock,
+		navigateToLastBlock
+	} from '$lib/utils/keyboard-navigation';
 
 	/**
 	 * SourcePane Component
@@ -103,6 +108,15 @@
 		if (event.key === 'Enter' || event.key === ' ') {
 			event.preventDefault();
 			dispatch('blockClick', { blockId });
+		} else if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+			event.preventDefault();
+			navigateToAdjacentBlock(blocks, blockId, event.key === 'ArrowDown' ? 'next' : 'previous');
+		} else if (event.key === 'Home') {
+			event.preventDefault();
+			navigateToFirstBlock(blocks);
+		} else if (event.key === 'End') {
+			event.preventDefault();
+			navigateToLastBlock(blocks);
 		}
 	}
 

@@ -1014,4 +1014,233 @@ describe('TranslationPane Component', () => {
 			expect(container.querySelector('script')).not.toBeInTheDocument();
 		});
 	});
+
+	describe('Keyboard Navigation', () => {
+		it('navigates to next block with ArrowDown', async () => {
+			const blocks: ContentBlock[] = [
+				{ id: 'block-1', type: 'paragraph', text: 'First block', metadata: {} },
+				{ id: 'block-2', type: 'paragraph', text: 'Second block', metadata: {} },
+				{ id: 'block-3', type: 'paragraph', text: 'Third block', metadata: {} }
+			];
+
+			const { container } = render(TranslationPane, { props: { blocks } });
+
+			const firstBlock = container.querySelector('[data-block-id="block-1"]') as HTMLElement;
+			const secondBlock = container.querySelector('[data-block-id="block-2"]') as HTMLElement;
+
+			expect(firstBlock).toBeInTheDocument();
+			expect(secondBlock).toBeInTheDocument();
+
+			// Focus first block and press ArrowDown
+			firstBlock.focus();
+			await firstBlock.dispatchEvent(
+				new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })
+			);
+
+			// Wait for focus to be set
+			await new Promise((resolve) => setTimeout(resolve, 50));
+
+			// Second block should be focused
+			expect(document.activeElement).toBe(secondBlock);
+		});
+
+		it('navigates to previous block with ArrowUp', async () => {
+			const blocks: ContentBlock[] = [
+				{ id: 'block-1', type: 'paragraph', text: 'First block', metadata: {} },
+				{ id: 'block-2', type: 'paragraph', text: 'Second block', metadata: {} },
+				{ id: 'block-3', type: 'paragraph', text: 'Third block', metadata: {} }
+			];
+
+			const { container } = render(TranslationPane, { props: { blocks } });
+
+			const firstBlock = container.querySelector('[data-block-id="block-1"]') as HTMLElement;
+			const secondBlock = container.querySelector('[data-block-id="block-2"]') as HTMLElement;
+
+			// Focus second block and press ArrowUp
+			secondBlock.focus();
+			await secondBlock.dispatchEvent(
+				new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true })
+			);
+
+			// Wait for focus to be set
+			await new Promise((resolve) => setTimeout(resolve, 50));
+
+			// First block should be focused
+			expect(document.activeElement).toBe(firstBlock);
+		});
+
+		it('does not navigate beyond first block with ArrowUp', async () => {
+			const blocks: ContentBlock[] = [
+				{ id: 'block-1', type: 'paragraph', text: 'First block', metadata: {} },
+				{ id: 'block-2', type: 'paragraph', text: 'Second block', metadata: {} }
+			];
+
+			const { container } = render(TranslationPane, { props: { blocks } });
+
+			const firstBlock = container.querySelector('[data-block-id="block-1"]') as HTMLElement;
+
+			// Focus first block and press ArrowUp
+			firstBlock.focus();
+			await firstBlock.dispatchEvent(
+				new KeyboardEvent('keydown', { key: 'ArrowUp', bubbles: true })
+			);
+
+			// Wait for potential focus change
+			await new Promise((resolve) => setTimeout(resolve, 50));
+
+			// Should remain on first block (no error thrown)
+			expect(container.querySelector('[data-block-id="block-1"]')).toBeInTheDocument();
+		});
+
+		it('does not navigate beyond last block with ArrowDown', async () => {
+			const blocks: ContentBlock[] = [
+				{ id: 'block-1', type: 'paragraph', text: 'First block', metadata: {} },
+				{ id: 'block-2', type: 'paragraph', text: 'Second block', metadata: {} }
+			];
+
+			const { container } = render(TranslationPane, { props: { blocks } });
+
+			const secondBlock = container.querySelector('[data-block-id="block-2"]') as HTMLElement;
+
+			// Focus last block and press ArrowDown
+			secondBlock.focus();
+			await secondBlock.dispatchEvent(
+				new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })
+			);
+
+			// Wait for potential focus change
+			await new Promise((resolve) => setTimeout(resolve, 50));
+
+			// Should remain on last block (no error thrown)
+			expect(container.querySelector('[data-block-id="block-2"]')).toBeInTheDocument();
+		});
+
+		it('navigates to first block with Home key', async () => {
+			const blocks: ContentBlock[] = [
+				{ id: 'block-1', type: 'paragraph', text: 'First block', metadata: {} },
+				{ id: 'block-2', type: 'paragraph', text: 'Second block', metadata: {} },
+				{ id: 'block-3', type: 'paragraph', text: 'Third block', metadata: {} }
+			];
+
+			const { container } = render(TranslationPane, { props: { blocks } });
+
+			const firstBlock = container.querySelector('[data-block-id="block-1"]') as HTMLElement;
+			const thirdBlock = container.querySelector('[data-block-id="block-3"]') as HTMLElement;
+
+			// Focus third block and press Home
+			thirdBlock.focus();
+			await thirdBlock.dispatchEvent(new KeyboardEvent('keydown', { key: 'Home', bubbles: true }));
+
+			// Wait for focus to be set
+			await new Promise((resolve) => setTimeout(resolve, 50));
+
+			// First block should be focused
+			expect(document.activeElement).toBe(firstBlock);
+		});
+
+		it('navigates to last block with End key', async () => {
+			const blocks: ContentBlock[] = [
+				{ id: 'block-1', type: 'paragraph', text: 'First block', metadata: {} },
+				{ id: 'block-2', type: 'paragraph', text: 'Second block', metadata: {} },
+				{ id: 'block-3', type: 'paragraph', text: 'Third block', metadata: {} }
+			];
+
+			const { container } = render(TranslationPane, { props: { blocks } });
+
+			const firstBlock = container.querySelector('[data-block-id="block-1"]') as HTMLElement;
+			const thirdBlock = container.querySelector('[data-block-id="block-3"]') as HTMLElement;
+
+			// Focus first block and press End
+			firstBlock.focus();
+			await firstBlock.dispatchEvent(new KeyboardEvent('keydown', { key: 'End', bubbles: true }));
+
+			// Wait for focus to be set
+			await new Promise((resolve) => setTimeout(resolve, 50));
+
+			// Last block should be focused
+			expect(document.activeElement).toBe(thirdBlock);
+		});
+
+		it('prevents default behavior for navigation keys', async () => {
+			const blocks: ContentBlock[] = [
+				{ id: 'block-1', type: 'paragraph', text: 'First block', metadata: {} },
+				{ id: 'block-2', type: 'paragraph', text: 'Second block', metadata: {} }
+			];
+
+			const { container } = render(TranslationPane, { props: { blocks } });
+
+			const firstBlock = container.querySelector('[data-block-id="block-1"]') as HTMLElement;
+
+			// Create events and check if preventDefault was called
+			const arrowDownEvent = new KeyboardEvent('keydown', {
+				key: 'ArrowDown',
+				bubbles: true,
+				cancelable: true
+			});
+			const homeEvent = new KeyboardEvent('keydown', {
+				key: 'Home',
+				bubbles: true,
+				cancelable: true
+			});
+			const endEvent = new KeyboardEvent('keydown', {
+				key: 'End',
+				bubbles: true,
+				cancelable: true
+			});
+
+			firstBlock.dispatchEvent(arrowDownEvent);
+			expect(arrowDownEvent.defaultPrevented).toBe(true);
+
+			firstBlock.dispatchEvent(homeEvent);
+			expect(homeEvent.defaultPrevented).toBe(true);
+
+			firstBlock.dispatchEvent(endEvent);
+			expect(endEvent.defaultPrevented).toBe(true);
+		});
+
+		it('works with different block types', async () => {
+			const blocks: ContentBlock[] = [
+				{ id: 'h1', type: 'heading', text: 'Título', metadata: { level: 1 } },
+				{ id: 'p1', type: 'paragraph', text: 'Párrafo', metadata: {} },
+				{ id: 'c1', type: 'code', text: 'código', metadata: { language: 'js' } },
+				{ id: 'l1', type: 'list', text: '- Elemento 1\n- Elemento 2', metadata: { ordered: false } }
+			];
+
+			const { container } = render(TranslationPane, { props: { blocks } });
+
+			const heading = container.querySelector('[data-block-id="h1"]') as HTMLElement;
+			const paragraph = container.querySelector('[data-block-id="p1"]') as HTMLElement;
+
+			// Navigate from heading to paragraph
+			heading.focus();
+			await heading.dispatchEvent(
+				new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })
+			);
+
+			await new Promise((resolve) => setTimeout(resolve, 50));
+			expect(document.activeElement).toBe(paragraph);
+		});
+
+		it('works with loading blocks', async () => {
+			const blocks: ContentBlock[] = [
+				{ id: 'block-1', type: 'paragraph', text: 'First', metadata: {} },
+				{ id: 'block-2', type: 'paragraph', text: 'Loading...', metadata: { loading: true } },
+				{ id: 'block-3', type: 'paragraph', text: 'Third', metadata: {} }
+			];
+
+			const { container } = render(TranslationPane, { props: { blocks } });
+
+			const firstBlock = container.querySelector('[data-block-id="block-1"]') as HTMLElement;
+			const secondBlock = container.querySelector('[data-block-id="block-2"]') as HTMLElement;
+
+			// Navigate to loading block
+			firstBlock.focus();
+			await firstBlock.dispatchEvent(
+				new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true })
+			);
+
+			await new Promise((resolve) => setTimeout(resolve, 50));
+			expect(document.activeElement).toBe(secondBlock);
+		});
+	});
 });
