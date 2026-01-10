@@ -530,9 +530,10 @@
 	/* Cursor indicates clickable block for navigation */
 	.block-hoverable {
 		cursor: pointer;
+		transition: background-color 0.15s ease-in-out;
 	}
 
 	.block-hoverable:hover {
-		opacity: 0.9;
+		background-color: #f3f4f6;
 	}
 </style>

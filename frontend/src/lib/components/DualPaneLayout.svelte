@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, setContext } from 'svelte';
+	import { createEventDispatcher, setContext, onDestroy } from 'svelte';
 	import { writable } from 'svelte/store';
 
 	/**
@@ -254,6 +254,31 @@
 	let isScrolling = false;
 	let scrollAnimationController: AbortController | null = null;
 	let navigationAnnouncementElement: HTMLDivElement;
+	
+	// Track timeout IDs for cleanup
+	let announcementTimeout: ReturnType<typeof setTimeout> | null = null;
+	let pulseAnimationTimeout: ReturnType<typeof setTimeout> | null = null;
+	let scrollCompleteTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	// Clean up timeouts on component destroy to prevent memory leaks
+	onDestroy(() => {
+		if (announcementTimeout) {
+			clearTimeout(announcementTimeout);
+			announcementTimeout = null;
+		}
+		if (pulseAnimationTimeout) {
+			clearTimeout(pulseAnimationTimeout);
+			pulseAnimationTimeout = null;
+		}
+		if (scrollCompleteTimeout) {
+			clearTimeout(scrollCompleteTimeout);
+			scrollCompleteTimeout = null;
+		}
+		if (scrollAnimationController) {
+			scrollAnimationController.abort();
+			scrollAnimationController = null;
+		}
+	});
 
 	/**
 	 * Announce navigation to screen readers.
@@ -261,15 +286,17 @@
 	function announceNavigation(source: 'source' | 'translation') {
 		if (navigationAnnouncementElement) {
 			const message =
-				source === 'source'
-					? 'Navigated to translation block'
-					: 'Navigated to source block';
+				source === 'source' ? 'Navigated to translation block' : 'Navigated to source block';
 			navigationAnnouncementElement.textContent = message;
 			// Clear after announcement
-			setTimeout(() => {
+			if (announcementTimeout) {
+				clearTimeout(announcementTimeout);
+			}
+			announcementTimeout = setTimeout(() => {
 				if (navigationAnnouncementElement) {
 					navigationAnnouncementElement.textContent = '';
 				}
+				announcementTimeout = null;
 			}, 1000);
 		}
 	}
@@ -279,8 +306,12 @@
 	 */
 	function addPulseAnimation(element: HTMLElement) {
 		element.classList.add('block-pulse');
-		setTimeout(() => {
+		if (pulseAnimationTimeout) {
+			clearTimeout(pulseAnimationTimeout);
+		}
+		pulseAnimationTimeout = setTimeout(() => {
 			element.classList.remove('block-pulse');
+			pulseAnimationTimeout = null;
 		}, 600);
 	}
 
@@ -313,11 +344,15 @@
 		});
 
 		// Mark scrolling as complete after animation duration (300ms)
-		setTimeout(() => {
+		if (scrollCompleteTimeout) {
+			clearTimeout(scrollCompleteTimeout);
+		}
+		scrollCompleteTimeout = setTimeout(() => {
 			if (!scrollAnimationController?.signal.aborted) {
 				isScrolling = false;
 				scrollAnimationController = null;
 			}
+			scrollCompleteTimeout = null;
 		}, 300);
 	}
 
