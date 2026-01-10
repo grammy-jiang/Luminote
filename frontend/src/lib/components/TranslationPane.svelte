@@ -43,6 +43,7 @@
 	const dispatch = createEventDispatcher<{
 		blockHover: { blockId: string };
 		blockLeave: { blockId: string };
+		blockClick: { blockId: string };
 	}>();
 
 	let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
@@ -90,6 +91,23 @@
 	 */
 	function handleBlockBlur(blockId: string) {
 		dispatch('blockLeave', { blockId });
+	}
+
+	/**
+	 * Handle block click to navigate to matching source block.
+	 */
+	function handleBlockClick(blockId: string) {
+		dispatch('blockClick', { blockId });
+	}
+
+	/**
+	 * Handle keyboard Enter/Space key to trigger navigation.
+	 */
+	function handleBlockKeydown(event: KeyboardEvent, blockId: string) {
+		if (event.key === 'Enter' || event.key === ' ') {
+			event.preventDefault();
+			dispatch('blockClick', { blockId });
+		}
 	}
 
 	/**
@@ -211,6 +229,7 @@
 			{#if block.type === 'paragraph'}
 				<div class="block-wrapper" class:block-loading={blockLoading}>
 					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+					<!-- svelte-ignore a11y-click-events-have-key-events -->
 					<p
 						id={block.id}
 						data-block-id={block.id}
@@ -223,6 +242,8 @@
 						on:mouseleave={() => handleBlockMouseLeave(block.id)}
 						on:focus={() => handleBlockFocus(block.id)}
 						on:blur={() => handleBlockBlur(block.id)}
+						on:click={() => handleBlockClick(block.id)}
+						on:keydown={(e) => handleBlockKeydown(e, block.id)}
 					>
 						{block.text}
 					</p>
@@ -250,6 +271,8 @@
 						on:mouseleave={() => handleBlockMouseLeave(block.id)}
 						on:focus={() => handleBlockFocus(block.id)}
 						on:blur={() => handleBlockBlur(block.id)}
+						on:click={() => handleBlockClick(block.id)}
+						on:keydown={(e) => handleBlockKeydown(e, block.id)}
 					>
 						{block.text}
 					</svelte:element>
@@ -263,6 +286,7 @@
 				{@const language = getCodeLanguage(block.metadata)}
 				<div class="block-wrapper" class:block-loading={blockLoading}>
 					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+					<!-- svelte-ignore a11y-click-events-have-key-events -->
 					<pre
 						id={block.id}
 						data-block-id={block.id}
@@ -275,7 +299,9 @@
 						on:mouseenter={() => handleBlockMouseEnter(block.id)}
 						on:mouseleave={() => handleBlockMouseLeave(block.id)}
 						on:focus={() => handleBlockFocus(block.id)}
-						on:blur={() => handleBlockBlur(block.id)}><code class="language-{language}"
+						on:blur={() => handleBlockBlur(block.id)}
+						on:click={() => handleBlockClick(block.id)}
+						on:keydown={(e) => handleBlockKeydown(e, block.id)}><code class="language-{language}"
 							>{block.text}</code
 						></pre>
 					{#if blockLoading}
@@ -290,6 +316,7 @@
 				<div class="block-wrapper" class:block-loading={blockLoading}>
 					{#if ordered}
 						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+						<!-- svelte-ignore a11y-click-events-have-key-events -->
 						<ol
 							id={block.id}
 							data-block-id={block.id}
@@ -302,6 +329,8 @@
 							on:mouseleave={() => handleBlockMouseLeave(block.id)}
 							on:focus={() => handleBlockFocus(block.id)}
 							on:blur={() => handleBlockBlur(block.id)}
+							on:click={() => handleBlockClick(block.id)}
+							on:keydown={(e) => handleBlockKeydown(e, block.id)}
 						>
 							{#each items as item}
 								<li>{item}</li>
@@ -309,6 +338,7 @@
 						</ol>
 					{:else}
 						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+						<!-- svelte-ignore a11y-click-events-have-key-events -->
 						<ul
 							id={block.id}
 							data-block-id={block.id}
@@ -321,6 +351,8 @@
 							on:mouseleave={() => handleBlockMouseLeave(block.id)}
 							on:focus={() => handleBlockFocus(block.id)}
 							on:blur={() => handleBlockBlur(block.id)}
+							on:click={() => handleBlockClick(block.id)}
+							on:keydown={(e) => handleBlockKeydown(e, block.id)}
 						>
 							{#each items as item}
 								<li>{item}</li>
@@ -336,6 +368,7 @@
 			{:else if block.type === 'quote'}
 				<div class="block-wrapper" class:block-loading={blockLoading}>
 					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+					<!-- svelte-ignore a11y-click-events-have-key-events -->
 					<blockquote
 						id={block.id}
 						data-block-id={block.id}
@@ -348,6 +381,8 @@
 						on:mouseleave={() => handleBlockMouseLeave(block.id)}
 						on:focus={() => handleBlockFocus(block.id)}
 						on:blur={() => handleBlockBlur(block.id)}
+						on:click={() => handleBlockClick(block.id)}
+						on:keydown={(e) => handleBlockKeydown(e, block.id)}
 					>
 						{block.text}
 					</blockquote>
@@ -366,6 +401,7 @@
 				{#if src}
 					<div class="block-wrapper" class:block-loading={blockLoading}>
 						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
+						<!-- svelte-ignore a11y-click-events-have-key-events -->
 						<figure
 							id={block.id}
 							data-block-id={block.id}
@@ -377,6 +413,8 @@
 							on:mouseleave={() => handleBlockMouseLeave(block.id)}
 							on:focus={() => handleBlockFocus(block.id)}
 							on:blur={() => handleBlockBlur(block.id)}
+							on:click={() => handleBlockClick(block.id)}
+							on:keydown={(e) => handleBlockKeydown(e, block.id)}
 						>
 							<img {src} {alt} loading="lazy" {width} {height} />
 							{#if block.text && block.text !== rawSrc}
@@ -652,8 +690,14 @@
 		outline: 2px solid #f59e0b;
 	}
 
-	/* Cursor indicates focusable block (not clickable action) */
+	/* Cursor indicates clickable block for navigation */
 	.block-hoverable {
-		cursor: default;
+		cursor: pointer;
+	}
+
+	.block-hoverable:hover {
+		opacity: 0.9;
+	}
+</style>
 	}
 </style>

@@ -249,6 +249,106 @@
 			return current === event.detail.blockId ? null : current;
 		});
 	}
+
+	// Track scroll animation state
+	let isScrolling = false;
+	let scrollAnimationController: AbortController | null = null;
+	let navigationAnnouncementElement: HTMLDivElement;
+
+	/**
+	 * Announce navigation to screen readers.
+	 */
+	function announceNavigation(source: 'source' | 'translation') {
+		if (navigationAnnouncementElement) {
+			const message =
+				source === 'source'
+					? 'Navigated to translation block'
+					: 'Navigated to source block';
+			navigationAnnouncementElement.textContent = message;
+			// Clear after announcement
+			setTimeout(() => {
+				if (navigationAnnouncementElement) {
+					navigationAnnouncementElement.textContent = '';
+				}
+			}, 1000);
+		}
+	}
+
+	/**
+	 * Add pulse animation to a block element.
+	 */
+	function addPulseAnimation(element: HTMLElement) {
+		element.classList.add('block-pulse');
+		setTimeout(() => {
+			element.classList.remove('block-pulse');
+		}, 600);
+	}
+
+	/**
+	 * Scroll to a block with smooth animation centered in viewport.
+	 */
+	function scrollToBlock(blockId: string, paneElement: HTMLDivElement) {
+		const targetBlock = paneElement.querySelector(`[data-block-id="${blockId}"]`);
+		if (!targetBlock) {
+			return;
+		}
+
+		// Cancel any ongoing scroll animation
+		if (scrollAnimationController) {
+			scrollAnimationController.abort();
+		}
+
+		// Create new abort controller for this animation
+		scrollAnimationController = new AbortController();
+		isScrolling = true;
+
+		// Add pulse animation to target block
+		addPulseAnimation(targetBlock as HTMLElement);
+
+		// Scroll with smooth animation, centering the block
+		targetBlock.scrollIntoView({
+			behavior: 'smooth',
+			block: 'center',
+			inline: 'nearest'
+		});
+
+		// Mark scrolling as complete after animation duration (300ms)
+		setTimeout(() => {
+			if (!scrollAnimationController?.signal.aborted) {
+				isScrolling = false;
+				scrollAnimationController = null;
+			}
+		}, 300);
+	}
+
+	/**
+	 * Handle block click from left pane - scroll right pane to matching block.
+	 */
+	function handleLeftPaneBlockClick(event: CustomEvent<{ blockId: string }>) {
+		const blockId = event.detail.blockId;
+		scrollToBlock(blockId, rightPane);
+		announceNavigation('source');
+	}
+
+	/**
+	 * Handle block click from right pane - scroll left pane to matching block.
+	 */
+	function handleRightPaneBlockClick(event: CustomEvent<{ blockId: string }>) {
+		const blockId = event.detail.blockId;
+		scrollToBlock(blockId, leftPane);
+		announceNavigation('translation');
+	}
+
+	/**
+	 * Cancel scroll animation on user interaction.
+	 */
+	function handleUserScroll() {
+		if (isScrolling && scrollAnimationController) {
+			scrollAnimationController.abort();
+			isScrolling = false;
+			scrollAnimationController = null;
+		}
+	}
 </script>
 
 <svelte:window
@@ -265,6 +365,15 @@
 	role="main"
 	aria-label="Two-pane reading interface"
 >
+	<!-- ARIA live region for navigation announcements -->
+	<div
+		bind:this={navigationAnnouncementElement}
+		class="sr-only"
+		role="status"
+		aria-live="polite"
+		aria-atomic="true"
+	></div>
+
 	<!-- Left Pane (Source Content) -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div
@@ -277,6 +386,8 @@
 		on:focus={() => (activePane = 'left')}
 		on:blockHover={handleBlockHover}
 		on:blockLeave={handleBlockLeave}
+		on:blockClick={handleLeftPaneBlockClick}
+		on:scroll={handleUserScroll}
 		style="width: {leftWidth}%;"
 	>
 		<slot name="left">
@@ -317,6 +428,8 @@
 		on:focus={() => (activePane = 'right')}
 		on:blockHover={handleBlockHover}
 		on:blockLeave={handleBlockLeave}
+		on:blockClick={handleRightPaneBlockClick}
+		on:scroll={handleUserScroll}
 		style="width: {100 - leftWidth}%;"
 	>
 		<slot name="right">
@@ -436,5 +549,38 @@
 	/* Ensure scroll position is maintained on resize */
 	.pane {
 		scroll-behavior: smooth;
+	}
+
+	/* Screen reader only content */
+	.sr-only {
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border-width: 0;
+	}
+
+	/* Pulse animation for block navigation feedback */
+	:global(.block-pulse) {
+		animation: pulse-highlight 0.6s ease-in-out;
+	}
+
+	@keyframes pulse-highlight {
+		0% {
+			background-color: transparent;
+			transform: scale(1);
+		}
+		50% {
+			background-color: #dbeafe;
+			transform: scale(1.02);
+		}
+		100% {
+			background-color: transparent;
+			transform: scale(1);
+		}
 	}
 </style>
