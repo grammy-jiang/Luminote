@@ -84,6 +84,21 @@ export interface ExtractionRequest {
 }
 
 /**
+ * A single content block extracted from a document.
+ * Aligns with backend ContentBlock schema in backend/app/schemas/extraction.py
+ */
+export interface ContentBlock {
+	/** Unique identifier for the content block */
+	id: string;
+	/** Type of content block */
+	type: 'paragraph' | 'heading' | 'list' | 'quote' | 'code' | 'image';
+	/** Text content of the block */
+	text: string;
+	/** Additional block metadata (e.g., level for headings, language for code) */
+	metadata: Record<string, unknown>;
+}
+
+/**
  * Content extraction response data.
  */
 export interface ExtractionResponse {
