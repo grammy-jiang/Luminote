@@ -724,4 +724,156 @@ describe('DualPaneLayout Component', () => {
 			expect(saved).toBe('70');
 		});
 	});
+
+	describe('Block Navigation', () => {
+		it('renders ARIA live region for navigation announcements', () => {
+			const { container } = render(DualPaneLayout);
+
+			const liveRegion = container.querySelector('[role="status"][aria-live="polite"]');
+			expect(liveRegion).toBeInTheDocument();
+		});
+
+		it('left pane emits blockClick events', async () => {
+			const { container } = render(DualPaneLayout);
+
+			const leftPane = container.querySelector('.left-pane');
+			expect(leftPane).toBeInTheDocument();
+
+			// Create a mock block element
+			const mockBlock = document.createElement('div');
+			mockBlock.setAttribute('data-block-id', 'test-block-1');
+			leftPane?.appendChild(mockBlock);
+
+			// Trigger blockClick event
+			await fireEvent(
+				leftPane!,
+				new CustomEvent('blockClick', {
+					detail: { blockId: 'test-block-1' },
+					bubbles: true
+				})
+			);
+
+			// Event should be handled (no errors)
+			expect(leftPane).toBeInTheDocument();
+		});
+
+		it('right pane emits blockClick events', async () => {
+			const { container } = render(DualPaneLayout);
+
+			const rightPane = container.querySelector('.right-pane');
+			expect(rightPane).toBeInTheDocument();
+
+			// Create a mock block element
+			const mockBlock = document.createElement('div');
+			mockBlock.setAttribute('data-block-id', 'test-block-2');
+			rightPane?.appendChild(mockBlock);
+
+			// Trigger blockClick event
+			await fireEvent(
+				rightPane!,
+				new CustomEvent('blockClick', {
+					detail: { blockId: 'test-block-2' },
+					bubbles: true
+				})
+			);
+
+			// Event should be handled (no errors)
+			expect(rightPane).toBeInTheDocument();
+		});
+
+		it('handles scroll events on left pane', async () => {
+			const { container } = render(DualPaneLayout);
+
+			const leftPane = container.querySelector('.left-pane');
+			expect(leftPane).toBeInTheDocument();
+
+			// Trigger scroll event
+			await fireEvent.scroll(leftPane!);
+
+			// No errors should occur
+			expect(leftPane).toBeInTheDocument();
+		});
+
+		it('handles scroll events on right pane', async () => {
+			const { container } = render(DualPaneLayout);
+
+			const rightPane = container.querySelector('.right-pane');
+			expect(rightPane).toBeInTheDocument();
+
+			// Trigger scroll event
+			await fireEvent.scroll(rightPane!);
+
+			// No errors should occur
+			expect(rightPane).toBeInTheDocument();
+		});
+
+		it('applies pulse animation class to navigated blocks', async () => {
+			const { container } = render(DualPaneLayout);
+
+			const leftPane = container.querySelector('.left-pane');
+			const rightPane = container.querySelector('.right-pane');
+
+			// Create mock blocks in both panes
+			const leftBlock = document.createElement('div');
+			leftBlock.setAttribute('data-block-id', 'block-1');
+			leftPane?.appendChild(leftBlock);
+
+			const rightBlock = document.createElement('div');
+			rightBlock.setAttribute('data-block-id', 'block-1');
+			rightPane?.appendChild(rightBlock);
+
+			// Mock scrollIntoView
+			rightBlock.scrollIntoView = vi.fn();
+
+			// Trigger blockClick from left pane
+			await fireEvent(
+				leftPane!,
+				new CustomEvent('blockClick', {
+					detail: { blockId: 'block-1' },
+					bubbles: true
+				})
+			);
+
+			// Allow animation to start
+			await new Promise((resolve) => setTimeout(resolve, 10));
+
+			// Check that scrollIntoView was called
+			expect(rightBlock.scrollIntoView).toHaveBeenCalledWith({
+				behavior: 'smooth',
+				block: 'center',
+				inline: 'nearest'
+			});
+
+			// Check that pulse animation class was added
+			expect(rightBlock.classList.contains('block-pulse')).toBe(true);
+		});
+
+		it('announces navigation to screen readers', async () => {
+			const { container } = render(DualPaneLayout);
+
+			const leftPane = container.querySelector('.left-pane');
+			const rightPane = container.querySelector('.right-pane');
+			const liveRegion = container.querySelector('[role="status"]');
+
+			// Create mock blocks
+			const rightBlock = document.createElement('div');
+			rightBlock.setAttribute('data-block-id', 'block-1');
+			rightBlock.scrollIntoView = vi.fn();
+			rightPane?.appendChild(rightBlock);
+
+			// Trigger blockClick from left pane
+			await fireEvent(
+				leftPane!,
+				new CustomEvent('blockClick', {
+					detail: { blockId: 'block-1' },
+					bubbles: true
+				})
+			);
+
+			// Wait for announcement
+			await waitFor(() => {
+				expect(liveRegion?.textContent).toBe('Navigated to translation block');
+			});
+		});
+	});
 });

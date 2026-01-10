@@ -201,12 +201,14 @@ CSS transitions apply visual highlight
 **How it works:**
 
 1. SourcePane/TranslationPane emit `blockHover` and `blockLeave` events
-2. Events bubble up to the pane div in DualPaneLayout
-3. DualPaneLayout listens via `on:blockHover` and `on:blockLeave` on pane divs
-4. DualPaneLayout updates internal `hoveredBlockId` state
-5. DualPaneLayout passes `highlightedBlockId` prop to SourcePane/TranslationPane
+1. Events bubble up to the pane div in DualPaneLayout
+1. DualPaneLayout listens via `on:blockHover` and `on:blockLeave` on pane divs
+1. DualPaneLayout updates internal `hoveredBlockId` state
+1. DualPaneLayout passes `highlightedBlockId` prop to SourcePane/TranslationPane
 
-**Note:** The components must be rendered in the slots for event bubbling to work correctly. The hover coordination happens automatically within DualPaneLayout.
+**Note:** The components must be rendered in the slots for event bubbling to
+work correctly. The hover coordination happens automatically within
+DualPaneLayout.
 
 ## Testing
 
