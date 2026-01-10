@@ -613,9 +613,10 @@ class ExtractionService:
             soup: BeautifulSoup object
 
         Returns:
-            List of tag strings
+            List of tag strings (deduplicated case-insensitively)
         """
         tags = []
+        seen = set()  # Track seen tags (lowercase) for case-insensitive deduplication
 
         # Try to extract from meta keywords
         keywords_meta = soup.find("meta", attrs={"name": "keywords"})
@@ -623,13 +624,18 @@ class ExtractionService:
             content = keywords_meta.get("content", "")
             if content:
                 # Split by comma and clean up
-                tags.extend([tag.strip() for tag in content.split(",") if tag.strip()])
+                for tag in content.split(","):
+                    tag = tag.strip()
+                    if tag and tag.lower() not in seen:
+                        seen.add(tag.lower())
+                        tags.append(tag)
 
         # Try to extract from article:tag meta tags
         article_tags = soup.find_all("meta", attrs={"name": "article:tag"})
         for tag_meta in article_tags:
             tag = tag_meta.get("content", "").strip()
-            if tag and tag not in tags:
+            if tag and tag.lower() not in seen:
+                seen.add(tag.lower())
                 tags.append(tag)
 
         # Try to extract from JSON-LD keywords
@@ -641,30 +647,22 @@ class ExtractionService:
                     keywords = data["keywords"]
                     if isinstance(keywords, list):
                         for kw in keywords:
-                            if (
-                                isinstance(kw, str)
-                                and kw.strip()
-                                and kw.strip() not in tags
-                            ):
-                                tags.append(kw.strip())
+                            if isinstance(kw, str):
+                                kw = kw.strip()
+                                if kw and kw.lower() not in seen:
+                                    seen.add(kw.lower())
+                                    tags.append(kw)
                     elif isinstance(keywords, str):
                         for kw in keywords.split(","):
-                            if kw.strip() and kw.strip() not in tags:
-                                tags.append(kw.strip())
+                            kw = kw.strip()
+                            if kw and kw.lower() not in seen:
+                                seen.add(kw.lower())
+                                tags.append(kw)
             except (TypeError, json.JSONDecodeError, ValueError):
                 # Ignore invalid JSON-LD - tags are optional
                 pass
 
-        # Remove duplicates while preserving order
-        seen = set()
-        unique_tags = []
-        for tag in tags:
-            tag_lower = tag.lower()
-            if tag_lower not in seen:
-                seen.add(tag_lower)
-                unique_tags.append(tag)
-
-        return unique_tags
+        return tags
 
     def _extract_metadata(
         self,

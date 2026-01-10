@@ -1099,7 +1099,8 @@ def test_parse_html_to_blocks_filters_navigation():
 
 @pytest.mark.unit
 async def test_blog_post():
-    """Test blog post extraction with title, author, date, tags, and filtered comments."""
+    """Test blog post extraction with title, author, date, tags, and filtered
+    comments."""
     service = ExtractionService()
 
     # Load blog post fixture
