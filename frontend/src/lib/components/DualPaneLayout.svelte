@@ -35,6 +35,9 @@
 	// Track which pane has focus for keyboard navigation
 	let activePane: 'left' | 'right' = 'left';
 
+	// Hover state for block highlighting
+	let hoveredBlockId: string | null = null;
+
 	// Split ratio state (percentage for left pane)
 	let leftWidth = 50;
 	let isDragging = false;
@@ -226,6 +229,22 @@
 		leftWidth = Math.max(minPaneWidth, Math.min(100 - minPaneWidth, percentage));
 		saveSplitRatio();
 	}
+
+	/**
+	 * Handle block hover from either pane.
+	 */
+	function handleBlockHover(event: CustomEvent<{ blockId: string }>) {
+		hoveredBlockId = event.detail.blockId;
+	}
+
+	/**
+	 * Handle block leave from either pane.
+	 */
+	function handleBlockLeave(event: CustomEvent<{ blockId: string }>) {
+		if (hoveredBlockId === event.detail.blockId) {
+			hoveredBlockId = null;
+		}
+	}
 </script>
 
 <svelte:window
@@ -252,9 +271,11 @@
 		aria-label={leftLabel}
 		tabindex="0"
 		on:focus={() => (activePane = 'left')}
+		on:blockHover={handleBlockHover}
+		on:blockLeave={handleBlockLeave}
 		style="width: {leftWidth}%;"
 	>
-		<slot name="left">
+		<slot name="left" highlightedBlockId={hoveredBlockId}>
 			<div class="pane-placeholder">
 				<p class="text-gray-500 text-center">No source content</p>
 			</div>
@@ -290,9 +311,11 @@
 		aria-label={rightLabel}
 		tabindex="0"
 		on:focus={() => (activePane = 'right')}
+		on:blockHover={handleBlockHover}
+		on:blockLeave={handleBlockLeave}
 		style="width: {100 - leftWidth}%;"
 	>
-		<slot name="right">
+		<slot name="right" highlightedBlockId={hoveredBlockId}>
 			<div class="pane-placeholder">
 				<p class="text-gray-500 text-center">No translation content</p>
 			</div>

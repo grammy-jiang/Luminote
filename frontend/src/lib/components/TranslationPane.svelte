@@ -1,4 +1,5 @@
 <script lang="ts">
+	import { createEventDispatcher } from 'svelte';
 	import type { ContentBlock } from '$lib/types/api';
 
 	/**
@@ -20,6 +21,7 @@
 	 * - Maintains block IDs for synchronization with source pane
 	 * - Responsive typography
 	 * - Accessible markup (semantic HTML, ARIA labels)
+	 * - Block hover highlighting for cross-pane synchronization
 	 *
 	 * Note: Text content is escaped for security. HTML links in block.text will
 	 * be rendered as plain text, not as clickable anchors.
@@ -27,6 +29,51 @@
 
 	export let blocks: ContentBlock[] = [];
 	export let loading: boolean = false;
+	export let highlightedBlockId: string | null = null;
+
+	const dispatch = createEventDispatcher<{
+		blockHover: { blockId: string };
+		blockLeave: { blockId: string };
+	}>();
+
+	let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	/**
+	 * Handle mouse enter on a block with debouncing.
+	 */
+	function handleBlockMouseEnter(blockId: string) {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+		}
+		hoverTimeout = setTimeout(() => {
+			dispatch('blockHover', { blockId });
+		}, 50);
+	}
+
+	/**
+	 * Handle mouse leave on a block.
+	 */
+	function handleBlockMouseLeave(blockId: string) {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+			hoverTimeout = null;
+		}
+		dispatch('blockLeave', { blockId });
+	}
+
+	/**
+	 * Handle keyboard focus on a block.
+	 */
+	function handleBlockFocus(blockId: string) {
+		dispatch('blockHover', { blockId });
+	}
+
+	/**
+	 * Handle keyboard blur on a block.
+	 */
+	function handleBlockBlur(blockId: string) {
+		dispatch('blockLeave', { blockId });
+	}
 
 	/**
 	 * RTL language codes (ISO 639-1).
@@ -146,12 +193,19 @@
 
 			{#if block.type === 'paragraph'}
 				<div class="block-wrapper" class:block-loading={blockLoading}>
+					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 					<p
 						id={block.id}
 						data-block-id={block.id}
 						data-block-type="paragraph"
-						class="block-paragraph"
+						class="block-paragraph block-hoverable"
+						class:block-highlighted={highlightedBlockId === block.id}
 						dir={direction}
+						tabindex="0"
+						on:mouseenter={() => handleBlockMouseEnter(block.id)}
+						on:mouseleave={() => handleBlockMouseLeave(block.id)}
+						on:focus={() => handleBlockFocus(block.id)}
+						on:blur={() => handleBlockBlur(block.id)}
 					>
 						{block.text}
 					</p>
@@ -165,13 +219,20 @@
 				{@const level = getHeadingLevel(block.metadata)}
 				{@const tag = `h${level}`}
 				<div class="block-wrapper" class:block-loading={blockLoading}>
+					<!-- svelte-ignore a11y-no-static-element-interactions -->
 					<svelte:element
 						this={tag}
 						id={block.id}
 						data-block-id={block.id}
 						data-block-type="heading"
-						class="block-heading block-heading-{level}"
+						class="block-heading block-heading-{level} block-hoverable"
+						class:block-highlighted={highlightedBlockId === block.id}
 						dir={direction}
+						tabindex="0"
+						on:mouseenter={() => handleBlockMouseEnter(block.id)}
+						on:mouseleave={() => handleBlockMouseLeave(block.id)}
+						on:focus={() => handleBlockFocus(block.id)}
+						on:blur={() => handleBlockBlur(block.id)}
 					>
 						{block.text}
 					</svelte:element>
@@ -184,14 +245,21 @@
 			{:else if block.type === 'code'}
 				{@const language = getCodeLanguage(block.metadata)}
 				<div class="block-wrapper" class:block-loading={blockLoading}>
+					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 					<pre
 						id={block.id}
 						data-block-id={block.id}
 						data-block-type="code"
-						class="block-code"
+						class="block-code block-hoverable"
+						class:block-highlighted={highlightedBlockId === block.id}
 						dir={direction}
-						aria-label="Code block{language !== 'plaintext' ? ` in ${language}` : ''}"><code
-							class="language-{language}">{block.text}</code
+						tabindex="0"
+						aria-label="Code block{language !== 'plaintext' ? ` in ${language}` : ''}"
+						on:mouseenter={() => handleBlockMouseEnter(block.id)}
+						on:mouseleave={() => handleBlockMouseLeave(block.id)}
+						on:focus={() => handleBlockFocus(block.id)}
+						on:blur={() => handleBlockBlur(block.id)}><code class="language-{language}"
+							>{block.text}</code
 						></pre>
 					{#if blockLoading}
 						<div class="block-loading-overlay">
@@ -204,24 +272,38 @@
 				{@const ordered = isOrderedList(block.metadata)}
 				<div class="block-wrapper" class:block-loading={blockLoading}>
 					{#if ordered}
+						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 						<ol
 							id={block.id}
 							data-block-id={block.id}
 							data-block-type="list"
-							class="block-list block-list-ordered"
+							class="block-list block-list-ordered block-hoverable"
+							class:block-highlighted={highlightedBlockId === block.id}
 							dir={direction}
+							tabindex="0"
+							on:mouseenter={() => handleBlockMouseEnter(block.id)}
+							on:mouseleave={() => handleBlockMouseLeave(block.id)}
+							on:focus={() => handleBlockFocus(block.id)}
+							on:blur={() => handleBlockBlur(block.id)}
 						>
 							{#each items as item}
 								<li>{item}</li>
 							{/each}
 						</ol>
 					{:else}
+						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 						<ul
 							id={block.id}
 							data-block-id={block.id}
 							data-block-type="list"
-							class="block-list block-list-unordered"
+							class="block-list block-list-unordered block-hoverable"
+							class:block-highlighted={highlightedBlockId === block.id}
 							dir={direction}
+							tabindex="0"
+							on:mouseenter={() => handleBlockMouseEnter(block.id)}
+							on:mouseleave={() => handleBlockMouseLeave(block.id)}
+							on:focus={() => handleBlockFocus(block.id)}
+							on:blur={() => handleBlockBlur(block.id)}
 						>
 							{#each items as item}
 								<li>{item}</li>
@@ -236,12 +318,19 @@
 				</div>
 			{:else if block.type === 'quote'}
 				<div class="block-wrapper" class:block-loading={blockLoading}>
+					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 					<blockquote
 						id={block.id}
 						data-block-id={block.id}
 						data-block-type="quote"
-						class="block-quote"
+						class="block-quote block-hoverable"
+						class:block-highlighted={highlightedBlockId === block.id}
 						dir={direction}
+						tabindex="0"
+						on:mouseenter={() => handleBlockMouseEnter(block.id)}
+						on:mouseleave={() => handleBlockMouseLeave(block.id)}
+						on:focus={() => handleBlockFocus(block.id)}
+						on:blur={() => handleBlockBlur(block.id)}
 					>
 						{block.text}
 					</blockquote>
@@ -259,11 +348,18 @@
 				{@const height = block.metadata.height ? Number(block.metadata.height) : undefined}
 				{#if src}
 					<div class="block-wrapper" class:block-loading={blockLoading}>
+						<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 						<figure
 							id={block.id}
 							data-block-id={block.id}
 							data-block-type="image"
-							class="block-image"
+							class="block-image block-hoverable"
+							class:block-highlighted={highlightedBlockId === block.id}
+							tabindex="0"
+							on:mouseenter={() => handleBlockMouseEnter(block.id)}
+							on:mouseleave={() => handleBlockMouseLeave(block.id)}
+							on:focus={() => handleBlockFocus(block.id)}
+							on:blur={() => handleBlockBlur(block.id)}
 						>
 							<img {src} {alt} loading="lazy" {width} {height} />
 							{#if block.text && block.text !== rawSrc}
@@ -513,5 +609,33 @@
 			font-size: 0.8125rem;
 			padding: 0.75rem;
 		}
+	}
+
+	/* Block highlighting styles */
+	.block-highlighted {
+		background-color: #fef3c7;
+		border-left: 3px solid #f59e0b;
+		padding-left: 0.5rem;
+		transition:
+			background-color 0.2s ease,
+			border-left 0.2s ease;
+		outline: 2px solid #f59e0b;
+		outline-offset: 2px;
+	}
+
+	/* Ensure keyboard focus is visible */
+	[tabindex='0']:focus {
+		outline: 2px solid #3b82f6;
+		outline-offset: 2px;
+	}
+
+	/* When both highlighted and focused */
+	.block-highlighted:focus {
+		outline: 2px solid #f59e0b;
+	}
+
+	/* Cursor indicates interactivity */
+	.block-hoverable {
+		cursor: pointer;
 	}
 </style>
