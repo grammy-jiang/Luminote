@@ -173,7 +173,7 @@ async def stream_translation(
                     yield f"data: {json.dumps(block_event)}\n\n"
                     translated_count += 1
 
-                except asyncio.TimeoutError:
+                except TimeoutError:
                     # Send error event for timeout (per-block error, continue with next)
                     error_data = {
                         "code": "TIMEOUT",
