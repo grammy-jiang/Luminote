@@ -1,6 +1,7 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, onDestroy, getContext } from 'svelte';
 	import type { ContentBlock } from '$lib/types/api';
+	import type { Writable } from 'svelte/store';
 
 	/**
 	 * TranslationPane Component
@@ -31,12 +32,28 @@
 	export let loading: boolean = false;
 	export let highlightedBlockId: string | null = null;
 
+	// Try to get highlightedBlockId from context if not provided as prop
+	const highlightedBlockIdContext = getContext<Writable<string | null>>('highlightedBlockId');
+
+	// Use context if available, otherwise use prop
+	$: effectiveHighlightedBlockId = highlightedBlockIdContext
+		? $highlightedBlockIdContext
+		: highlightedBlockId;
+
 	const dispatch = createEventDispatcher<{
 		blockHover: { blockId: string };
 		blockLeave: { blockId: string };
 	}>();
 
 	let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	// Clean up timeout on component destroy to prevent memory leaks
+	onDestroy(() => {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+			hoverTimeout = null;
+		}
+	});
 
 	/**
 	 * Handle mouse enter on a block with debouncing.
@@ -199,7 +216,7 @@
 						data-block-id={block.id}
 						data-block-type="paragraph"
 						class="block-paragraph block-hoverable"
-						class:block-highlighted={highlightedBlockId === block.id}
+						class:block-highlighted={effectiveHighlightedBlockId === block.id}
 						dir={direction}
 						tabindex="0"
 						on:mouseenter={() => handleBlockMouseEnter(block.id)}
@@ -226,7 +243,7 @@
 						data-block-id={block.id}
 						data-block-type="heading"
 						class="block-heading block-heading-{level} block-hoverable"
-						class:block-highlighted={highlightedBlockId === block.id}
+						class:block-highlighted={effectiveHighlightedBlockId === block.id}
 						dir={direction}
 						tabindex="0"
 						on:mouseenter={() => handleBlockMouseEnter(block.id)}
@@ -251,7 +268,7 @@
 						data-block-id={block.id}
 						data-block-type="code"
 						class="block-code block-hoverable"
-						class:block-highlighted={highlightedBlockId === block.id}
+						class:block-highlighted={effectiveHighlightedBlockId === block.id}
 						dir={direction}
 						tabindex="0"
 						aria-label="Code block{language !== 'plaintext' ? ` in ${language}` : ''}"
@@ -278,7 +295,7 @@
 							data-block-id={block.id}
 							data-block-type="list"
 							class="block-list block-list-ordered block-hoverable"
-							class:block-highlighted={highlightedBlockId === block.id}
+							class:block-highlighted={effectiveHighlightedBlockId === block.id}
 							dir={direction}
 							tabindex="0"
 							on:mouseenter={() => handleBlockMouseEnter(block.id)}
@@ -297,7 +314,7 @@
 							data-block-id={block.id}
 							data-block-type="list"
 							class="block-list block-list-unordered block-hoverable"
-							class:block-highlighted={highlightedBlockId === block.id}
+							class:block-highlighted={effectiveHighlightedBlockId === block.id}
 							dir={direction}
 							tabindex="0"
 							on:mouseenter={() => handleBlockMouseEnter(block.id)}
@@ -324,7 +341,7 @@
 						data-block-id={block.id}
 						data-block-type="quote"
 						class="block-quote block-hoverable"
-						class:block-highlighted={highlightedBlockId === block.id}
+						class:block-highlighted={effectiveHighlightedBlockId === block.id}
 						dir={direction}
 						tabindex="0"
 						on:mouseenter={() => handleBlockMouseEnter(block.id)}
@@ -354,7 +371,7 @@
 							data-block-id={block.id}
 							data-block-type="image"
 							class="block-image block-hoverable"
-							class:block-highlighted={highlightedBlockId === block.id}
+							class:block-highlighted={effectiveHighlightedBlockId === block.id}
 							tabindex="0"
 							on:mouseenter={() => handleBlockMouseEnter(block.id)}
 							on:mouseleave={() => handleBlockMouseLeave(block.id)}
@@ -616,6 +633,7 @@
 		background-color: #fef3c7;
 		border-left: 3px solid #f59e0b;
 		padding-left: 0.5rem;
+		margin-left: -0.5rem; /* Compensate for padding to prevent layout shift */
 		transition:
 			background-color 0.2s ease,
 			border-left 0.2s ease;
@@ -634,8 +652,8 @@
 		outline: 2px solid #f59e0b;
 	}
 
-	/* Cursor indicates interactivity */
+	/* Cursor indicates focusable block (not clickable action) */
 	.block-hoverable {
-		cursor: pointer;
+		cursor: default;
 	}
 </style>

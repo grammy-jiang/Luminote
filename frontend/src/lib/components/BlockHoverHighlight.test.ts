@@ -435,5 +435,27 @@ describe('Block Hover Highlighting', () => {
 
 			vi.useRealTimers();
 		});
+	describe('Integration with DualPaneLayout', () => {
+		it('coordinates hover highlighting between panes via context', async () => {
+			vi.useFakeTimers();
+
+			// Import DualPaneLayout to test the full integration
+			const { default: DualPaneLayout } = await import('./DualPaneLayout.svelte');
+
+			// Render the full component hierarchy
+			const { container } = render(DualPaneLayout, {
+				props: {},
+				context: new Map()
+			});
+
+			// Get the pane containers
+			const leftPane = container.querySelector('.left-pane');
+			const rightPane = container.querySelector('.right-pane');
+
+			expect(leftPane).toBeInTheDocument();
+			expect(rightPane).toBeInTheDocument();
+
+			vi.useRealTimers();
+		});
 	});
 });

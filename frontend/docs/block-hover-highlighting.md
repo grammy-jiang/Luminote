@@ -2,20 +2,25 @@
 
 ## Overview
 
-This document describes the implementation of the block-level hover highlighting feature for Luminote's two-pane reading interface.
+This document describes the implementation of the block-level hover highlighting
+feature for Luminote's two-pane reading interface.
 
 ## Feature Description
 
-When users hover over content blocks in either the source or translation pane, the corresponding block in the other pane is automatically highlighted. This provides visual feedback to help users understand the block-to-block mapping between source and translated content.
+When users hover over content blocks in either the source or translation pane,
+the corresponding block in the other pane is automatically highlighted. This
+provides visual feedback to help users understand the block-to-block mapping
+between source and translated content.
 
 ## Implementation Details
 
 ### Components Modified
 
 #### 1. SourcePane.svelte
+
 - **Added Props:**
   - `highlightedBlockId: string | null` - ID of the block to highlight
-  
+
 - **Added Events:**
   - `blockHover` - Emitted when mouse enters a block or block receives focus
   - `blockLeave` - Emitted when mouse leaves a block or block loses focus
@@ -32,9 +37,11 @@ When users hover over content blocks in either the source or translation pane, t
   - Highlighted blocks receive `block-highlighted` class
 
 #### 2. TranslationPane.svelte
+
 - Same changes as SourcePane, with identical API and behavior
 
 #### 3. DualPaneLayout.svelte
+
 - **Added State:**
   - `hoveredBlockId: string | null` - Tracks currently hovered block
 
@@ -47,33 +54,38 @@ When users hover over content blocks in either the source or translation pane, t
 ### Styling
 
 #### Highlight Styles
+
 ```css
 .block-highlighted {
-    background-color: #fef3c7;      /* Light amber/yellow */
-    border-left: 3px solid #f59e0b; /* Amber border */
-    padding-left: 0.5rem;
-    transition: background-color 0.2s ease, border-left 0.2s ease;
-    outline: 2px solid #f59e0b;
-    outline-offset: 2px;
+	background-color: #fef3c7; /* Light amber/yellow */
+	border-left: 3px solid #f59e0b; /* Amber border */
+	padding-left: 0.5rem;
+	transition:
+		background-color 0.2s ease,
+		border-left 0.2s ease;
+	outline: 2px solid #f59e0b;
+	outline-offset: 2px;
 }
 ```
 
 #### Focus Styles
+
 ```css
 [tabindex='0']:focus {
-    outline: 2px solid #3b82f6; /* Blue for focus */
-    outline-offset: 2px;
+	outline: 2px solid #3b82f6; /* Blue for focus */
+	outline-offset: 2px;
 }
 
 .block-highlighted:focus {
-    outline: 2px solid #f59e0b; /* Amber when both highlighted and focused */
+	outline: 2px solid #f59e0b; /* Amber when both highlighted and focused */
 }
 ```
 
 #### Cursor
+
 ```css
 .block-hoverable {
-    cursor: pointer;
+	cursor: pointer;
 }
 ```
 
@@ -84,17 +96,18 @@ When users hover over content blocks in either the source or translation pane, t
    - Tab key moves focus between blocks
    - Focus triggers highlighting immediately (no debounce)
 
-2. **Visual Indicators:**
+1. **Visual Indicators:**
    - Uses both background color AND border (not color alone)
    - Distinct focus outline (blue) vs hover highlight (amber)
    - Smooth transitions for visual comfort
 
-3. **ARIA Attributes:**
+1. **ARIA Attributes:**
    - Code blocks have `aria-label` describing language
    - All blocks maintain semantic HTML structure
 
-4. **Svelte Accessibility Warnings:**
-   - Added `<!-- svelte-ignore a11y-no-noninteractive-tabindex -->` where intentionally making non-interactive elements focusable for this feature
+1. **Svelte Accessibility Warnings:**
+   - Added `<!-- svelte-ignore a11y-no-noninteractive-tabindex -->` where
+     intentionally making non-interactive elements focusable for this feature
 
 ### Performance Optimizations
 
@@ -102,13 +115,13 @@ When users hover over content blocks in either the source or translation pane, t
    - Mouse hover events debounced by 50ms to prevent flicker
    - Keyboard focus events NOT debounced for immediate feedback
 
-2. **Minimal DOM Operations:**
+1. **Minimal DOM Operations:**
    - Only CSS classes toggle, no DOM manipulation
    - Transitions handled by CSS, not JavaScript
 
-3. **Tested with Large Documents:**
+1. **Tested with Large Documents:**
    - Validated with 150+ blocks
-   - Renders in <500ms
+   - Renders in \<500ms
    - No performance degradation observed
 
 ### Debounce Logic
@@ -117,24 +130,25 @@ When users hover over content blocks in either the source or translation pane, t
 let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
 
 function handleBlockMouseEnter(blockId: string) {
-    if (hoverTimeout) {
-        clearTimeout(hoverTimeout);
-    }
-    hoverTimeout = setTimeout(() => {
-        dispatch('blockHover', { blockId });
-    }, 50);
+	if (hoverTimeout) {
+		clearTimeout(hoverTimeout);
+	}
+	hoverTimeout = setTimeout(() => {
+		dispatch('blockHover', { blockId });
+	}, 50);
 }
 
 function handleBlockMouseLeave(blockId: string) {
-    if (hoverTimeout) {
-        clearTimeout(hoverTimeout);
-        hoverTimeout = null;
-    }
-    dispatch('blockLeave', { blockId });
+	if (hoverTimeout) {
+		clearTimeout(hoverTimeout);
+		hoverTimeout = null;
+	}
+	dispatch('blockLeave', { blockId });
 }
 ```
 
 **Rationale:**
+
 - Prevents rapid-fire events when moving mouse quickly
 - Clears pending timeout if mouse leaves before debounce completes
 - Keyboard focus bypasses debounce for immediate response
@@ -168,23 +182,31 @@ CSS transitions apply visual highlight
     import DualPaneLayout from './DualPaneLayout.svelte';
     import SourcePane from './SourcePane.svelte';
     import TranslationPane from './TranslationPane.svelte';
-    
+
     let sourceBlocks = [...];
     let translationBlocks = [...];
 </script>
 
 <DualPaneLayout>
-    <div slot="left">
-        <SourcePane blocks={sourceBlocks} />
-    </div>
-    
-    <div slot="right">
-        <TranslationPane blocks={translationBlocks} />
-    </div>
+	<div slot="left">
+		<SourcePane blocks={sourceBlocks} />
+	</div>
+
+	<div slot="right">
+		<TranslationPane blocks={translationBlocks} />
+	</div>
 </DualPaneLayout>
 ```
 
-**Note:** The hover coordination happens automatically within DualPaneLayout. No additional configuration needed.
+**How it works:**
+
+1. SourcePane/TranslationPane emit `blockHover` and `blockLeave` events
+2. Events bubble up to the pane div in DualPaneLayout
+3. DualPaneLayout listens via `on:blockHover` and `on:blockLeave` on pane divs
+4. DualPaneLayout updates internal `hoveredBlockId` state
+5. DualPaneLayout passes `highlightedBlockId` prop to SourcePane/TranslationPane
+
+**Note:** The components must be rendered in the slots for event bubbling to work correctly. The hover coordination happens automatically within DualPaneLayout.
 
 ## Testing
 
@@ -206,23 +228,23 @@ CSS transitions apply visual highlight
    - Emits `blockLeave` immediately
    - Cancels pending hover if mouse leaves quickly
 
-2. **Keyboard Events:**
+1. **Keyboard Events:**
    - Focus emits `blockHover` immediately
    - Blur emits `blockLeave` immediately
    - No debounce for keyboard events
 
-3. **Styling:**
+1. **Styling:**
    - Applies `.block-highlighted` when `highlightedBlockId` matches
    - Works for all block types (paragraph, heading, code, list, quote, image)
    - Removes highlight when `highlightedBlockId` changes to null
 
-4. **Accessibility:**
+1. **Accessibility:**
    - All blocks have `tabindex="0"`
    - All blocks have `.block-hoverable` class
    - Keyboard focus works identically to mouse hover
 
-5. **Performance:**
-   - Renders 150 blocks in <500ms
+1. **Performance:**
+   - Renders 150 blocks in \<500ms
    - Debouncing prevents multiple events from rapid mouse movement
 
 ### Running Tests
@@ -243,7 +265,7 @@ npm run test:coverage
 ## Browser Compatibility
 
 - **Chrome/Edge:** Fully supported
-- **Firefox:** Fully supported  
+- **Firefox:** Fully supported
 - **Safari:** Fully supported
 - **Mobile:** Touch events not implemented (hover-only feature)
 
@@ -255,16 +277,16 @@ Potential improvements for future iterations:
    - Add tap-and-hold for mobile highlighting
    - Consider alternative interaction for touch devices
 
-2. **Scroll Synchronization:**
+1. **Scroll Synchronization:**
    - Option to auto-scroll opposite pane to highlighted block
    - "Sticky highlight" that persists on click
 
-3. **Customization:**
+1. **Customization:**
    - User-selectable highlight colors
    - Configurable debounce delay
    - Toggle hover feature on/off
 
-4. **Analytics:**
+1. **Analytics:**
    - Track which blocks users hover over most
    - Use data to improve translation quality
 
