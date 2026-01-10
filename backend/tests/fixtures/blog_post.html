@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="author" content="Alex Thompson">
+    <meta property="article:published_time" content="2024-01-25T09:15:00Z">
+    <meta property="og:type" content="blog">
+    <meta name="keywords" content="web development, javascript, react, tutorial">
+    <meta name="article:tag" content="web development">
+    <meta name="article:tag" content="javascript">
+    <meta name="article:tag" content="react">
+    <meta name="article:tag" content="tutorial">
+    <title>Building Modern Web Applications with React: A Comprehensive Guide</title>
+    <script type="application/ld+json">
+    {
+        "@context": "https://schema.org",
+        "@type": "BlogPosting",
+        "headline": "Building Modern Web Applications with React: A Comprehensive Guide",
+        "author": {
+            "@type": "Person",
+            "name": "Alex Thompson"
+        },
+        "datePublished": "2024-01-25T09:15:00Z",
+        "keywords": ["web development", "javascript", "react", "tutorial"],
+        "publisher": {
+            "@type": "Organization",
+            "name": "Dev Blog Central"
+        }
+    }
+    </script>
+</head>
+<body>
+    <!-- Navigation - should be filtered out -->
+    <nav class="main-navigation">
+        <ul>
+            <li><a href="/">Home</a></li>
+            <li><a href="/blog">Blog</a></li>
+            <li><a href="/about">About</a></li>
+        </ul>
+    </nav>
+
+    <!-- Sidebar - should be filtered out -->
+    <aside class="sidebar">
+        <h3>Popular Posts</h3>
+        <ul>
+            <li><a href="/post1">Popular Post 1</a></li>
+            <li><a href="/post2">Popular Post 2</a></li>
+        </ul>
+        <h3>Categories</h3>
+        <ul>
+            <li><a href="/category/web">Web Development</a></li>
+            <li><a href="/category/mobile">Mobile</a></li>
+        </ul>
+    </aside>
+
+    <article class="blog-post">
+        <header>
+            <!-- Blog post title -->
+            <h1 class="post-title">Building Modern Web Applications with React: A Comprehensive Guide</h1>
+
+            <!-- Author and date -->
+            <div class="post-meta">
+                <span class="author">By <a href="/author/alex">Alex Thompson</a></span>
+                <time class="published" datetime="2024-01-25T09:15:00Z">January 25, 2024</time>
+            </div>
+
+            <!-- Tags -->
+            <div class="post-tags">
+                <a href="/tag/web-development" class="tag">web development</a>
+                <a href="/tag/javascript" class="tag">javascript</a>
+                <a href="/tag/react" class="tag">react</a>
+                <a href="/tag/tutorial" class="tag">tutorial</a>
+            </div>
+        </header>
+
+        <main class="post-content">
+            <p class="lead">React has revolutionized how we build web applications. In this comprehensive guide, we'll explore the key concepts and best practices for building modern React applications.</p>
+
+            <figure>
+                <img src="https://example.com/react-logo.jpg" alt="React logo" width="1200" height="600">
+                <figcaption>The React logo and ecosystem</figcaption>
+            </figure>
+
+            <h2>Getting Started with React</h2>
+            <p>React is a JavaScript library for building user interfaces. It allows you to create reusable components that manage their own state.</p>
+
+            <h3>Setting Up Your Environment</h3>
+            <p>Before we dive in, you'll need to set up your development environment. Here are the essential tools:</p>
+
+            <ul>
+                <li>Node.js (version 18 or higher)</li>
+                <li>npm or yarn package manager</li>
+                <li>A code editor (VS Code recommended)</li>
+                <li>Git for version control</li>
+            </ul>
+
+            <h2>Core Concepts</h2>
+            <p>Understanding React's core concepts is essential for building effective applications.</p>
+
+            <h3>Components and Props</h3>
+            <p>Components are the building blocks of React applications. They can receive data through props.</p>
+
+            <pre><code class="language-javascript">
+function Welcome(props) {
+  return &lt;h1&gt;Hello, {props.name}&lt;/h1&gt;;
+}
+            </code></pre>
+
+            <h3>State and Lifecycle</h3>
+            <p>State allows components to create and manage their own data. Unlike props, state is mutable.</p>
+
+            <blockquote>
+                React's useState hook is one of the most fundamental hooks you'll use. It allows functional components to have state.
+            </blockquote>
+
+            <h2>Advanced Patterns</h2>
+            <p>Once you understand the basics, you can explore more advanced patterns.</p>
+
+            <figure>
+                <img src="https://example.com/component-tree.jpg" alt="Component hierarchy diagram">
+                <figcaption>Visualization of a React component tree structure</figcaption>
+            </figure>
+
+            <h3>Context API</h3>
+            <p>The Context API provides a way to pass data through the component tree without having to pass props manually at every level.</p>
+
+            <ol>
+                <li>Create a context using React.createContext()</li>
+                <li>Provide the context value at a higher level</li>
+                <li>Consume the context in child components</li>
+            </ol>
+
+            <h2>Best Practices</h2>
+            <p>Following best practices will help you write maintainable and performant React code.</p>
+
+            <ul>
+                <li>Keep components small and focused</li>
+                <li>Use prop types or TypeScript for type checking</li>
+                <li>Implement error boundaries</li>
+                <li>Optimize performance with React.memo and useMemo</li>
+            </ul>
+
+            <h2>Conclusion</h2>
+            <p>React continues to be one of the most popular choices for building modern web applications. With its component-based architecture and powerful ecosystem, it provides developers with the tools needed to build scalable applications.</p>
+
+            <p>In future posts, we'll dive deeper into advanced React patterns, performance optimization, and integrating with backend APIs.</p>
+        </main>
+
+        <footer class="post-footer">
+            <div class="share-buttons">
+                <a href="#" class="share-twitter">Share on Twitter</a>
+                <a href="#" class="share-facebook">Share on Facebook</a>
+            </div>
+
+            <!-- Tags (duplicate for footer) -->
+            <div class="footer-tags">
+                <span>Tagged:</span>
+                <a href="/tag/web-development">web development</a>,
+                <a href="/tag/javascript">javascript</a>,
+                <a href="/tag/react">react</a>,
+                <a href="/tag/tutorial">tutorial</a>
+            </div>
+        </footer>
+    </article>
+
+    <!-- Comments section - should be filtered out -->
+    <section id="comments" class="comments-section">
+        <h2>Comments</h2>
+        <div class="comment">
+            <div class="comment-author">User123</div>
+            <div class="comment-text">Great article! Very helpful.</div>
+        </div>
+        <div class="comment">
+            <div class="comment-author">DevGuru</div>
+            <div class="comment-text">Thanks for sharing this.</div>
+        </div>
+        <div id="disqus_thread"></div>
+    </section>
+
+    <!-- More sidebar content - should be filtered out -->
+    <aside class="related-posts">
+        <h3>You Might Also Like</h3>
+        <div class="related-items">
+            <a href="/related1">Related Article 1</a>
+            <a href="/related2">Related Article 2</a>
+        </div>
+    </aside>
+</body>
+</html>

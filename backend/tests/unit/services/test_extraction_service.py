@@ -1095,3 +1095,256 @@ def test_parse_html_to_blocks_filters_navigation():
     # Only main content should be extracted
     assert len(blocks) == 1
     assert blocks[0].text == "Main content"
+
+
+@pytest.mark.unit
+async def test_blog_post():
+    """Test blog post extraction with title, author, date, tags, and filtered comments."""
+    service = ExtractionService()
+
+    # Load blog post fixture
+    BLOG_POST_HTML = (FIXTURES_DIR / "blog_post.html").read_text()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        # Setup mock response with blog post HTML
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.text = BLOG_POST_HTML
+        mock_response.headers = {"content-type": "text/html"}
+
+        mock_client_instance = AsyncMock()
+        mock_client_instance.get = AsyncMock(return_value=mock_response)
+        mock_client.return_value.__aenter__.return_value = mock_client_instance
+
+        result = await service.extract("https://example.com/blog/react-guide")
+
+        # Verify basic properties
+        assert result.url == "https://example.com/blog/react-guide"
+        assert result.title
+        assert "React" in result.title
+        assert result.author == "Alex Thompson"
+        assert result.date_published == "2024-01-25T09:15:00Z"
+
+        # Verify article type is detected as blog
+        assert result.metadata.get("article_type") == "blog"
+
+        # Verify tags are extracted
+        assert "tags" in result.metadata
+        tags = result.metadata["tags"]
+        assert isinstance(tags, list)
+        assert len(tags) == 4
+        assert "web development" in tags
+        assert "javascript" in tags
+        assert "react" in tags
+        assert "tutorial" in tags
+
+        # Verify content blocks exist
+        assert len(result.content_blocks) > 0
+
+        # Verify headings are extracted
+        headings = [b for b in result.content_blocks if b.type == "heading"]
+        assert len(headings) > 0
+        # Check for specific section headings
+        heading_texts = [h.text for h in headings]
+        assert any("Getting Started" in text for text in heading_texts)
+        assert any("Core Concepts" in text for text in heading_texts)
+
+        # Verify code blocks are preserved
+        code_blocks = [b for b in result.content_blocks if b.type == "code"]
+        assert len(code_blocks) >= 1
+        # Check for language detection
+        assert any(b.metadata.get("language") == "javascript" for b in code_blocks)
+
+        # Verify lists are extracted
+        lists = [b for b in result.content_blocks if b.type == "list"]
+        assert len(lists) >= 2  # At least 2 lists in the blog post
+
+        # Verify images with captions are preserved
+        images = [b for b in result.content_blocks if b.type == "image"]
+        assert len(images) >= 2
+        # Check for captions
+        images_with_captions = [b for b in images if b.metadata.get("caption")]
+        assert len(images_with_captions) >= 2
+
+        # Verify quotes exist
+        quotes = [b for b in result.content_blocks if b.type == "quote"]
+        assert len(quotes) >= 1
+
+        # Verify comments section is filtered out
+        all_text = " ".join([b.text for b in result.content_blocks])
+        # Comments should not appear
+        assert "User123" not in all_text
+        assert "DevGuru" not in all_text
+        assert "Great article! Very helpful" not in all_text
+        # The actual content should be present
+        assert "React has revolutionized" in all_text
+
+        # Verify sidebar content is filtered out
+        assert "Popular Posts" not in all_text
+        assert "You Might Also Like" not in all_text
+
+
+@pytest.mark.unit
+def test_is_navigation_or_sidebar_filters_comments():
+    """Test that comments sections are filtered out."""
+    service = ExtractionService()
+
+    # Test comments class
+    html = '<section class="comments-section"><p>Comment text</p></section>'
+    soup = BeautifulSoup(html, "lxml")
+    p = soup.find("p")
+    assert service._is_navigation_or_sidebar(p) is True
+
+    # Test comment id
+    html = '<div id="comments"><p>Comment text</p></div>'
+    soup = BeautifulSoup(html, "lxml")
+    p = soup.find("p")
+    assert service._is_navigation_or_sidebar(p) is True
+
+    # Test disqus
+    html = '<div id="disqus_thread"><p>Comment text</p></div>'
+    soup = BeautifulSoup(html, "lxml")
+    p = soup.find("p")
+    assert service._is_navigation_or_sidebar(p) is True
+
+    # Test regular content is not filtered
+    html = "<article><p>Article content</p></article>"
+    soup = BeautifulSoup(html, "lxml")
+    p = soup.find("p")
+    assert service._is_navigation_or_sidebar(p) is False
+
+
+@pytest.mark.unit
+def test_detect_article_type_blog():
+    """Test blog post type detection."""
+    service = ExtractionService()
+
+    # Test BlogPosting in JSON-LD
+    html = """
+    <html>
+        <head>
+            <script type="application/ld+json">
+            {
+                "@type": "BlogPosting",
+                "headline": "Test Blog"
+            }
+            </script>
+        </head>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    assert service._detect_article_type(soup) == "blog"
+
+    # Test og:type blog
+    html = """
+    <html>
+        <head>
+            <meta property="og:type" content="blog">
+        </head>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    assert service._detect_article_type(soup) == "blog"
+
+
+@pytest.mark.unit
+def test_extract_tags():
+    """Test tag extraction from blog posts."""
+    service = ExtractionService()
+
+    # Test with keywords meta tag
+    html = """
+    <html>
+        <head>
+            <meta name="keywords" content="python, django, web development">
+        </head>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    tags = service._extract_tags(soup)
+    assert len(tags) == 3
+    assert "python" in tags
+    assert "django" in tags
+    assert "web development" in tags
+
+    # Test with article:tag meta tags
+    html = """
+    <html>
+        <head>
+            <meta name="article:tag" content="javascript">
+            <meta name="article:tag" content="react">
+            <meta name="article:tag" content="frontend">
+        </head>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    tags = service._extract_tags(soup)
+    assert len(tags) == 3
+    assert "javascript" in tags
+    assert "react" in tags
+    assert "frontend" in tags
+
+    # Test with JSON-LD keywords (array)
+    html = """
+    <html>
+        <head>
+            <script type="application/ld+json">
+            {
+                "@type": "BlogPosting",
+                "keywords": ["ai", "machine learning", "python"]
+            }
+            </script>
+        </head>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    tags = service._extract_tags(soup)
+    assert len(tags) == 3
+    assert "ai" in tags
+    assert "machine learning" in tags
+    assert "python" in tags
+
+    # Test with JSON-LD keywords (string)
+    html = """
+    <html>
+        <head>
+            <script type="application/ld+json">
+            {
+                "@type": "BlogPosting",
+                "keywords": "golang, backend, api"
+            }
+            </script>
+        </head>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    tags = service._extract_tags(soup)
+    assert len(tags) == 3
+    assert "golang" in tags
+    assert "backend" in tags
+    assert "api" in tags
+
+    # Test with no tags
+    html = "<html><head></head></html>"
+    soup = BeautifulSoup(html, "lxml")
+    tags = service._extract_tags(soup)
+    assert len(tags) == 0
+
+    # Test duplicate removal
+    html = """
+    <html>
+        <head>
+            <meta name="keywords" content="python, Django, web">
+            <meta name="article:tag" content="python">
+            <meta name="article:tag" content="django">
+        </head>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    tags = service._extract_tags(soup)
+    # Should have 3 unique tags (case-insensitive deduplication)
+    assert len(tags) == 3
+    assert "python" in tags
+    assert "web" in tags
+    # Either "Django" or "django" should be present (first occurrence wins)
+    assert any(tag.lower() == "django" for tag in tags)
