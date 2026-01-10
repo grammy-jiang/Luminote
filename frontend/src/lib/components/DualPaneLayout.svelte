@@ -1,5 +1,6 @@
 <script lang="ts">
-	import { createEventDispatcher } from 'svelte';
+	import { createEventDispatcher, setContext } from 'svelte';
+	import { writable } from 'svelte/store';
 
 	/**
 	 * DualPaneLayout Component
@@ -16,6 +17,7 @@
 	 * - ARIA labels for accessibility
 	 * - Exported refs for programmatic control
 	 * - localStorage persistence for split ratio
+	 * - Block hover highlighting coordination via context
 	 */
 
 	export let leftLabel: string = 'Source';
@@ -34,6 +36,10 @@
 
 	// Track which pane has focus for keyboard navigation
 	let activePane: 'left' | 'right' = 'left';
+
+	// Hover state for block highlighting - shared via context
+	const hoveredBlockId = writable<string | null>(null);
+	setContext('highlightedBlockId', hoveredBlockId);
 
 	// Split ratio state (percentage for left pane)
 	let leftWidth = 50;
@@ -226,6 +232,23 @@
 		leftWidth = Math.max(minPaneWidth, Math.min(100 - minPaneWidth, percentage));
 		saveSplitRatio();
 	}
+
+	/**
+	 * Handle block hover from either pane.
+	 */
+	function handleBlockHover(event: CustomEvent<{ blockId: string }>) {
+		hoveredBlockId.set(event.detail.blockId);
+	}
+
+	/**
+	 * Handle block leave from either pane.
+	 */
+	function handleBlockLeave(event: CustomEvent<{ blockId: string }>) {
+		hoveredBlockId.update((current) => {
+			// Only clear if it's the same block that's leaving
+			return current === event.detail.blockId ? null : current;
+		});
+	}
 </script>
 
 <svelte:window
@@ -252,6 +275,8 @@
 		aria-label={leftLabel}
 		tabindex="0"
 		on:focus={() => (activePane = 'left')}
+		on:blockHover={handleBlockHover}
+		on:blockLeave={handleBlockLeave}
 		style="width: {leftWidth}%;"
 	>
 		<slot name="left">
@@ -290,6 +315,8 @@
 		aria-label={rightLabel}
 		tabindex="0"
 		on:focus={() => (activePane = 'right')}
+		on:blockHover={handleBlockHover}
+		on:blockLeave={handleBlockLeave}
 		style="width: {100 - leftWidth}%;"
 	>
 		<slot name="right">

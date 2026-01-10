@@ -242,7 +242,7 @@ export const svelteIntegrationExample = `
   <button on:click={startTranslation} disabled={isTranslating}>
     Translate
   </button>
-  
+
   {#if isTranslating}
     <button on:click={cancelTranslation}>
       Cancel

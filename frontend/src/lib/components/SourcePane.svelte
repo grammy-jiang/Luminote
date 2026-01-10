@@ -1,5 +1,7 @@
 <script lang="ts">
+	import { createEventDispatcher, onDestroy, getContext } from 'svelte';
 	import type { ContentBlock } from '$lib/types/api';
+	import type { Writable } from 'svelte/store';
 
 	/**
 	 * SourcePane Component
@@ -17,12 +19,74 @@
 	 * - Maintains block IDs for synchronization
 	 * - Responsive typography
 	 * - Accessible markup (semantic HTML, ARIA labels)
+	 * - Block hover highlighting for cross-pane synchronization
 	 *
 	 * Note: Text content is escaped for security. HTML links in block.text will
 	 * be rendered as plain text, not as clickable anchors.
 	 */
 
 	export let blocks: ContentBlock[] = [];
+	export let highlightedBlockId: string | null = null;
+
+	// Try to get highlightedBlockId from context if not provided as prop
+	const highlightedBlockIdContext = getContext<Writable<string | null>>('highlightedBlockId');
+
+	// Use context if available, otherwise use prop
+	$: effectiveHighlightedBlockId = highlightedBlockIdContext
+		? $highlightedBlockIdContext
+		: highlightedBlockId;
+
+	const dispatch = createEventDispatcher<{
+		blockHover: { blockId: string };
+		blockLeave: { blockId: string };
+	}>();
+
+	let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	// Clean up timeout on component destroy to prevent memory leaks
+	onDestroy(() => {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+			hoverTimeout = null;
+		}
+	});
+
+	/**
+	 * Handle mouse enter on a block with debouncing.
+	 */
+	function handleBlockMouseEnter(blockId: string) {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+		}
+		hoverTimeout = setTimeout(() => {
+			dispatch('blockHover', { blockId });
+		}, 50);
+	}
+
+	/**
+	 * Handle mouse leave on a block.
+	 */
+	function handleBlockMouseLeave(blockId: string) {
+		if (hoverTimeout) {
+			clearTimeout(hoverTimeout);
+			hoverTimeout = null;
+		}
+		dispatch('blockLeave', { blockId });
+	}
+
+	/**
+	 * Handle keyboard focus on a block.
+	 */
+	function handleBlockFocus(blockId: string) {
+		dispatch('blockHover', { blockId });
+	}
+
+	/**
+	 * Handle keyboard blur on a block.
+	 */
+	function handleBlockBlur(blockId: string) {
+		dispatch('blockLeave', { blockId });
+	}
 
 	/**
 	 * Parse list items from text content.
@@ -99,56 +163,91 @@
 	{:else}
 		{#each blocks as block (block.id)}
 			{#if block.type === 'paragraph'}
+				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 				<p
 					id={block.id}
 					data-block-id={block.id}
 					data-block-type="paragraph"
-					class="block-paragraph"
+					class="block-paragraph block-hoverable"
+					class:block-highlighted={effectiveHighlightedBlockId === block.id}
+					tabindex="0"
+					on:mouseenter={() => handleBlockMouseEnter(block.id)}
+					on:mouseleave={() => handleBlockMouseLeave(block.id)}
+					on:focus={() => handleBlockFocus(block.id)}
+					on:blur={() => handleBlockBlur(block.id)}
 				>
 					{block.text}
 				</p>
 			{:else if block.type === 'heading'}
 				{@const level = getHeadingLevel(block.metadata)}
 				{@const tag = `h${level}`}
+				<!-- svelte-ignore a11y-no-static-element-interactions -->
 				<svelte:element
 					this={tag}
 					id={block.id}
 					data-block-id={block.id}
 					data-block-type="heading"
-					class="block-heading block-heading-{level}"
+					class="block-heading block-heading-{level} block-hoverable"
+					class:block-highlighted={effectiveHighlightedBlockId === block.id}
+					tabindex="0"
+					on:mouseenter={() => handleBlockMouseEnter(block.id)}
+					on:mouseleave={() => handleBlockMouseLeave(block.id)}
+					on:focus={() => handleBlockFocus(block.id)}
+					on:blur={() => handleBlockBlur(block.id)}
 				>
 					{block.text}
 				</svelte:element>
 			{:else if block.type === 'code'}
 				{@const language = getCodeLanguage(block.metadata)}
+				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 				<pre
 					id={block.id}
 					data-block-id={block.id}
 					data-block-type="code"
-					class="block-code"
-					aria-label="Code block{language !== 'plaintext' ? ` in ${language}` : ''}"><code
-						class="language-{language}">{block.text}</code
+					class="block-code block-hoverable"
+					class:block-highlighted={effectiveHighlightedBlockId === block.id}
+					tabindex="0"
+					aria-label="Code block{language !== 'plaintext' ? ` in ${language}` : ''}"
+					on:mouseenter={() => handleBlockMouseEnter(block.id)}
+					on:mouseleave={() => handleBlockMouseLeave(block.id)}
+					on:focus={() => handleBlockFocus(block.id)}
+					on:blur={() => handleBlockBlur(block.id)}><code class="language-{language}"
+						>{block.text}</code
 					></pre>
 			{:else if block.type === 'list'}
 				{@const items = parseListItems(block.text)}
 				{@const ordered = isOrderedList(block.metadata)}
 				{#if ordered}
+					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 					<ol
 						id={block.id}
 						data-block-id={block.id}
 						data-block-type="list"
-						class="block-list block-list-ordered"
+						class="block-list block-list-ordered block-hoverable"
+						class:block-highlighted={effectiveHighlightedBlockId === block.id}
+						tabindex="0"
+						on:mouseenter={() => handleBlockMouseEnter(block.id)}
+						on:mouseleave={() => handleBlockMouseLeave(block.id)}
+						on:focus={() => handleBlockFocus(block.id)}
+						on:blur={() => handleBlockBlur(block.id)}
 					>
 						{#each items as item}
 							<li>{item}</li>
 						{/each}
 					</ol>
 				{:else}
+					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 					<ul
 						id={block.id}
 						data-block-id={block.id}
 						data-block-type="list"
-						class="block-list block-list-unordered"
+						class="block-list block-list-unordered block-hoverable"
+						class:block-highlighted={effectiveHighlightedBlockId === block.id}
+						tabindex="0"
+						on:mouseenter={() => handleBlockMouseEnter(block.id)}
+						on:mouseleave={() => handleBlockMouseLeave(block.id)}
+						on:focus={() => handleBlockFocus(block.id)}
+						on:blur={() => handleBlockBlur(block.id)}
 					>
 						{#each items as item}
 							<li>{item}</li>
@@ -156,11 +255,18 @@
 					</ul>
 				{/if}
 			{:else if block.type === 'quote'}
+				<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 				<blockquote
 					id={block.id}
 					data-block-id={block.id}
 					data-block-type="quote"
-					class="block-quote"
+					class="block-quote block-hoverable"
+					class:block-highlighted={effectiveHighlightedBlockId === block.id}
+					tabindex="0"
+					on:mouseenter={() => handleBlockMouseEnter(block.id)}
+					on:mouseleave={() => handleBlockMouseLeave(block.id)}
+					on:focus={() => handleBlockFocus(block.id)}
+					on:blur={() => handleBlockBlur(block.id)}
 				>
 					{block.text}
 				</blockquote>
@@ -171,11 +277,18 @@
 				{@const width = block.metadata.width ? Number(block.metadata.width) : undefined}
 				{@const height = block.metadata.height ? Number(block.metadata.height) : undefined}
 				{#if src}
+					<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 					<figure
 						id={block.id}
 						data-block-id={block.id}
 						data-block-type="image"
-						class="block-image"
+						class="block-image block-hoverable"
+						class:block-highlighted={effectiveHighlightedBlockId === block.id}
+						tabindex="0"
+						on:mouseenter={() => handleBlockMouseEnter(block.id)}
+						on:mouseleave={() => handleBlockMouseLeave(block.id)}
+						on:focus={() => handleBlockFocus(block.id)}
+						on:blur={() => handleBlockBlur(block.id)}
 					>
 						<img {src} {alt} loading="lazy" {width} {height} />
 						{#if block.text && block.text !== rawSrc}
@@ -350,5 +463,34 @@
 			font-size: 0.8125rem;
 			padding: 0.75rem;
 		}
+	}
+
+	/* Block highlighting styles */
+	.block-highlighted {
+		background-color: #fef3c7;
+		border-left: 3px solid #f59e0b;
+		padding-left: 0.5rem;
+		margin-left: -0.5rem; /* Compensate for padding to prevent layout shift */
+		transition:
+			background-color 0.2s ease,
+			border-left 0.2s ease;
+		outline: 2px solid #f59e0b;
+		outline-offset: 2px;
+	}
+
+	/* Ensure keyboard focus is visible */
+	[tabindex='0']:focus {
+		outline: 2px solid #3b82f6;
+		outline-offset: 2px;
+	}
+
+	/* When both highlighted and focused */
+	.block-highlighted:focus {
+		outline: 2px solid #f59e0b;
+	}
+
+	/* Cursor indicates focusable block (not clickable action) */
+	.block-hoverable {
+		cursor: default;
 	}
 </style>
