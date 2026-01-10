@@ -526,6 +526,28 @@ describe('SourcePane Component', () => {
 			const img = container.querySelector('img');
 			expect(img).toHaveAttribute('loading', 'lazy');
 		});
+
+		it('includes width and height attributes when provided in metadata', () => {
+			const blocks: ContentBlock[] = [
+				{
+					id: 'img7',
+					type: 'image',
+					text: '',
+					metadata: {
+						src: 'https://example.com/sized.jpg',
+						alt: 'Sized image',
+						width: 800,
+						height: 600
+					}
+				}
+			];
+
+			const { container } = render(SourcePane, { props: { blocks } });
+
+			const img = container.querySelector('img');
+			expect(img).toHaveAttribute('width', '800');
+			expect(img).toHaveAttribute('height', '600');
+		});
 	});
 
 	describe('Mixed Content', () => {
@@ -540,7 +562,7 @@ describe('SourcePane Component', () => {
 					id: 'img1',
 					type: 'image',
 					text: 'Caption',
-					metadata: { src: 'test.jpg', alt: 'Test' }
+					metadata: { src: 'https://example.com/test.jpg', alt: 'Test' }
 				}
 			];
 
@@ -575,7 +597,12 @@ describe('SourcePane Component', () => {
 				{ id: '3', type: 'code', text: 'C', metadata: {} },
 				{ id: '4', type: 'list', text: '- L', metadata: {} },
 				{ id: '5', type: 'quote', text: 'Q', metadata: {} },
-				{ id: '6', type: 'image', text: '', metadata: { src: 'i.jpg', alt: 'I' } }
+				{
+					id: '6',
+					type: 'image',
+					text: '',
+					metadata: { src: 'https://example.com/i.jpg', alt: 'I' }
+				}
 			];
 
 			const { container } = render(SourcePane, { props: { blocks } });
@@ -644,7 +671,7 @@ describe('SourcePane Component', () => {
 					id: 'i1',
 					type: 'image',
 					text: '',
-					metadata: { src: 'test.jpg', alt: 'Test image' }
+					metadata: { src: 'https://example.com/test.jpg', alt: 'Test image' }
 				}
 			];
 
@@ -691,6 +718,164 @@ describe('SourcePane Component', () => {
 
 			// Should default to h2
 			expect(container.querySelector('h2[data-block-id="invalid"]')).toBeInTheDocument();
+		});
+	});
+
+	describe('Security', () => {
+		it('blocks javascript: URLs in image src', () => {
+			const blocks: ContentBlock[] = [
+				{
+					id: 'xss1',
+					type: 'image',
+					text: 'XSS attempt',
+					metadata: {
+						src: 'javascript:alert("XSS")',
+						alt: 'Malicious image'
+					}
+				}
+			];
+
+			const { container } = render(SourcePane, { props: { blocks } });
+
+			// Image should not be rendered with javascript: URL
+			const img = container.querySelector('img');
+			expect(img).not.toBeInTheDocument();
+		});
+
+		it('blocks data: URLs in image src', () => {
+			const blocks: ContentBlock[] = [
+				{
+					id: 'xss2',
+					type: 'image',
+					text: 'Data URL attempt',
+					metadata: {
+						src: 'data:text/html,<script>alert("XSS")</script>',
+						alt: 'Data URL image'
+					}
+				}
+			];
+
+			const { container } = render(SourcePane, { props: { blocks } });
+
+			// Image should not be rendered with data: URL
+			const img = container.querySelector('img');
+			expect(img).not.toBeInTheDocument();
+		});
+
+		it('allows valid http URLs in image src', () => {
+			const blocks: ContentBlock[] = [
+				{
+					id: 'safe1',
+					type: 'image',
+					text: 'Safe image',
+					metadata: {
+						src: 'http://example.com/image.jpg',
+						alt: 'Safe HTTP image'
+					}
+				}
+			];
+
+			const { container } = render(SourcePane, { props: { blocks } });
+
+			const img = container.querySelector('img');
+			expect(img).toBeInTheDocument();
+			expect(img).toHaveAttribute('src', 'http://example.com/image.jpg');
+		});
+
+		it('allows valid https URLs in image src', () => {
+			const blocks: ContentBlock[] = [
+				{
+					id: 'safe2',
+					type: 'image',
+					text: 'Safe image',
+					metadata: {
+						src: 'https://example.com/image.jpg',
+						alt: 'Safe HTTPS image'
+					}
+				}
+			];
+
+			const { container } = render(SourcePane, { props: { blocks } });
+
+			const img = container.querySelector('img');
+			expect(img).toBeInTheDocument();
+			expect(img).toHaveAttribute('src', 'https://example.com/image.jpg');
+		});
+
+		it('sanitizes code language to prevent class injection', () => {
+			const blocks: ContentBlock[] = [
+				{
+					id: 'code-xss',
+					type: 'code',
+					text: 'console.log("test")',
+					metadata: {
+						language: 'javascript malicious-class" onload="alert(1)'
+					}
+				}
+			];
+
+			const { container } = render(SourcePane, { props: { blocks } });
+
+			const code = container.querySelector('code');
+			expect(code).toBeInTheDocument();
+			// Should default to plaintext for invalid language
+			expect(code).toHaveClass('language-plaintext');
+		});
+
+		it('allows valid language names with hyphens and underscores', () => {
+			const blocks: ContentBlock[] = [
+				{
+					id: 'code-valid',
+					type: 'code',
+					text: 'code',
+					metadata: {
+						language: 'objective-c_plus_plus'
+					}
+				}
+			];
+
+			const { container } = render(SourcePane, { props: { blocks } });
+
+			const code = container.querySelector('code');
+			expect(code).toHaveClass('language-objective-c_plus_plus');
+		});
+
+		it('escapes HTML in paragraph text', () => {
+			const blocks: ContentBlock[] = [
+				{
+					id: 'html-escape',
+					type: 'paragraph',
+					text: '<script>alert("XSS")</script>',
+					metadata: {}
+				}
+			];
+
+			const { container } = render(SourcePane, { props: { blocks } });
+
+			const paragraph = container.querySelector('p[data-block-id="html-escape"]');
+			expect(paragraph).toBeInTheDocument();
+			// Text should be escaped, not executed
+			expect(paragraph?.textContent?.trim()).toBe('<script>alert("XSS")</script>');
+			// No script tag should be in DOM
+			expect(container.querySelector('script')).not.toBeInTheDocument();
+		});
+
+		it('escapes HTML in heading text', () => {
+			const blocks: ContentBlock[] = [
+				{
+					id: 'heading-html',
+					type: 'heading',
+					text: '<img src=x onerror=alert(1)>',
+					metadata: { level: 1 }
+				}
+			];
+
+			const { container } = render(SourcePane, { props: { blocks } });
+
+			const heading = container.querySelector('h1');
+			expect(heading?.textContent?.trim()).toBe('<img src=x onerror=alert(1)>');
+			// No img tag should be in heading
+			expect(heading?.querySelector('img')).not.toBeInTheDocument();
 		});
 	});
 });

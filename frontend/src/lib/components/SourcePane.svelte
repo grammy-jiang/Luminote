@@ -14,10 +14,12 @@
 	 * - Images with lazy loading and alt text
 	 * - Lists (ordered and unordered) based on metadata.ordered
 	 * - Blockquotes with visual styling
-	 * - Preserves links and makes them clickable
 	 * - Maintains block IDs for synchronization
 	 * - Responsive typography
 	 * - Accessible markup (semantic HTML, ARIA labels)
+	 *
+	 * Note: Text content is escaped for security. HTML links in block.text will
+	 * be rendered as plain text, not as clickable anchors.
 	 */
 
 	export let blocks: ContentBlock[] = [];
@@ -50,10 +52,17 @@
 
 	/**
 	 * Get language from code block metadata for syntax highlighting.
+	 * Validates that language contains only safe characters.
 	 */
 	function getCodeLanguage(metadata: Record<string, unknown>): string {
 		const lang = metadata.language;
-		return typeof lang === 'string' ? lang : 'plaintext';
+		if (typeof lang === 'string') {
+			// Validate language contains only alphanumeric, hyphens, and underscores
+			if (/^[a-zA-Z0-9_-]+$/.test(lang)) {
+				return lang;
+			}
+		}
+		return 'plaintext';
 	}
 
 	/**
@@ -62,12 +71,30 @@
 	function isOrderedList(metadata: Record<string, unknown>): boolean {
 		return metadata.ordered === true;
 	}
+
+	/**
+	 * Validate image src URL to prevent XSS attacks.
+	 * Only allows http:// and https:// protocols.
+	 */
+	function validateImageSrc(src: string): string {
+		if (!src) return '';
+		try {
+			const url = new URL(src);
+			// Only allow http and https protocols
+			if (url.protocol === 'http:' || url.protocol === 'https:') {
+				return src;
+			}
+		} catch {
+			// Invalid URL, return empty string
+		}
+		return '';
+	}
 </script>
 
 <div class="source-pane-content" role="article" aria-label="Source content">
 	{#if blocks.length === 0}
 		<div class="empty-state">
-			<p class="text-gray-500 text-center">No content blocks to display</p>
+			<p class="empty-state-text">No content blocks to display</p>
 		</div>
 	{:else}
 		{#each blocks as block (block.id)}
@@ -82,61 +109,16 @@
 				</p>
 			{:else if block.type === 'heading'}
 				{@const level = getHeadingLevel(block.metadata)}
-				{#if level === 1}
-					<h1
-						id={block.id}
-						data-block-id={block.id}
-						data-block-type="heading"
-						class="block-heading block-heading-1"
-					>
-						{block.text}
-					</h1>
-				{:else if level === 2}
-					<h2
-						id={block.id}
-						data-block-id={block.id}
-						data-block-type="heading"
-						class="block-heading block-heading-2"
-					>
-						{block.text}
-					</h2>
-				{:else if level === 3}
-					<h3
-						id={block.id}
-						data-block-id={block.id}
-						data-block-type="heading"
-						class="block-heading block-heading-3"
-					>
-						{block.text}
-					</h3>
-				{:else if level === 4}
-					<h4
-						id={block.id}
-						data-block-id={block.id}
-						data-block-type="heading"
-						class="block-heading block-heading-4"
-					>
-						{block.text}
-					</h4>
-				{:else if level === 5}
-					<h5
-						id={block.id}
-						data-block-id={block.id}
-						data-block-type="heading"
-						class="block-heading block-heading-5"
-					>
-						{block.text}
-					</h5>
-				{:else}
-					<h6
-						id={block.id}
-						data-block-id={block.id}
-						data-block-type="heading"
-						class="block-heading block-heading-6"
-					>
-						{block.text}
-					</h6>
-				{/if}
+				{@const tag = `h${level}`}
+				<svelte:element
+					this={tag}
+					id={block.id}
+					data-block-id={block.id}
+					data-block-type="heading"
+					class="block-heading block-heading-{level}"
+				>
+					{block.text}
+				</svelte:element>
 			{:else if block.type === 'code'}
 				{@const language = getCodeLanguage(block.metadata)}
 				<pre
@@ -184,13 +166,23 @@
 				</blockquote>
 			{:else if block.type === 'image'}
 				{@const alt = String(block.metadata.alt || 'Image')}
-				{@const src = String(block.metadata.src || block.text)}
-				<figure id={block.id} data-block-id={block.id} data-block-type="image" class="block-image">
-					<img {src} {alt} loading="lazy" />
-					{#if block.text && block.text !== src}
-						<figcaption>{block.text}</figcaption>
-					{/if}
-				</figure>
+				{@const rawSrc = String(block.metadata.src || block.text)}
+				{@const src = validateImageSrc(rawSrc)}
+				{@const width = block.metadata.width ? Number(block.metadata.width) : undefined}
+				{@const height = block.metadata.height ? Number(block.metadata.height) : undefined}
+				{#if src}
+					<figure
+						id={block.id}
+						data-block-id={block.id}
+						data-block-type="image"
+						class="block-image"
+					>
+						<img {src} {alt} loading="lazy" {width} {height} />
+						{#if block.text && block.text !== rawSrc}
+							<figcaption>{block.text}</figcaption>
+						{/if}
+					</figure>
+				{/if}
 			{/if}
 		{/each}
 	{/if}
@@ -210,6 +202,11 @@
 		justify-content: center;
 		min-height: 200px;
 		padding: 2rem;
+	}
+
+	.empty-state-text {
+		color: #6b7280;
+		text-align: center;
 	}
 
 	/* Paragraph styling */
@@ -297,12 +294,11 @@
 	/* Blockquote styling */
 	.block-quote {
 		border-left: 4px solid #3b82f6;
-		padding-left: 1rem;
 		margin: 1rem 0;
 		font-style: italic;
 		color: #4b5563;
 		background-color: #f9fafb;
-		padding: 1rem;
+		padding: 1rem 1rem 1rem 1.5rem;
 		border-radius: 0.25rem;
 	}
 
@@ -354,20 +350,5 @@
 			font-size: 0.8125rem;
 			padding: 0.75rem;
 		}
-	}
-
-	/* Ensure links are styled and accessible */
-	.source-pane-content :global(a) {
-		color: #3b82f6;
-		text-decoration: underline;
-	}
-
-	.source-pane-content :global(a:hover) {
-		color: #2563eb;
-	}
-
-	.source-pane-content :global(a:focus) {
-		outline: 2px solid #3b82f6;
-		outline-offset: 2px;
 	}
 </style>
