@@ -908,7 +908,7 @@ describe('TranslationPane Component', () => {
 			const { container } = render(TranslationPane, { props: { blocks } });
 
 			const paragraph = container.querySelector('p');
-			// Should default to auto for unknown languages
+			// Should default to auto for language codes that are not exactly 2 characters long
 			expect(paragraph).toHaveAttribute('dir', 'auto');
 		});
 	});
