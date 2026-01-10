@@ -386,7 +386,7 @@ def test_extract_metadata():
     """
 
     soup = BeautifulSoup(html, "lxml")
-    metadata = service._extract_metadata(soup, {})
+    metadata = service._extract_metadata(soup, {}, [], [])
 
     assert metadata["author"] == "John Smith"
     assert metadata["date_published"] == "2024-01-15T10:30:00Z"
@@ -646,7 +646,7 @@ def test_extract_metadata_json_ld_author():
     """
 
     soup = BeautifulSoup(html, "lxml")
-    metadata = service._extract_metadata(soup, {})
+    metadata = service._extract_metadata(soup, {}, [], [])
 
     assert metadata["author"] == "JSON-LD Author"
 
@@ -672,7 +672,7 @@ def test_extract_metadata_json_ld_author_string():
     """
 
     soup = BeautifulSoup(html, "lxml")
-    metadata = service._extract_metadata(soup, {})
+    metadata = service._extract_metadata(soup, {}, [], [])
 
     assert metadata["author"] == "String Author"
 
@@ -698,7 +698,7 @@ def test_extract_metadata_json_ld_date():
     """
 
     soup = BeautifulSoup(html, "lxml")
-    metadata = service._extract_metadata(soup, {})
+    metadata = service._extract_metadata(soup, {}, [], [])
 
     assert metadata["date_published"] == "2024-01-20T12:00:00Z"
 
@@ -720,7 +720,7 @@ def test_extract_metadata_invalid_json_ld():
     """
 
     soup = BeautifulSoup(html, "lxml")
-    metadata = service._extract_metadata(soup, {})
+    metadata = service._extract_metadata(soup, {}, [], [])
 
     # Should return empty dict without crashing
     assert isinstance(metadata, dict)
@@ -741,7 +741,7 @@ def test_extract_metadata_date_meta_tag():
     """
 
     soup = BeautifulSoup(html, "lxml")
-    metadata = service._extract_metadata(soup, {})
+    metadata = service._extract_metadata(soup, {}, [], [])
 
     assert metadata["date_published"] == "2024-02-01"
 
@@ -798,3 +798,299 @@ async def test_extract_block_parsing_failure():
                 await service.extract("https://example.com")
 
             assert "block parsing failed" in exc_info.value.message.lower()
+
+
+@pytest.mark.unit
+async def test_news_article():
+    """Test news article extraction with headlines, byline, pull quotes, and captions."""
+    service = ExtractionService()
+
+    # Load news article fixture
+    NEWS_ARTICLE_HTML = (FIXTURES_DIR / "news_article.html").read_text()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        # Setup mock response with news article HTML
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.text = NEWS_ARTICLE_HTML
+        mock_response.headers = {"content-type": "text/html"}
+
+        mock_client_instance = AsyncMock()
+        mock_client_instance.get = AsyncMock(return_value=mock_response)
+        mock_client.return_value.__aenter__.return_value = mock_client_instance
+
+        result = await service.extract("https://example.com/news/article")
+
+        # Verify basic properties
+        assert result.url == "https://example.com/news/article"
+        assert result.title
+        assert result.author == "Sarah Johnson"
+        assert result.date_published == "2024-01-20T14:30:00Z"
+
+        # Verify article type is detected as news
+        assert result.metadata.get("article_type") == "news"
+
+        # Verify byline is extracted
+        assert "byline" in result.metadata
+        byline = result.metadata["byline"]
+        assert "Sarah Johnson" in byline
+
+        # Verify content blocks exist
+        assert len(result.content_blocks) > 0
+
+        # Verify headlines are extracted (H2 and H3, since H1 becomes title)
+        headings = [b for b in result.content_blocks if b.type == "heading"]
+        assert len(headings) > 0
+        # Check for H2 headings
+        h2_headings = [b for b in headings if b.metadata.get("level") == 2]
+        assert len(h2_headings) >= 2
+        # Check for specific section headings
+        heading_texts = [h.text for h in headings]
+        assert any("Discovery" in text for text in heading_texts)
+        assert any("Industry" in text for text in heading_texts)
+
+        # Verify images with captions are extracted
+        images = [b for b in result.content_blocks if b.type == "image"]
+        assert len(images) >= 2  # Should have at least 2 images
+        # Check for captions
+        images_with_captions = [b for b in images if b.metadata.get("caption")]
+        assert len(images_with_captions) >= 2
+        # Verify caption content
+        captions = [img.metadata.get("caption", "") for img in images_with_captions]
+        assert any(
+            "Lead researcher" in caption or "Dr. Emily Chen" in caption
+            for caption in captions
+        )
+        assert any(
+            "Diagram" in caption or "internal structure" in caption
+            for caption in captions
+        )
+
+        # Verify quotes exist
+        quotes = [b for b in result.content_blocks if b.type == "quote"]
+        assert len(quotes) >= 1
+
+        # Verify regular quotes exist (not pull quotes in content blocks)
+        # Pull quotes are extracted from original HTML, regular quotes from cleaned HTML
+        regular_quotes = [
+            b for b in quotes if not b.metadata.get("is_pull_quote", False)
+        ]
+        assert len(regular_quotes) >= 1
+        # Check content of regular quote
+        regular_quote_texts = [q.text for q in regular_quotes]
+        assert any("Dr. Michael Torres" in text for text in regular_quote_texts)
+
+        # Verify pull quotes are in metadata (extracted from original HTML)
+        assert "pull_quotes" in result.metadata
+        pull_quotes_list = result.metadata["pull_quotes"]
+        assert len(pull_quotes_list) >= 2
+        # Check content of pull quotes
+        assert any(
+            "change the entire renewable energy landscape" in pq
+            for pq in pull_quotes_list
+        )
+        assert any("future of energy production" in pq for pq in pull_quotes_list)
+
+        # Verify navigation and sidebar content is filtered out
+        # Check that navigation items are not in content
+        all_text = " ".join([b.text for b in result.content_blocks])
+        # Navigation links should not appear
+        assert "Trending Now" not in all_text
+        # The actual content should be present
+        assert "Scientists at the Advanced Research Institute" in all_text
+
+
+@pytest.mark.unit
+def test_is_navigation_or_sidebar():
+    """Test navigation and sidebar detection."""
+    service = ExtractionService()
+
+    # Test nav element
+    html = "<nav><p>Navigation</p></nav>"
+    soup = BeautifulSoup(html, "lxml")
+    nav_p = soup.find("p")
+    assert service._is_navigation_or_sidebar(nav_p) is True
+
+    # Test aside element
+    html = "<aside><p>Sidebar</p></aside>"
+    soup = BeautifulSoup(html, "lxml")
+    aside_p = soup.find("p")
+    assert service._is_navigation_or_sidebar(aside_p) is True
+
+    # Test element with navigation class
+    html = '<div class="site-navigation"><p>Nav</p></div>'
+    soup = BeautifulSoup(html, "lxml")
+    nav_div_p = soup.find("p")
+    assert service._is_navigation_or_sidebar(nav_div_p) is True
+
+    # Test element with sidebar class
+    html = '<div class="sidebar"><p>Side</p></div>'
+    soup = BeautifulSoup(html, "lxml")
+    sidebar_div_p = soup.find("p")
+    assert service._is_navigation_or_sidebar(sidebar_div_p) is True
+
+    # Test regular content
+    html = "<article><p>Content</p></article>"
+    soup = BeautifulSoup(html, "lxml")
+    article_p = soup.find("p")
+    assert service._is_navigation_or_sidebar(article_p) is False
+
+
+@pytest.mark.unit
+def test_is_pull_quote():
+    """Test pull quote detection."""
+    service = ExtractionService()
+
+    # Test blockquote with pullquote class
+    html = '<blockquote class="pullquote">Quote text</blockquote>'
+    soup = BeautifulSoup(html, "lxml")
+    blockquote = soup.find("blockquote")
+    assert service._is_pull_quote(blockquote) is True
+
+    # Test blockquote inside aside with pull quote class
+    html = '<aside class="pull-quote"><blockquote>Quote text</blockquote></aside>'
+    soup = BeautifulSoup(html, "lxml")
+    blockquote = soup.find("blockquote")
+    assert service._is_pull_quote(blockquote) is True
+
+    # Test regular blockquote
+    html = "<blockquote>Regular quote</blockquote>"
+    soup = BeautifulSoup(html, "lxml")
+    blockquote = soup.find("blockquote")
+    assert service._is_pull_quote(blockquote) is False
+
+
+@pytest.mark.unit
+def test_detect_article_type():
+    """Test article type detection."""
+    service = ExtractionService()
+
+    # Test NewsArticle in JSON-LD
+    html = """
+    <html>
+        <head>
+            <script type="application/ld+json">
+            {
+                "@type": "NewsArticle",
+                "headline": "Test"
+            }
+            </script>
+        </head>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    assert service._detect_article_type(soup) == "news"
+
+    # Test og:type article
+    html = """
+    <html>
+        <head>
+            <meta property="og:type" content="article">
+        </head>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    assert service._detect_article_type(soup) == "news"
+
+    # Test no article type
+    html = "<html><head></head></html>"
+    soup = BeautifulSoup(html, "lxml")
+    assert service._detect_article_type(soup) is None
+
+
+@pytest.mark.unit
+def test_extract_byline():
+    """Test byline extraction."""
+    service = ExtractionService()
+
+    # Test with byline class
+    html = '<p class="byline">By John Doe</p>'
+    soup = BeautifulSoup(html, "lxml")
+    byline = service._extract_byline(soup)
+    assert byline == "By John Doe"
+
+    # Test with author in paragraph containing "by"
+    html = '<article><p>By <span class="author">Jane Smith</span></p></article>'
+    soup = BeautifulSoup(html, "lxml")
+    byline = service._extract_byline(soup)
+    assert byline == "By Jane Smith"
+
+    # Test with no byline
+    html = "<html><body><p>Regular content</p></body></html>"
+    soup = BeautifulSoup(html, "lxml")
+    byline = service._extract_byline(soup)
+    assert byline is None
+
+
+@pytest.mark.unit
+def test_extract_pull_quotes_from_html():
+    """Test pull quote extraction from HTML."""
+    service = ExtractionService()
+
+    # Test with pull quote classes
+    html = """
+    <html>
+        <body>
+            <blockquote class="pullquote">First pull quote</blockquote>
+            <aside class="pull-quote"><blockquote>Second pull quote</blockquote></aside>
+            <blockquote>Regular quote</blockquote>
+        </body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    pull_quotes = service._extract_pull_quotes_from_html(soup)
+
+    assert len(pull_quotes) == 2
+    assert "First pull quote" in pull_quotes
+    assert "Second pull quote" in pull_quotes
+    assert "Regular quote" not in pull_quotes
+
+
+@pytest.mark.unit
+def test_parse_html_to_blocks_with_figure():
+    """Test parsing HTML figure with caption."""
+    service = ExtractionService()
+
+    html = """
+    <html><body>
+        <figure>
+            <img src="https://example.com/photo.jpg" alt="Photo alt text">
+            <figcaption>This is the caption text</figcaption>
+        </figure>
+    </body></html>
+    """
+
+    blocks = service._parse_html_to_blocks(html)
+
+    assert len(blocks) == 1
+    assert blocks[0].type == "image"
+    assert blocks[0].text == "This is the caption text"
+    assert blocks[0].metadata["src"] == "https://example.com/photo.jpg"
+    assert blocks[0].metadata["alt"] == "Photo alt text"
+    assert blocks[0].metadata["caption"] == "This is the caption text"
+
+
+@pytest.mark.unit
+def test_parse_html_to_blocks_filters_navigation():
+    """Test that navigation elements are filtered out."""
+    service = ExtractionService()
+
+    html = """
+    <html><body>
+        <nav>
+            <p>Navigation link</p>
+        </nav>
+        <aside class="sidebar">
+            <p>Sidebar content</p>
+        </aside>
+        <article>
+            <p>Main content</p>
+        </article>
+    </body></html>
+    """
+
+    blocks = service._parse_html_to_blocks(html)
+
+    # Only main content should be extracted
+    assert len(blocks) == 1
+    assert blocks[0].text == "Main content"

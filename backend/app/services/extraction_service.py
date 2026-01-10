@@ -176,10 +176,19 @@ class ExtractionService:
                 "blockquote",
                 "pre",
                 "img",
+                "figure",
             ]
         ):
             # Skip code elements that are inside pre elements
             if element.name == "code" and element.find_parent("pre"):
+                continue
+
+            # Skip img elements that are inside figure elements
+            if element.name == "img" and element.find_parent("figure"):
+                continue
+
+            # Skip navigation and sidebar elements
+            if self._is_navigation_or_sidebar(element):
                 continue
 
             block = self._element_to_block(element)
@@ -187,6 +196,91 @@ class ExtractionService:
                 blocks.append(block)
 
         return blocks
+
+    def _is_navigation_or_sidebar(self, element: Any) -> bool:
+        """Check if element is part of navigation or sidebar.
+
+        Args:
+            element: BeautifulSoup element
+
+        Returns:
+            True if element should be filtered out
+        """
+        # Check if element or any parent has navigation/sidebar indicators
+        current = element
+        while current:
+            # Check tag names
+            if current.name in ["nav", "aside"]:
+                return True
+
+            # Check class names
+            classes = current.get("class", [])
+            if isinstance(classes, list):
+                class_str = " ".join(classes).lower()
+                if any(
+                    keyword in class_str
+                    for keyword in [
+                        "nav",
+                        "navigation",
+                        "sidebar",
+                        "side-bar",
+                        "related",
+                        "trending",
+                        "menu",
+                    ]
+                ):
+                    return True
+
+            # Check id
+            element_id = current.get("id", "").lower()
+            if any(
+                keyword in element_id
+                for keyword in ["nav", "sidebar", "menu", "related", "trending"]
+            ):
+                return True
+
+            # Move to parent
+            current = current.parent
+            # Stop at body or html
+            if current and current.name in ["body", "html", "[document]"]:
+                break
+
+        return False
+
+    def _is_pull_quote(self, element: Any) -> bool:
+        """Check if a blockquote is a pull quote.
+
+        Pull quotes are typically styled differently and used for emphasis,
+        often wrapped in aside or having specific class names.
+
+        Args:
+            element: BeautifulSoup element (blockquote)
+
+        Returns:
+            True if element is a pull quote
+        """
+        # Check if blockquote has pull quote class
+        classes = element.get("class", [])
+        if isinstance(classes, list):
+            class_str = " ".join(classes).lower()
+            if any(
+                keyword in class_str for keyword in ["pull", "pullquote", "highlight"]
+            ):
+                return True
+
+        # Check if blockquote is inside an aside with pull quote indicators
+        parent = element.parent
+        if parent and parent.name == "aside":
+            parent_classes = parent.get("class", [])
+            if isinstance(parent_classes, list):
+                parent_class_str = " ".join(parent_classes).lower()
+                if any(
+                    keyword in parent_class_str
+                    for keyword in ["pull", "pullquote", "highlight"]
+                ):
+                    return True
+
+        return False
 
     def _element_to_block(self, element: Any) -> ContentBlock | None:
         """Convert HTML element to ContentBlock.
@@ -256,11 +350,15 @@ class ExtractionService:
             text = element.get_text(strip=True)
             if not text:
                 return None
+
+            # Determine if this is a pull quote
+            is_pull_quote = self._is_pull_quote(element)
+
             return ContentBlock(
                 id=block_id,
                 type="quote",
                 text=text,
-                metadata={},
+                metadata={"is_pull_quote": is_pull_quote},
             )
 
         # Code block (pre or code)
@@ -311,21 +409,184 @@ class ExtractionService:
                 },
             )
 
+        # Figure (with caption support)
+        elif element.name == "figure":
+            # Extract image from figure
+            img = element.find("img")
+            if not img or not img.get("src"):
+                return None
+
+            src = img.get("src", "")
+            alt = img.get("alt", "")
+
+            # Extract caption from figcaption
+            caption = ""
+            figcaption = element.find("figcaption")
+            if figcaption:
+                caption = figcaption.get_text(strip=True)
+
+            # Use caption as text if available, otherwise use alt text
+            text = caption if caption else alt
+
+            return ContentBlock(
+                id=block_id,
+                type="image",
+                text=text,
+                metadata={
+                    "src": src,
+                    "alt": alt,
+                    "caption": caption,
+                    "width": img.get("width"),
+                    "height": img.get("height"),
+                },
+            )
+
         return None
 
+    def _detect_article_type(self, soup: BeautifulSoup) -> str | None:
+        """Detect the type of article from HTML metadata.
+
+        Args:
+            soup: BeautifulSoup object
+
+        Returns:
+            Article type string or None
+        """
+        # Check JSON-LD for NewsArticle type
+        json_ld = soup.find("script", attrs={"type": "application/ld+json"})
+        if json_ld:
+            try:
+                data = json.loads(json_ld.string)
+                if isinstance(data, dict):
+                    article_type = data.get("@type", "")
+                    if article_type == "NewsArticle":
+                        return "news"
+            except Exception:
+                pass
+
+        # Check Open Graph type
+        og_type = soup.find("meta", attrs={"property": "og:type"})
+        if og_type:
+            content = og_type.get("content", "").lower()
+            if "article" in content:
+                return "news"
+
+        return None
+
+    def _extract_byline(self, soup: BeautifulSoup) -> str | None:
+        """Extract byline from HTML.
+
+        Args:
+            soup: BeautifulSoup object
+
+        Returns:
+            Byline text or None
+        """
+        # Look for common byline patterns
+        byline_elem = soup.find(class_=re.compile(r"byline", re.I))
+        if byline_elem:
+            text = byline_elem.get_text(strip=True)
+            return str(text) if text else None
+
+        # Look for author span/element in common locations
+        author_elem = soup.find(class_=re.compile(r"author", re.I))
+        if author_elem:
+            # Get parent context if it looks like a byline
+            parent = author_elem.parent
+            if parent and parent.name in ["p", "div", "span"]:
+                # Get text with some whitespace preserved to check for "by"
+                parent_text = parent.get_text(separator=" ", strip=True)
+                # Check if it contains "by" or similar patterns (case insensitive)
+                if re.search(r"\bby\b", str(parent_text), re.I):
+                    return str(parent_text) if parent_text else None
+
+        return None
+
+    def _extract_pull_quotes_from_html(self, soup: BeautifulSoup) -> list[str]:
+        """Extract pull quotes from original HTML.
+
+        Pull quotes are identified by:
+        - blockquote inside aside with pull-quote class
+        - blockquote with pullquote/pull-quote class
+
+        Args:
+            soup: BeautifulSoup object of original HTML
+
+        Returns:
+            List of pull quote texts
+        """
+        pull_quotes = []
+
+        # Find all blockquotes
+        for blockquote in soup.find_all("blockquote"):
+            # Check if blockquote has pull quote class
+            classes = blockquote.get("class", [])
+            if isinstance(classes, list):
+                class_str = " ".join(classes).lower()
+                if any(
+                    keyword in class_str
+                    for keyword in ["pull", "pullquote", "highlight"]
+                ):
+                    text = blockquote.get_text(strip=True)
+                    if text:
+                        pull_quotes.append(text)
+                    continue
+
+            # Check if blockquote is inside aside with pull quote indicators
+            parent = blockquote.parent
+            if parent and parent.name == "aside":
+                parent_classes = parent.get("class", [])
+                if isinstance(parent_classes, list):
+                    parent_class_str = " ".join(parent_classes).lower()
+                    if any(
+                        keyword in parent_class_str
+                        for keyword in ["pull", "pullquote", "highlight"]
+                    ):
+                        text = blockquote.get_text(strip=True)
+                        if text:
+                            pull_quotes.append(text)
+
+        return pull_quotes
+
+    def _extract_pull_quotes(self, content_blocks: list[ContentBlock]) -> list[str]:
+        """Extract pull quotes from content blocks.
+
+        Args:
+            content_blocks: List of ContentBlock objects
+
+        Returns:
+            List of pull quote texts
+        """
+        pull_quotes = []
+        for block in content_blocks:
+            if block.type == "quote" and block.metadata.get("is_pull_quote"):
+                pull_quotes.append(block.text)
+        return pull_quotes
+
     def _extract_metadata(
-        self, soup: BeautifulSoup, readability_data: dict[str, Any]
+        self,
+        soup: BeautifulSoup,
+        readability_data: dict[str, Any],
+        content_blocks: list[ContentBlock],
+        pull_quotes_from_html: list[str],
     ) -> dict[str, Any]:
         """Extract metadata from HTML.
 
         Args:
             soup: BeautifulSoup object
             readability_data: Data from Readability extraction
+            content_blocks: Parsed content blocks
+            pull_quotes_from_html: Pull quotes extracted from original HTML
 
         Returns:
             Dictionary of metadata
         """
         metadata: dict[str, Any] = {}
+
+        # Detect article type
+        article_type = self._detect_article_type(soup)
+        if article_type:
+            metadata["article_type"] = article_type
 
         # Try to find author
         author = None
@@ -352,6 +613,11 @@ class ExtractionService:
         if author:
             metadata["author"] = author
 
+        # Extract byline (for news articles)
+        byline = self._extract_byline(soup)
+        if byline:
+            metadata["byline"] = byline
+
         # Try to find publication date
         date_published = None
         # Look for common date meta tags
@@ -375,6 +641,13 @@ class ExtractionService:
 
         if date_published:
             metadata["date_published"] = date_published
+
+        # Combine pull quotes from original HTML and content blocks
+        pull_quotes_from_blocks = self._extract_pull_quotes(content_blocks)
+        all_pull_quotes = list(set(pull_quotes_from_html + pull_quotes_from_blocks))
+
+        if all_pull_quotes:
+            metadata["pull_quotes"] = all_pull_quotes
 
         return metadata
 
@@ -410,9 +683,11 @@ class ExtractionService:
                 url=url, reason=f"Readability extraction failed: {str(e)}"
             ) from e
 
-        # Parse original HTML for metadata
+        # Parse original HTML for metadata extraction and pull quotes
         soup = BeautifulSoup(html, "lxml")
-        metadata = self._extract_metadata(soup, readability_data)
+
+        # Extract pull quotes from original HTML (before Readability cleaning)
+        pull_quotes_from_html = self._extract_pull_quotes_from_html(soup)
 
         # Parse cleaned HTML into blocks
         try:
@@ -424,6 +699,11 @@ class ExtractionService:
 
         if not content_blocks:
             raise ExtractionError(url=url, reason="No content blocks extracted")
+
+        # Extract metadata (including pull quotes from both sources)
+        metadata = self._extract_metadata(
+            soup, readability_data, content_blocks, pull_quotes_from_html
+        )
 
         # Build result
         return ExtractedContent(
