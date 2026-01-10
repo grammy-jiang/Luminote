@@ -1,1 +1,3 @@
 coverage/
+# Demo routes for testing
+src/routes/demo/
