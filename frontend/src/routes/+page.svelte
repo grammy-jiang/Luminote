@@ -57,9 +57,8 @@
 					<kbd class="px-2 py-1 bg-indigo-200 rounded">→</kbd> to adjust in 5% increments.
 				</p>
 				<p class="text-indigo-800 text-sm">
-					Current split: <strong>{splitRatio.toFixed(0)}%</strong> / <strong
-						>{(100 - splitRatio).toFixed(0)}%</strong
-					>
+					Current split: <strong>{splitRatio.toFixed(0)}%</strong> /
+					<strong>{(100 - splitRatio).toFixed(0)}%</strong>
 				</p>
 			</div>
 
@@ -137,9 +136,8 @@
 					<kbd class="px-2 py-1 bg-indigo-200 rounded">→</kbd> 按5%增量调整。
 				</p>
 				<p class="text-indigo-800 text-sm">
-					当前分割：<strong>{splitRatio.toFixed(0)}%</strong> / <strong
-						>{(100 - splitRatio).toFixed(0)}%</strong
-					>
+					当前分割：<strong>{splitRatio.toFixed(0)}%</strong> /
+					<strong>{(100 - splitRatio).toFixed(0)}%</strong>
 				</p>
 			</div>
 
