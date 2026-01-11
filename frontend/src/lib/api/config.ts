@@ -6,7 +6,13 @@
  */
 
 import { apiClient } from '$lib/utils/api';
-import type { APIResponse, ConfigSaveRequest, ConfigResponse } from '$lib/types/api';
+import type {
+	APIResponse,
+	ConfigSaveRequest,
+	ConfigResponse,
+	ConfigValidationRequest,
+	ConfigValidationResponse
+} from '$lib/types/api';
 
 /**
  * Get a configuration value by key.
@@ -73,6 +79,29 @@ export async function getAllConfig(): Promise<APIResponse<Record<string, unknown
  */
 export async function deleteConfig(key: string): Promise<APIResponse<void>> {
 	return apiClient.delete<void>(`/api/v1/config/${key}`);
+}
+
+/**
+ * Validate API configuration.
+ *
+ * @param request - Configuration validation request
+ * @returns Promise resolving to validation result
+ * @throws {APIClientError} If validation fails or request fails
+ *
+ * @example
+ * ```typescript
+ * const result = await validateConfig({
+ *   provider: 'openai',
+ *   model: 'gpt-4',
+ *   api_key: 'sk-...'
+ * });
+ * console.log(result.data.valid); // true/false
+ * ```
+ */
+export async function validateConfig(
+	request: ConfigValidationRequest
+): Promise<APIResponse<ConfigValidationResponse>> {
+	return apiClient.post<ConfigValidationResponse>('/api/v1/config/validate', request);
 }
 
 /**
