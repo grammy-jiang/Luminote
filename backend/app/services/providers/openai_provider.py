@@ -4,7 +4,9 @@ import httpx
 
 from app.core.errors import (
     APIKeyError,
+    InsufficientPermissionsError,
     ProviderTimeoutError,
+    QuotaExceededError,
     RateLimitError,
     TranslationError,
 )
@@ -98,17 +100,56 @@ class OpenAIProvider(BaseProvider):
                 raise APIKeyError(
                     provider="openai", reason="Invalid or expired API key"
                 ) from e
-            elif status_code == 429:
-                # Try to extract retry-after from response
-                retry_after = 60  # Default
+            elif status_code == 402:
+                # Payment required - quota exceeded
                 try:
                     error_data = e.response.json()
-                    if "error" in error_data and "message" in error_data["error"]:
-                        # OpenAI sometimes includes retry info in message; currently unused.
-                        # TODO: Parse retry-after seconds from this message when format is stable.
-                        pass
+                    error_msg = error_data.get("error", {}).get(
+                        "message", "API quota exceeded"
+                    )
                 except Exception:
-                    # Failed to parse error response; ignore and use default retry_after
+                    error_msg = "API quota exceeded"
+                raise QuotaExceededError(provider="openai", reason=error_msg) from e
+            elif status_code == 403:
+                # Forbidden - insufficient permissions
+                try:
+                    error_data = e.response.json()
+                    error_msg = error_data.get("error", {}).get(
+                        "message", "Insufficient permissions"
+                    )
+                except Exception:
+                    error_msg = "Insufficient permissions"
+                raise InsufficientPermissionsError(
+                    provider="openai", reason=error_msg
+                ) from e
+            elif status_code == 429:
+                # Try to extract retry-after from response headers first
+                retry_after = 60  # Default
+                if "retry-after" in e.response.headers:
+                    try:
+                        retry_after = int(e.response.headers["retry-after"])
+                    except (ValueError, TypeError):
+                        pass
+                # Also check for rate_limit_exceeded error type which may include quota info
+                try:
+                    error_data = e.response.json()
+                    error_type = error_data.get("error", {}).get("type", "")
+                    # Check if this is a quota issue vs rate limit
+                    if (
+                        "insufficient_quota" in error_type
+                        or "quota"
+                        in error_data.get("error", {}).get("message", "").lower()
+                    ):
+                        raise QuotaExceededError(
+                            provider="openai",
+                            reason=error_data.get("error", {}).get(
+                                "message", "API quota exceeded"
+                            ),
+                        ) from e
+                except QuotaExceededError:
+                    raise
+                except Exception:
+                    # Failed to parse error response; treat as rate limit
                     pass
                 raise RateLimitError(retry_after=retry_after, provider="openai") from e
             elif status_code >= 500:
@@ -240,17 +281,56 @@ class OpenAIProvider(BaseProvider):
                 raise APIKeyError(
                     provider="openai", reason="Invalid or expired API key"
                 ) from e
-            elif status_code == 429:
-                # Try to extract retry-after from response
-                retry_after = 60  # Default
+            elif status_code == 402:
+                # Payment required - quota exceeded
                 try:
                     error_data = e.response.json()
-                    if "error" in error_data and "message" in error_data["error"]:
-                        # OpenAI sometimes includes retry info in message; currently unused.
-                        # TODO: Parse retry-after seconds from this message when format is stable.
-                        pass
+                    error_msg = error_data.get("error", {}).get(
+                        "message", "API quota exceeded"
+                    )
                 except Exception:
-                    # Failed to parse error response; ignore and use default retry_after
+                    error_msg = "API quota exceeded"
+                raise QuotaExceededError(provider="openai", reason=error_msg) from e
+            elif status_code == 403:
+                # Forbidden - insufficient permissions
+                try:
+                    error_data = e.response.json()
+                    error_msg = error_data.get("error", {}).get(
+                        "message", "Insufficient permissions"
+                    )
+                except Exception:
+                    error_msg = "Insufficient permissions"
+                raise InsufficientPermissionsError(
+                    provider="openai", reason=error_msg
+                ) from e
+            elif status_code == 429:
+                # Try to extract retry-after from response headers first
+                retry_after = 60  # Default
+                if "retry-after" in e.response.headers:
+                    try:
+                        retry_after = int(e.response.headers["retry-after"])
+                    except (ValueError, TypeError):
+                        pass
+                # Also check for rate_limit_exceeded error type which may include quota info
+                try:
+                    error_data = e.response.json()
+                    error_type = error_data.get("error", {}).get("type", "")
+                    # Check if this is a quota issue vs rate limit
+                    if (
+                        "insufficient_quota" in error_type
+                        or "quota"
+                        in error_data.get("error", {}).get("message", "").lower()
+                    ):
+                        raise QuotaExceededError(
+                            provider="openai",
+                            reason=error_data.get("error", {}).get(
+                                "message", "API quota exceeded"
+                            ),
+                        ) from e
+                except QuotaExceededError:
+                    raise
+                except Exception:
+                    # Failed to parse error response; treat as rate limit
                     pass
                 raise RateLimitError(retry_after=retry_after, provider="openai") from e
             elif status_code >= 500:

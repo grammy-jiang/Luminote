@@ -4,7 +4,9 @@ import httpx
 
 from app.core.errors import (
     APIKeyError,
+    InsufficientPermissionsError,
     ProviderTimeoutError,
+    QuotaExceededError,
     RateLimitError,
     TranslationError,
 )
@@ -103,6 +105,28 @@ class AnthropicProvider(BaseProvider):
                 raise APIKeyError(
                     provider="anthropic", reason="Invalid or expired API key"
                 ) from e
+            elif status_code == 402:
+                # Payment required - quota exceeded
+                try:
+                    error_data = e.response.json()
+                    error_msg = error_data.get("error", {}).get(
+                        "message", "API quota exceeded"
+                    )
+                except Exception:
+                    error_msg = "API quota exceeded"
+                raise QuotaExceededError(provider="anthropic", reason=error_msg) from e
+            elif status_code == 403:
+                # Forbidden - insufficient permissions
+                try:
+                    error_data = e.response.json()
+                    error_msg = error_data.get("error", {}).get(
+                        "message", "Insufficient permissions"
+                    )
+                except Exception:
+                    error_msg = "Insufficient permissions"
+                raise InsufficientPermissionsError(
+                    provider="anthropic", reason=error_msg
+                ) from e
             elif status_code == 429:
                 # Try to extract retry-after from response headers
                 retry_after = 60  # Default
@@ -112,6 +136,26 @@ class AnthropicProvider(BaseProvider):
                     except (ValueError, TypeError):
                         # Ignore invalid Retry-After header values and keep the default
                         pass
+                # Check if this is a quota issue vs rate limit
+                try:
+                    error_data = e.response.json()
+                    error_type = error_data.get("error", {}).get("type", "")
+                    if (
+                        "insufficient_quota" in error_type
+                        or "quota"
+                        in error_data.get("error", {}).get("message", "").lower()
+                    ):
+                        raise QuotaExceededError(
+                            provider="anthropic",
+                            reason=error_data.get("error", {}).get(
+                                "message", "API quota exceeded"
+                            ),
+                        ) from e
+                except QuotaExceededError:
+                    raise
+                except Exception:
+                    # Failed to parse error response; treat as rate limit
+                    pass
                 raise RateLimitError(
                     retry_after=retry_after, provider="anthropic"
                 ) from e
@@ -245,6 +289,28 @@ class AnthropicProvider(BaseProvider):
                 raise APIKeyError(
                     provider="anthropic", reason="Invalid or expired API key"
                 ) from e
+            elif status_code == 402:
+                # Payment required - quota exceeded
+                try:
+                    error_data = e.response.json()
+                    error_msg = error_data.get("error", {}).get(
+                        "message", "API quota exceeded"
+                    )
+                except Exception:
+                    error_msg = "API quota exceeded"
+                raise QuotaExceededError(provider="anthropic", reason=error_msg) from e
+            elif status_code == 403:
+                # Forbidden - insufficient permissions
+                try:
+                    error_data = e.response.json()
+                    error_msg = error_data.get("error", {}).get(
+                        "message", "Insufficient permissions"
+                    )
+                except Exception:
+                    error_msg = "Insufficient permissions"
+                raise InsufficientPermissionsError(
+                    provider="anthropic", reason=error_msg
+                ) from e
             elif status_code == 429:
                 # Try to extract retry-after from response headers
                 retry_after = 60  # Default
@@ -254,6 +320,26 @@ class AnthropicProvider(BaseProvider):
                     except (ValueError, TypeError):
                         # Ignore invalid Retry-After header values and keep the default
                         pass
+                # Check if this is a quota issue vs rate limit
+                try:
+                    error_data = e.response.json()
+                    error_type = error_data.get("error", {}).get("type", "")
+                    if (
+                        "insufficient_quota" in error_type
+                        or "quota"
+                        in error_data.get("error", {}).get("message", "").lower()
+                    ):
+                        raise QuotaExceededError(
+                            provider="anthropic",
+                            reason=error_data.get("error", {}).get(
+                                "message", "API quota exceeded"
+                            ),
+                        ) from e
+                except QuotaExceededError:
+                    raise
+                except Exception:
+                    # Failed to parse error response; treat as rate limit
+                    pass
                 raise RateLimitError(
                     retry_after=retry_after, provider="anthropic"
                 ) from e

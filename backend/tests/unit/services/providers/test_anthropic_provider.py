@@ -8,7 +8,9 @@ import pytest
 
 from app.core.errors import (
     APIKeyError,
+    InsufficientPermissionsError,
     ProviderTimeoutError,
+    QuotaExceededError,
     RateLimitError,
     TranslationError,
 )
@@ -296,6 +298,519 @@ async def test_anthropic_translate_unexpected_response_format():
         assert exc_info.value.code == "TRANSLATION_ERROR"
         assert "format" in exc_info.value.message.lower()
         assert "response format" in exc_info.value.message.lower()
+
+
+@pytest.mark.unit
+async def test_anthropic_translate_402_quota_exceeded():
+    """Test handling of 402 payment required / quota exceeded error."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_post = AsyncMock()
+        mock_request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        mock_response = httpx.Response(
+            status_code=402,
+            json={"error": {"message": "You have exceeded your quota"}},
+            request=mock_request,
+        )
+        mock_post.side_effect = httpx.HTTPStatusError(
+            message="Payment Required",
+            request=mock_request,
+            response=mock_response,
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(QuotaExceededError) as exc_info:
+            await provider.translate(
+                text="Hello",
+                target_language="es",
+                model="claude-3-5-sonnet-20241022",
+                api_key="sk-ant-test",
+            )
+
+        assert exc_info.value.code == "QUOTA_EXCEEDED"
+        assert exc_info.value.status_code == 402
+        assert "anthropic" in exc_info.value.message.lower()
+
+
+@pytest.mark.unit
+async def test_anthropic_translate_403_forbidden():
+    """Test handling of 403 forbidden / insufficient permissions error."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_post = AsyncMock()
+        mock_request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        mock_response = httpx.Response(
+            status_code=403,
+            json={"error": {"message": "Insufficient permissions"}},
+            request=mock_request,
+        )
+        mock_post.side_effect = httpx.HTTPStatusError(
+            message="Forbidden",
+            request=mock_request,
+            response=mock_response,
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(InsufficientPermissionsError) as exc_info:
+            await provider.translate(
+                text="Hello",
+                target_language="es",
+                model="claude-3-5-sonnet-20241022",
+                api_key="sk-ant-test",
+            )
+
+        assert exc_info.value.code == "INSUFFICIENT_PERMISSIONS"
+        assert exc_info.value.status_code == 403
+        assert "anthropic" in exc_info.value.message.lower()
+
+
+@pytest.mark.unit
+async def test_anthropic_translate_429_quota_in_message():
+    """Test 429 with quota message is treated as QuotaExceededError."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_post = AsyncMock()
+        mock_request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        mock_response = httpx.Response(
+            status_code=429,
+            json={
+                "error": {
+                    "type": "insufficient_quota",
+                    "message": "You have insufficient quota for this request",
+                }
+            },
+            request=mock_request,
+        )
+        mock_post.side_effect = httpx.HTTPStatusError(
+            message="Too Many Requests",
+            request=mock_request,
+            response=mock_response,
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(QuotaExceededError) as exc_info:
+            await provider.translate(
+                text="Hello",
+                target_language="es",
+                model="claude-3-5-sonnet-20241022",
+                api_key="sk-ant-test",
+            )
+
+        assert exc_info.value.code == "QUOTA_EXCEEDED"
+        assert "insufficient quota" in exc_info.value.message.lower()
+
+
+# Tests for validate() method error handling
+
+
+@pytest.mark.unit
+async def test_anthropic_validate_success():
+    """Test successful API key validation."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_post = AsyncMock()
+        mock_request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        mock_response = httpx.Response(
+            status_code=200,
+            json={
+                "content": [{"type": "text", "text": "Hello"}],
+                "usage": {"input_tokens": 2, "output_tokens": 1},
+            },
+            request=mock_request,
+        )
+        mock_post.return_value = mock_response
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        result = await provider.validate(
+            model="claude-3-5-sonnet-20241022", api_key="sk-ant-test-key"
+        )
+
+        assert result.valid is True
+        assert result.provider == "anthropic"
+        assert result.model == "claude-3-5-sonnet-20241022"
+        assert result.capabilities.streaming is True
+        assert result.capabilities.max_tokens == 200000
+
+
+@pytest.mark.unit
+async def test_anthropic_validate_invalid_api_key_format():
+    """Test that invalid API key format raises APIKeyError during validation."""
+    provider = AnthropicProvider()
+
+    with pytest.raises(APIKeyError) as exc_info:
+        await provider.validate(
+            model="claude-3-5-sonnet-20241022", api_key="invalid-key"
+        )
+
+    assert exc_info.value.code == "API_KEY_ERROR"
+    assert "anthropic" in exc_info.value.message.lower()
+
+
+@pytest.mark.unit
+async def test_anthropic_validate_401_error():
+    """Test handling of 401 authentication error during validation."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_post = AsyncMock()
+        mock_post.side_effect = httpx.HTTPStatusError(
+            message="Unauthorized",
+            request=httpx.Request("POST", "https://api.anthropic.com/v1/messages"),
+            response=httpx.Response(
+                status_code=401, json={"error": {"message": "Invalid API key"}}
+            ),
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(APIKeyError) as exc_info:
+            await provider.validate(
+                model="claude-3-5-sonnet-20241022", api_key="sk-ant-invalid"
+            )
+
+        assert exc_info.value.code == "API_KEY_ERROR"
+        assert "anthropic" in exc_info.value.message.lower()
+
+
+@pytest.mark.unit
+async def test_anthropic_validate_402_quota_exceeded():
+    """Test handling of 402 quota exceeded error during validation."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_post = AsyncMock()
+        mock_request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        mock_response = httpx.Response(
+            status_code=402,
+            json={"error": {"message": "You have exceeded your quota"}},
+            request=mock_request,
+        )
+        mock_post.side_effect = httpx.HTTPStatusError(
+            message="Payment Required",
+            request=mock_request,
+            response=mock_response,
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(QuotaExceededError) as exc_info:
+            await provider.validate(
+                model="claude-3-5-sonnet-20241022", api_key="sk-ant-test"
+            )
+
+        assert exc_info.value.code == "QUOTA_EXCEEDED"
+        assert exc_info.value.status_code == 402
+
+
+@pytest.mark.unit
+async def test_anthropic_validate_403_forbidden():
+    """Test handling of 403 forbidden error during validation."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_post = AsyncMock()
+        mock_request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        mock_response = httpx.Response(
+            status_code=403,
+            json={"error": {"message": "Insufficient permissions"}},
+            request=mock_request,
+        )
+        mock_post.side_effect = httpx.HTTPStatusError(
+            message="Forbidden",
+            request=mock_request,
+            response=mock_response,
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(InsufficientPermissionsError) as exc_info:
+            await provider.validate(
+                model="claude-3-5-sonnet-20241022", api_key="sk-ant-test"
+            )
+
+        assert exc_info.value.code == "INSUFFICIENT_PERMISSIONS"
+        assert exc_info.value.status_code == 403
+
+
+@pytest.mark.unit
+async def test_anthropic_validate_429_rate_limit():
+    """Test handling of 429 rate limit error during validation."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_post = AsyncMock()
+        mock_request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        mock_response = httpx.Response(
+            status_code=429,
+            headers={"retry-after": "75"},
+            json={"error": {"message": "Rate limit exceeded"}},
+            request=mock_request,
+        )
+        mock_post.side_effect = httpx.HTTPStatusError(
+            message="Too Many Requests",
+            request=mock_request,
+            response=mock_response,
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(RateLimitError) as exc_info:
+            await provider.validate(
+                model="claude-3-5-sonnet-20241022", api_key="sk-ant-test"
+            )
+
+        assert exc_info.value.code == "RATE_LIMIT_EXCEEDED"
+        assert exc_info.value.details["retry_after"] == 75
+
+
+@pytest.mark.unit
+async def test_anthropic_validate_timeout():
+    """Test handling of timeout error during validation."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_post = AsyncMock()
+        mock_post.side_effect = httpx.TimeoutException("Request timed out")
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(ProviderTimeoutError) as exc_info:
+            await provider.validate(
+                model="claude-3-5-sonnet-20241022", api_key="sk-ant-test"
+            )
+
+        assert exc_info.value.code == "PROVIDER_TIMEOUT"
+        assert exc_info.value.status_code == 504
+
+
+@pytest.mark.unit
+async def test_anthropic_validate_402_json_parse_failure():
+    """Test validate 402 error with JSON parse failure."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        from unittest.mock import Mock
+
+        mock_post = AsyncMock()
+        mock_request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        mock_response = Mock(spec=httpx.Response)
+        mock_response.status_code = 402
+        mock_response.request = mock_request
+        # Mock json() to raise exception
+        mock_response.json.side_effect = Exception("JSON parse error")
+
+        mock_post.side_effect = httpx.HTTPStatusError(
+            message="Payment Required",
+            request=mock_request,
+            response=mock_response,
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(QuotaExceededError) as exc_info:
+            await provider.validate(
+                model="claude-3-5-sonnet-20241022", api_key="sk-ant-test"
+            )
+
+        assert exc_info.value.code == "QUOTA_EXCEEDED"
+
+
+@pytest.mark.unit
+async def test_anthropic_validate_403_json_parse_failure():
+    """Test validate 403 error with JSON parse failure."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        from unittest.mock import Mock
+
+        mock_post = AsyncMock()
+        mock_request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        mock_response = Mock(spec=httpx.Response)
+        mock_response.status_code = 403
+        mock_response.request = mock_request
+        # Mock json() to raise exception
+        mock_response.json.side_effect = Exception("JSON parse error")
+
+        mock_post.side_effect = httpx.HTTPStatusError(
+            message="Forbidden",
+            request=mock_request,
+            response=mock_response,
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(InsufficientPermissionsError) as exc_info:
+            await provider.validate(
+                model="claude-3-5-sonnet-20241022", api_key="sk-ant-test"
+            )
+
+        assert exc_info.value.code == "INSUFFICIENT_PERMISSIONS"
+
+
+@pytest.mark.unit
+async def test_anthropic_validate_429_invalid_retry_after():
+    """Test validate 429 with invalid retry-after header."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_post = AsyncMock()
+        mock_request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        mock_response = httpx.Response(
+            status_code=429,
+            headers={"retry-after": "invalid-value"},
+            json={"error": {"message": "Rate limit exceeded"}},
+            request=mock_request,
+        )
+        mock_post.side_effect = httpx.HTTPStatusError(
+            message="Too Many Requests",
+            request=mock_request,
+            response=mock_response,
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(RateLimitError) as exc_info:
+            await provider.validate(
+                model="claude-3-5-sonnet-20241022", api_key="sk-ant-test"
+            )
+
+        assert exc_info.value.code == "RATE_LIMIT_EXCEEDED"
+        assert exc_info.value.details["retry_after"] == 60  # Default
+
+
+@pytest.mark.unit
+async def test_anthropic_translate_402_json_parse_failure():
+    """Test 402 error with JSON parse failure."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        from unittest.mock import Mock
+
+        mock_post = AsyncMock()
+        mock_request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        mock_response = Mock(spec=httpx.Response)
+        mock_response.status_code = 402
+        mock_response.request = mock_request
+        # Mock json() to raise exception
+        mock_response.json.side_effect = Exception("JSON parse error")
+
+        mock_post.side_effect = httpx.HTTPStatusError(
+            message="Payment Required",
+            request=mock_request,
+            response=mock_response,
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(QuotaExceededError) as exc_info:
+            await provider.translate(
+                text="Hello",
+                target_language="es",
+                model="claude-3-5-sonnet-20241022",
+                api_key="sk-ant-test",
+            )
+
+        assert exc_info.value.code == "QUOTA_EXCEEDED"
+        assert "API quota exceeded" in exc_info.value.message
+
+
+@pytest.mark.unit
+async def test_anthropic_translate_403_json_parse_failure():
+    """Test 403 error with JSON parse failure."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        from unittest.mock import Mock
+
+        mock_post = AsyncMock()
+        mock_request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        mock_response = Mock(spec=httpx.Response)
+        mock_response.status_code = 403
+        mock_response.request = mock_request
+        # Mock json() to raise exception
+        mock_response.json.side_effect = Exception("JSON parse error")
+
+        mock_post.side_effect = httpx.HTTPStatusError(
+            message="Forbidden",
+            request=mock_request,
+            response=mock_response,
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(InsufficientPermissionsError) as exc_info:
+            await provider.translate(
+                text="Hello",
+                target_language="es",
+                model="claude-3-5-sonnet-20241022",
+                api_key="sk-ant-test",
+            )
+
+        assert exc_info.value.code == "INSUFFICIENT_PERMISSIONS"
+        assert "Insufficient permissions" in exc_info.value.message
+
+
+@pytest.mark.unit
+async def test_anthropic_translate_429_invalid_retry_after_header():
+    """Test 429 with invalid retry-after header value."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_post = AsyncMock()
+        mock_request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        mock_response = httpx.Response(
+            status_code=429,
+            headers={"retry-after": "not-a-number"},  # Invalid integer
+            json={"error": {"message": "Rate limit exceeded"}},
+            request=mock_request,
+        )
+        mock_post.side_effect = httpx.HTTPStatusError(
+            message="Too Many Requests",
+            request=mock_request,
+            response=mock_response,
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(RateLimitError) as exc_info:
+            await provider.translate(
+                text="Hello",
+                target_language="es",
+                model="claude-3-5-sonnet-20241022",
+                api_key="sk-ant-test",
+            )
+
+        assert exc_info.value.code == "RATE_LIMIT_EXCEEDED"
+        # Should fall back to default 60 seconds
+        assert exc_info.value.details["retry_after"] == 60
+
+
+@pytest.mark.unit
+async def test_anthropic_translate_429_json_parse_error():
+    """Test 429 with JSON parse error falls back to rate limit."""
+    provider = AnthropicProvider()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        from unittest.mock import Mock
+
+        mock_post = AsyncMock()
+        mock_request = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+        mock_response = Mock(spec=httpx.Response)
+        mock_response.status_code = 429
+        mock_response.request = mock_request
+        mock_response.headers = {}
+        # Mock json() to raise exception
+        mock_response.json.side_effect = Exception("JSON parse error")
+
+        mock_post.side_effect = httpx.HTTPStatusError(
+            message="Too Many Requests",
+            request=mock_request,
+            response=mock_response,
+        )
+        mock_client.return_value.__aenter__.return_value.post = mock_post
+
+        with pytest.raises(RateLimitError) as exc_info:
+            await provider.translate(
+                text="Hello",
+                target_language="es",
+                model="claude-3-5-sonnet-20241022",
+                api_key="sk-ant-test",
+            )
+
+        assert exc_info.value.code == "RATE_LIMIT_EXCEEDED"
 
 
 @pytest.mark.integration
