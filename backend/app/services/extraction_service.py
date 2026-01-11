@@ -147,6 +147,10 @@ class ExtractionService:
                     status_code=502,
                 ) from e
         except httpx.ConnectError as e:
+            # NOTE: ConnectError must be caught before NetworkError because ConnectError
+            # is a subclass of NetworkError in httpx. This ordering ensures we can provide
+            # more specific error messages for connection failures (host unreachable,
+            # connection refused) vs. other network issues (DNS failures, network timeouts).
             raise URLFetchError(
                 url=url,
                 reason="Unable to connect - the host may be unreachable or the connection was refused",
