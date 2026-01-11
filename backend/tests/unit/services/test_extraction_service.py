@@ -1,5 +1,6 @@
 """Tests for ExtractionService."""
 
+import re
 from pathlib import Path
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -8,6 +9,7 @@ import pytest
 from bs4 import BeautifulSoup
 
 from app.core.errors import ExtractionError, InvalidURLError, URLFetchError
+from app.schemas.extraction import ContentBlock
 from app.services.extraction_service import ExtractionService
 
 # Load sample HTML fixture
@@ -1349,3 +1351,455 @@ def test_extract_tags():
     assert "web" in tags
     # Either "Django" or "django" should be present (first occurrence wins)
     assert any(tag.lower() == "django" for tag in tags)
+
+
+@pytest.mark.unit
+async def test_technical_doc():
+    """Test technical documentation extraction with special features."""
+    service = ExtractionService()
+
+    # Load technical doc fixture
+    TECHNICAL_DOC_HTML = (FIXTURES_DIR / "technical_doc.html").read_text()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        # Setup mock response with technical doc HTML
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.text = TECHNICAL_DOC_HTML
+        mock_response.headers = {"content-type": "text/html"}
+
+        mock_client_instance = AsyncMock()
+        mock_client_instance.get = AsyncMock(return_value=mock_response)
+        mock_client.return_value.__aenter__.return_value = mock_client_instance
+
+        result = await service.extract("https://example.com/docs/fastapi-guide")
+
+        # Verify basic properties
+        assert result.url == "https://example.com/docs/fastapi-guide"
+        assert result.title
+        assert "FastAPI" in result.title
+
+        # Verify article type is detected as technical
+        assert result.metadata.get("article_type") == "technical"
+
+        # Verify code languages are extracted
+        assert "code_languages" in result.metadata
+        code_languages = result.metadata["code_languages"]
+        assert isinstance(code_languages, list)
+        assert "python" in code_languages
+        assert "bash" in code_languages
+        # May also have json, typescript depending on extraction
+
+        # Verify heading structure is preserved
+        assert "heading_structure" in result.metadata
+        heading_structure = result.metadata["heading_structure"]
+        assert heading_structure["type"] == "root"
+        assert "children" in heading_structure
+        assert len(heading_structure["children"]) > 0
+
+        # Verify nested headings (Getting Started -> Installation)
+        root_children = heading_structure["children"]
+        assert len(root_children) == 1  # Should have H1 as root
+
+        h1 = root_children[0]
+        assert h1["level"] == 1
+        assert "FastAPI" in h1["text"]
+
+        # Find Getting Started section (should be H2 under H1)
+        getting_started = None
+        for child in h1["children"]:
+            if "Getting Started" in child.get("text", ""):
+                getting_started = child
+                break
+        assert getting_started is not None
+        assert getting_started["level"] == 2
+        assert len(getting_started.get("children", [])) > 0
+
+        # Verify nested H3s under Getting Started
+        installation = None
+        for child in getting_started["children"]:
+            if "Installation" in child.get("text", ""):
+                installation = child
+                break
+        assert installation is not None
+        assert installation["level"] == 3
+
+        # Verify reference links are extracted
+        assert "reference_links" in result.metadata
+        reference_links = result.metadata["reference_links"]
+        assert isinstance(reference_links, list)
+        assert len(reference_links) > 0
+        # Check for specific reference links
+        reference_texts = [link["text"] for link in reference_links]
+        assert any("FastAPI" in text for text in reference_texts)
+
+        # Verify API documentation is detected
+        assert result.metadata.get("is_api_documentation") is True
+
+        # Verify content blocks exist
+        assert len(result.content_blocks) > 0
+
+        # Verify headings with proper hierarchy
+        headings = [b for b in result.content_blocks if b.type == "heading"]
+        assert len(headings) >= 8  # Multiple heading levels
+
+        # Check for specific headings at different levels
+        h2_headings = [b for b in headings if b.metadata.get("level") == 2]
+        assert len(h2_headings) >= 4  # Getting Started, Core Concepts, etc.
+
+        h3_headings = [b for b in headings if b.metadata.get("level") == 3]
+        assert len(h3_headings) >= 6  # Installation, First Application, etc.
+
+        h4_headings = [b for b in headings if b.metadata.get("level") == 4]
+        assert len(h4_headings) >= 2  # GET /users, POST /users
+
+        # Verify code blocks are preserved with language info
+        code_blocks = [b for b in result.content_blocks if b.type == "code"]
+        assert len(code_blocks) >= 8  # Multiple code examples
+
+        # Check that languages are detected
+        code_with_lang = [
+            b for b in code_blocks if b.metadata.get("language") is not None
+        ]
+        assert len(code_with_lang) >= 6
+
+        # Check for specific languages
+        python_blocks = [
+            b for b in code_blocks if b.metadata.get("language") == "python"
+        ]
+        assert len(python_blocks) >= 5
+
+        bash_blocks = [b for b in code_blocks if b.metadata.get("language") == "bash"]
+        assert len(bash_blocks) >= 2
+
+        # Verify line numbers are removed from code
+        for code_block in code_blocks:
+            # Code should not contain patterns like "1. " at start of lines
+            lines = code_block.text.split("\n")
+            for line in lines:
+                # Allow empty lines and lines with content, but not "1. pip install"
+                if line.strip():
+                    assert not re.match(
+                        r"^\s*\d+[.:]\s", line
+                    ), f"Line number found in code: {line}"
+
+        # Verify tabbed content is handled
+        # Should have code from both Python and TypeScript tabs
+        all_code_text = " ".join([b.text for b in code_blocks])
+        # Python example from tab
+        assert "async def read_user" in all_code_text
+        # TypeScript example from tab
+        assert "req.params.userId" in all_code_text or "typescript" in code_languages
+
+        # Verify lists are extracted
+        lists = [b for b in result.content_blocks if b.type == "list"]
+        assert len(lists) >= 2  # At least 2 lists in the doc
+
+        # Verify API endpoint structure is captured in headings
+        heading_texts = [h.text for h in headings]
+        assert any("GET /users" in text for text in heading_texts)
+        assert any("POST /users" in text for text in heading_texts)
+
+
+@pytest.mark.unit
+def test_remove_line_numbers():
+    """Test line number removal from code blocks."""
+    service = ExtractionService()
+
+    # Test with numbered lines (period separator)
+    code_with_numbers = """1. pip install fastapi
+2. pip install uvicorn"""
+    cleaned = service._remove_line_numbers(code_with_numbers)
+    assert (
+        cleaned
+        == """pip install fastapi
+pip install uvicorn"""
+    )
+
+    # Test with numbered lines (colon separator)
+    code_with_colons = """1: import fastapi
+2: from fastapi import FastAPI"""
+    cleaned = service._remove_line_numbers(code_with_colons)
+    assert (
+        cleaned
+        == """import fastapi
+from fastapi import FastAPI"""
+    )
+
+    # Test with indented line numbers
+    code_indented = """  1. def hello():
+  2.     return "world" """
+    cleaned = service._remove_line_numbers(code_indented)
+    assert (
+        cleaned
+        == """def hello():
+    return "world" """
+    )
+
+    # Test code without line numbers (should remain unchanged)
+    code_no_numbers = """def test():
+    pass"""
+    cleaned = service._remove_line_numbers(code_no_numbers)
+    assert cleaned == code_no_numbers
+
+
+@pytest.mark.unit
+def test_build_heading_structure():
+    """Test heading structure building for technical docs."""
+    service = ExtractionService()
+
+    # Create sample content blocks with headings
+    blocks = [
+        ContentBlock(
+            id="h1",
+            type="heading",
+            text="Introduction",
+            metadata={"level": 1},
+        ),
+        ContentBlock(
+            id="p1",
+            type="paragraph",
+            text="Some content",
+            metadata={},
+        ),
+        ContentBlock(
+            id="h2",
+            type="heading",
+            text="Getting Started",
+            metadata={"level": 2},
+        ),
+        ContentBlock(
+            id="h3-1",
+            type="heading",
+            text="Installation",
+            metadata={"level": 3},
+        ),
+        ContentBlock(
+            id="h3-2",
+            type="heading",
+            text="Configuration",
+            metadata={"level": 3},
+        ),
+        ContentBlock(
+            id="h2-2",
+            type="heading",
+            text="Advanced Topics",
+            metadata={"level": 2},
+        ),
+    ]
+
+    structure = service._build_heading_structure(blocks)
+
+    # Verify root structure
+    assert structure["type"] == "root"
+    assert len(structure["children"]) == 1  # Only H1
+
+    # Verify H1
+    h1 = structure["children"][0]
+    assert h1["text"] == "Introduction"
+    assert h1["level"] == 1
+    assert len(h1["children"]) == 2  # Two H2s
+
+    # Verify first H2
+    h2_1 = h1["children"][0]
+    assert h2_1["text"] == "Getting Started"
+    assert h2_1["level"] == 2
+    assert len(h2_1["children"]) == 2  # Two H3s
+
+    # Verify H3s
+    assert h2_1["children"][0]["text"] == "Installation"
+    assert h2_1["children"][1]["text"] == "Configuration"
+
+    # Verify second H2
+    h2_2 = h1["children"][1]
+    assert h2_2["text"] == "Advanced Topics"
+    assert h2_2["level"] == 2
+
+
+@pytest.mark.unit
+def test_extract_code_languages():
+    """Test code language extraction."""
+    service = ExtractionService()
+
+    blocks = [
+        ContentBlock(
+            id="c1",
+            type="code",
+            text="print('hello')",
+            metadata={"language": "python"},
+        ),
+        ContentBlock(
+            id="c2",
+            type="code",
+            text="console.log('hello')",
+            metadata={"language": "javascript"},
+        ),
+        ContentBlock(
+            id="c3",
+            type="code",
+            text="echo 'hello'",
+            metadata={"language": "bash"},
+        ),
+        ContentBlock(
+            id="c4",
+            type="code",
+            text="SELECT * FROM users",
+            metadata={},  # No language
+        ),
+        ContentBlock(
+            id="c5",
+            type="code",
+            text="more python",
+            metadata={"language": "python"},  # Duplicate
+        ),
+    ]
+
+    languages = service._extract_code_languages(blocks)
+
+    # Should be sorted and deduplicated
+    assert languages == ["bash", "javascript", "python"]
+
+
+@pytest.mark.unit
+def test_detect_api_documentation():
+    """Test API documentation detection."""
+    service = ExtractionService()
+
+    # Test with API class
+    html = '<article class="api-documentation"><p>Content</p></article>'
+    soup = BeautifulSoup(html, "lxml")
+    assert service._detect_api_documentation(soup) is True
+
+    # Test with endpoint patterns
+    html = """
+    <html>
+        <body>
+            <h3>GET /users</h3>
+            <h3>POST /users</h3>
+            <h3>DELETE /users/{id}</h3>
+        </body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    assert service._detect_api_documentation(soup) is True
+
+    # Test without API indicators
+    html = "<html><body><h3>Regular Heading</h3></body></html>"
+    soup = BeautifulSoup(html, "lxml")
+    assert service._detect_api_documentation(soup) is False
+
+
+@pytest.mark.unit
+def test_extract_reference_links():
+    """Test reference link extraction."""
+    service = ExtractionService()
+
+    html = """
+    <html>
+        <body>
+            <h2>References</h2>
+            <ul>
+                <li><a href="https://example.com/doc1">Documentation 1</a></li>
+                <li><a href="https://example.com/doc2">Documentation 2</a></li>
+            </ul>
+            <h2>See Also</h2>
+            <p><a href="https://example.com/guide">Related Guide</a></p>
+            <h2>Other Section</h2>
+            <p><a href="https://example.com/other">Not a reference</a></p>
+        </body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    links = service._extract_reference_links(soup)
+
+    # Should extract 3 links from References and See Also sections
+    assert len(links) == 3
+    link_texts = [link["text"] for link in links]
+    assert "Documentation 1" in link_texts
+    assert "Documentation 2" in link_texts
+    assert "Related Guide" in link_texts
+    assert "Not a reference" not in link_texts
+
+
+@pytest.mark.unit
+def test_detect_technical_article():
+    """Test technical article detection."""
+    service = ExtractionService()
+
+    # Test with TechArticle schema
+    html = """
+    <html>
+        <head>
+            <script type="application/ld+json">
+            {
+                "@type": "TechArticle",
+                "headline": "Test"
+            }
+            </script>
+        </head>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    assert service._detect_technical_article(soup) is True
+
+    # Test with multiple code blocks
+    html = """
+    <html>
+        <body>
+            <pre><code>code1</code></pre>
+            <pre><code>code2</code></pre>
+            <pre><code>code3</code></pre>
+        </body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    assert service._detect_technical_article(soup) is True
+
+    # Test with technical keywords and structure
+    html = """
+    <html>
+        <head><title>API Documentation Guide</title></head>
+        <body>
+            <h2>Section 1</h2>
+            <h2>Section 2</h2>
+            <h3>Subsection 1</h3>
+            <h3>Subsection 2</h3>
+        </body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    assert service._detect_technical_article(soup) is True
+
+    # Test regular article (should be False)
+    html = """
+    <html>
+        <head><title>Regular Blog Post</title></head>
+        <body><p>Content</p></body>
+    </html>
+    """
+    soup = BeautifulSoup(html, "lxml")
+    assert service._detect_technical_article(soup) is False
+
+
+@pytest.mark.unit
+def test_is_inside_tabbed_content():
+    """Test detection of elements inside tabbed content."""
+    service = ExtractionService()
+
+    # Test element inside tabbed-content div
+    html = '<div class="tabbed-content"><pre><code>test</code></pre></div>'
+    soup = BeautifulSoup(html, "lxml")
+    pre = soup.find("pre")
+    assert service._is_inside_tabbed_content(pre) is True
+
+    # Test element with data-tabs attribute
+    html = '<div data-tabs="python,js"><code>test</code></div>'
+    soup = BeautifulSoup(html, "lxml")
+    code = soup.find("code")
+    assert service._is_inside_tabbed_content(code) is True
+
+    # Test regular element
+    html = "<article><pre><code>test</code></pre></article>"
+    soup = BeautifulSoup(html, "lxml")
+    pre = soup.find("pre")
+    assert service._is_inside_tabbed_content(pre) is False
