@@ -378,3 +378,51 @@ def test_extract_preserves_metadata(client: TestClient) -> None:
     assert data["data"]["metadata"]["word_count"] == 100
     assert data["data"]["metadata"]["extraction_method"] == "readability"
     assert data["data"]["metadata"]["block_count"] == 1
+
+
+@pytest.mark.unit
+def test_extract_cache_hit_and_miss(client: TestClient) -> None:
+    """Test that caching works correctly - first miss, second hit."""
+    # Arrange
+    request_data = {"url": "https://example.com/cached-article"}
+
+    # Mock the extraction service
+    with patch(
+        "app.api.v1.endpoints.extract.extraction_service.extract"
+    ) as mock_extract:
+        mock_extract.return_value = ExtractedContent(
+            url="https://example.com/cached-article",
+            title="Cached Article",
+            author="Jane Doe",
+            date_published="2026-01-08",
+            content_blocks=[
+                ContentBlock(
+                    id="block-1",
+                    type="paragraph",
+                    text="This content should be cached.",
+                    metadata={},
+                ),
+            ],
+            metadata={},
+        )
+
+        # Act - First request (cache miss)
+        response1 = client.post("/api/v1/extract", json=request_data)
+
+        # Assert first request
+        assert response1.status_code == 200
+        data1 = response1.json()
+        assert data1["data"]["url"] == "https://example.com/cached-article"
+        assert data1["data"]["metadata"]["cache_hit"] is False
+        assert mock_extract.call_count == 1
+
+        # Act - Second request (cache hit)
+        response2 = client.post("/api/v1/extract", json=request_data)
+
+    # Assert second request
+    assert response2.status_code == 200
+    data2 = response2.json()
+    assert data2["data"]["url"] == "https://example.com/cached-article"
+    assert data2["data"]["metadata"]["cache_hit"] is True
+    # Extraction service should still only be called once
+    assert mock_extract.call_count == 1

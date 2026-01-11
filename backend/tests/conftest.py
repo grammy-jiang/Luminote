@@ -22,6 +22,18 @@ class FixtureAttrs:
     sample_content: dict[str, Any]
 
 
+@pytest.fixture(autouse=True)
+def clear_cache() -> None:
+    """Clear the caching service before each test to ensure test isolation.
+
+    This autouse fixture runs before every test to prevent cache pollution between
+    tests.
+    """
+    from app.api.v1.endpoints.extract import caching_service
+
+    caching_service.clear()
+
+
 @pytest.fixture
 def client() -> TestClient:
     """Create a test client for the FastAPI application.
