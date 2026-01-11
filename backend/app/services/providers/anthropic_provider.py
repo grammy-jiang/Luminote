@@ -1,5 +1,7 @@
 """Anthropic translation provider implementation."""
 
+from typing import NoReturn
+
 import httpx
 
 from app.core.errors import (
@@ -29,6 +31,97 @@ class AnthropicProvider(BaseProvider):
             Provider name "anthropic"
         """
         return "anthropic"
+
+    def _handle_http_error(
+        self, e: httpx.HTTPStatusError, model: str, operation: str
+    ) -> NoReturn:
+        """Handle HTTP errors from Anthropic API.
+
+        Args:
+            e: The HTTPStatusError from httpx
+            model: Model identifier
+            operation: Operation name for error messages (e.g., "translate", "validate")
+
+        Raises:
+            APIKeyError: If status is 401
+            QuotaExceededError: If status is 402 or 429 with quota indicators
+            InsufficientPermissionsError: If status is 403
+            RateLimitError: If status is 429
+            TranslationError: For other errors
+        """
+        status_code = e.response.status_code
+
+        if status_code == 401:
+            raise APIKeyError(
+                provider="anthropic", reason="Invalid or expired API key"
+            ) from e
+        elif status_code == 402:
+            # Payment required - quota exceeded
+            try:
+                error_data = e.response.json()
+                error_msg = error_data.get("error", {}).get(
+                    "message", "API quota exceeded"
+                )
+            except Exception:
+                error_msg = "API quota exceeded"
+            raise QuotaExceededError(provider="anthropic", reason=error_msg) from e
+        elif status_code == 403:
+            # Forbidden - insufficient permissions
+            try:
+                error_data = e.response.json()
+                error_msg = error_data.get("error", {}).get(
+                    "message", "Insufficient permissions"
+                )
+            except Exception:
+                error_msg = "Insufficient permissions"
+            raise InsufficientPermissionsError(
+                provider="anthropic", reason=error_msg
+            ) from e
+        elif status_code == 429:
+            # Try to extract retry-after from response headers
+            retry_after = 60  # Default
+            if "retry-after" in e.response.headers:
+                try:
+                    retry_after = int(e.response.headers["retry-after"])
+                except (ValueError, TypeError):
+                    # Ignore invalid Retry-After header values and keep the default
+                    pass
+            # Check if this is a quota issue vs rate limit
+            try:
+                error_data = e.response.json()
+                error_type = error_data.get("error", {}).get("type", "")
+                if (
+                    "insufficient_quota" in error_type
+                    or "quota" in error_data.get("error", {}).get("message", "").lower()
+                ):
+                    raise QuotaExceededError(
+                        provider="anthropic",
+                        reason=error_data.get("error", {}).get(
+                            "message", "API quota exceeded"
+                        ),
+                    ) from e
+            except QuotaExceededError:
+                raise
+            except Exception:
+                # Failed to parse error response; treat as rate limit
+                pass
+            raise RateLimitError(retry_after=retry_after, provider="anthropic") from e
+        elif status_code >= 500:
+            raise TranslationError(
+                provider="anthropic",
+                model=model,
+                reason=f"Anthropic API server error (status {status_code})",
+            ) from e
+        else:
+            # Try to extract error message from response
+            try:
+                error_data = e.response.json()
+                error_msg = error_data.get("error", {}).get("message", str(e))
+            except Exception:
+                error_msg = str(e)
+            raise TranslationError(
+                provider="anthropic", model=model, reason=error_msg
+            ) from e
 
     async def translate(
         self, text: str, target_language: str, model: str, api_key: str
@@ -99,82 +192,7 @@ class AnthropicProvider(BaseProvider):
                 )
 
         except httpx.HTTPStatusError as e:
-            status_code = e.response.status_code
-
-            if status_code == 401:
-                raise APIKeyError(
-                    provider="anthropic", reason="Invalid or expired API key"
-                ) from e
-            elif status_code == 402:
-                # Payment required - quota exceeded
-                try:
-                    error_data = e.response.json()
-                    error_msg = error_data.get("error", {}).get(
-                        "message", "API quota exceeded"
-                    )
-                except Exception:
-                    error_msg = "API quota exceeded"
-                raise QuotaExceededError(provider="anthropic", reason=error_msg) from e
-            elif status_code == 403:
-                # Forbidden - insufficient permissions
-                try:
-                    error_data = e.response.json()
-                    error_msg = error_data.get("error", {}).get(
-                        "message", "Insufficient permissions"
-                    )
-                except Exception:
-                    error_msg = "Insufficient permissions"
-                raise InsufficientPermissionsError(
-                    provider="anthropic", reason=error_msg
-                ) from e
-            elif status_code == 429:
-                # Try to extract retry-after from response headers
-                retry_after = 60  # Default
-                if "retry-after" in e.response.headers:
-                    try:
-                        retry_after = int(e.response.headers["retry-after"])
-                    except (ValueError, TypeError):
-                        # Ignore invalid Retry-After header values and keep the default
-                        pass
-                # Check if this is a quota issue vs rate limit
-                try:
-                    error_data = e.response.json()
-                    error_type = error_data.get("error", {}).get("type", "")
-                    if (
-                        "insufficient_quota" in error_type
-                        or "quota"
-                        in error_data.get("error", {}).get("message", "").lower()
-                    ):
-                        raise QuotaExceededError(
-                            provider="anthropic",
-                            reason=error_data.get("error", {}).get(
-                                "message", "API quota exceeded"
-                            ),
-                        ) from e
-                except QuotaExceededError:
-                    raise
-                except Exception:
-                    # Failed to parse error response; treat as rate limit
-                    pass
-                raise RateLimitError(
-                    retry_after=retry_after, provider="anthropic"
-                ) from e
-            elif status_code >= 500:
-                raise TranslationError(
-                    provider="anthropic",
-                    model=model,
-                    reason=f"Anthropic API server error (status {status_code})",
-                ) from e
-            else:
-                # Try to extract error message from response
-                try:
-                    error_data = e.response.json()
-                    error_msg = error_data.get("error", {}).get("message", str(e))
-                except Exception:
-                    error_msg = str(e)
-                raise TranslationError(
-                    provider="anthropic", model=model, reason=error_msg
-                ) from e
+            self._handle_http_error(e, model, "translate")
 
         except httpx.TimeoutException as e:
             raise ProviderTimeoutError(
@@ -283,82 +301,7 @@ class AnthropicProvider(BaseProvider):
                 )
 
         except httpx.HTTPStatusError as e:
-            status_code = e.response.status_code
-
-            if status_code == 401:
-                raise APIKeyError(
-                    provider="anthropic", reason="Invalid or expired API key"
-                ) from e
-            elif status_code == 402:
-                # Payment required - quota exceeded
-                try:
-                    error_data = e.response.json()
-                    error_msg = error_data.get("error", {}).get(
-                        "message", "API quota exceeded"
-                    )
-                except Exception:
-                    error_msg = "API quota exceeded"
-                raise QuotaExceededError(provider="anthropic", reason=error_msg) from e
-            elif status_code == 403:
-                # Forbidden - insufficient permissions
-                try:
-                    error_data = e.response.json()
-                    error_msg = error_data.get("error", {}).get(
-                        "message", "Insufficient permissions"
-                    )
-                except Exception:
-                    error_msg = "Insufficient permissions"
-                raise InsufficientPermissionsError(
-                    provider="anthropic", reason=error_msg
-                ) from e
-            elif status_code == 429:
-                # Try to extract retry-after from response headers
-                retry_after = 60  # Default
-                if "retry-after" in e.response.headers:
-                    try:
-                        retry_after = int(e.response.headers["retry-after"])
-                    except (ValueError, TypeError):
-                        # Ignore invalid Retry-After header values and keep the default
-                        pass
-                # Check if this is a quota issue vs rate limit
-                try:
-                    error_data = e.response.json()
-                    error_type = error_data.get("error", {}).get("type", "")
-                    if (
-                        "insufficient_quota" in error_type
-                        or "quota"
-                        in error_data.get("error", {}).get("message", "").lower()
-                    ):
-                        raise QuotaExceededError(
-                            provider="anthropic",
-                            reason=error_data.get("error", {}).get(
-                                "message", "API quota exceeded"
-                            ),
-                        ) from e
-                except QuotaExceededError:
-                    raise
-                except Exception:
-                    # Failed to parse error response; treat as rate limit
-                    pass
-                raise RateLimitError(
-                    retry_after=retry_after, provider="anthropic"
-                ) from e
-            elif status_code >= 500:
-                raise TranslationError(
-                    provider="anthropic",
-                    model=model,
-                    reason=f"Anthropic API server error (status {status_code})",
-                ) from e
-            else:
-                # Try to extract error message from response
-                try:
-                    error_data = e.response.json()
-                    error_msg = error_data.get("error", {}).get("message", str(e))
-                except Exception:
-                    error_msg = str(e)
-                raise TranslationError(
-                    provider="anthropic", model=model, reason=error_msg
-                ) from e
+            self._handle_http_error(e, model, "validate")
 
         except httpx.TimeoutException as e:
             raise ProviderTimeoutError(
