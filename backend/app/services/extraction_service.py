@@ -198,7 +198,7 @@ class ExtractionService:
         return blocks
 
     def _is_navigation_or_sidebar(self, element: Any) -> bool:
-        """Check if element is part of navigation or sidebar.
+        """Check if element is part of navigation, sidebar, or comments.
 
         Args:
             element: BeautifulSoup element
@@ -206,7 +206,7 @@ class ExtractionService:
         Returns:
             True if element should be filtered out
         """
-        # Check if element or any parent has navigation/sidebar indicators
+        # Check if element or any parent has navigation/sidebar/comments indicators
         current = element
         while current:
             # Check tag names
@@ -247,6 +247,11 @@ class ExtractionService:
                         "related",
                         "trending",
                         "menu",
+                        "comment",
+                        "comments",
+                        "disqus",
+                        "discourse",
+                        "replies",
                     ]
                 ):
                     return True
@@ -255,7 +260,17 @@ class ExtractionService:
             element_id = current.get("id", "").lower()
             if any(
                 keyword in element_id
-                for keyword in ["nav", "sidebar", "menu", "related", "trending"]
+                for keyword in [
+                    "nav",
+                    "sidebar",
+                    "menu",
+                    "related",
+                    "trending",
+                    "comment",
+                    "comments",
+                    "disqus",
+                    "discourse",
+                ]
             ):
                 return True
 
@@ -470,9 +485,9 @@ class ExtractionService:
             soup: BeautifulSoup object
 
         Returns:
-            Article type string or None
+            Article type string ("news", "blog") or None
         """
-        # Check JSON-LD for NewsArticle type
+        # Check JSON-LD for article type
         json_ld = soup.find("script", attrs={"type": "application/ld+json"})
         if json_ld:
             try:
@@ -481,6 +496,8 @@ class ExtractionService:
                     article_type = data.get("@type", "")
                     if article_type == "NewsArticle":
                         return "news"
+                    elif article_type == "BlogPosting":
+                        return "blog"
             except (TypeError, json.JSONDecodeError, ValueError) as exc:
                 # Best-effort JSON-LD parsing; log and continue on invalid JSON
                 logger.debug(
@@ -492,7 +509,9 @@ class ExtractionService:
         og_type = soup.find("meta", attrs={"property": "og:type"})
         if og_type:
             content = og_type.get("content", "").lower()
-            if "article" in content:
+            if "blog" in content:
+                return "blog"
+            elif "article" in content:
                 return "news"
 
         return None
@@ -587,6 +606,64 @@ class ExtractionService:
                 pull_quotes.append(block.text)
         return pull_quotes
 
+    def _extract_tags(self, soup: BeautifulSoup) -> list[str]:
+        """Extract tags from blog post HTML.
+
+        Args:
+            soup: BeautifulSoup object
+
+        Returns:
+            List of tag strings (deduplicated case-insensitively)
+        """
+        tags = []
+        seen = set()  # Track seen tags (lowercase) for case-insensitive deduplication
+
+        # Try to extract from meta keywords
+        keywords_meta = soup.find("meta", attrs={"name": "keywords"})
+        if keywords_meta:
+            content = keywords_meta.get("content", "")
+            if content:
+                # Split by comma and clean up
+                for tag in content.split(","):
+                    tag = tag.strip()
+                    if tag and tag.lower() not in seen:
+                        seen.add(tag.lower())
+                        tags.append(tag)
+
+        # Try to extract from article:tag meta tags
+        article_tags = soup.find_all("meta", attrs={"name": "article:tag"})
+        for tag_meta in article_tags:
+            tag = tag_meta.get("content", "").strip()
+            if tag and tag.lower() not in seen:
+                seen.add(tag.lower())
+                tags.append(tag)
+
+        # Try to extract from JSON-LD keywords
+        json_ld = soup.find("script", attrs={"type": "application/ld+json"})
+        if json_ld:
+            try:
+                data = json.loads(json_ld.string or "")
+                if isinstance(data, dict) and "keywords" in data:
+                    keywords = data["keywords"]
+                    if isinstance(keywords, list):
+                        for kw in keywords:
+                            if isinstance(kw, str):
+                                kw = kw.strip()
+                                if kw and kw.lower() not in seen:
+                                    seen.add(kw.lower())
+                                    tags.append(kw)
+                    elif isinstance(keywords, str):
+                        for kw in keywords.split(","):
+                            kw = kw.strip()
+                            if kw and kw.lower() not in seen:
+                                seen.add(kw.lower())
+                                tags.append(kw)
+            except (TypeError, json.JSONDecodeError, ValueError):
+                # Ignore invalid JSON-LD - tags are optional
+                pass
+
+        return tags
+
     def _extract_metadata(
         self,
         soup: BeautifulSoup,
@@ -672,6 +749,12 @@ class ExtractionService:
 
         if all_pull_quotes:
             metadata["pull_quotes"] = all_pull_quotes
+
+        # Extract tags for blog posts
+        if article_type == "blog":
+            tags = self._extract_tags(soup)
+            if tags:
+                metadata["tags"] = tags
 
         return metadata
 
