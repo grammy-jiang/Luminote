@@ -3,8 +3,10 @@
 import httpx
 
 from app.core.errors import APIKeyError, RateLimitError, TranslationError
+from app.core.logging import logger
 from app.services.providers.base import (
     BaseProvider,
+    ModelCapabilitiesResult,
     TranslationResult,
     ValidationResult,
 )
@@ -206,19 +208,28 @@ class AnthropicProvider(BaseProvider):
 
                 # Find matching model prefix for max tokens
                 max_tokens = 100000  # Default fallback
+                model_matched = False
                 for model_prefix, tokens in max_tokens_map.items():
                     if model.startswith(model_prefix):
                         max_tokens = tokens
+                        model_matched = True
                         break
+
+                # Log when using fallback for unknown model
+                if not model_matched:
+                    logger.warning(
+                        f"Unknown Anthropic model '{model}', using default max_tokens={max_tokens}",
+                        extra={"model": model, "provider": "anthropic"},
+                    )
 
                 return ValidationResult(
                     valid=True,
                     provider=self.get_provider_name(),
                     model=model,
-                    capabilities={
-                        "streaming": True,  # All Claude models support streaming
-                        "max_tokens": max_tokens,
-                    },
+                    capabilities=ModelCapabilitiesResult(
+                        streaming=True,  # All Claude models support streaming
+                        max_tokens=max_tokens,
+                    ),
                 )
 
         except httpx.HTTPStatusError as e:

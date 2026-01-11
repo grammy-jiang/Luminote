@@ -8,6 +8,7 @@ from app.core.errors import LuminoteException
 from app.schemas.translation import ContentBlock
 from app.services.providers.base import (
     BaseProvider,
+    ModelCapabilitiesResult,
     TranslationResult,
     ValidationResult,
 )
@@ -35,7 +36,7 @@ class CustomTestProvider(BaseProvider):
             valid=True,
             provider="custom",
             model=model,
-            capabilities={"streaming": True, "max_tokens": 4096},
+            capabilities=ModelCapabilitiesResult(streaming=True, max_tokens=4096),
         )
 
 

@@ -68,8 +68,8 @@ async def validate_config(
             provider=validation_result.provider,
             model=validation_result.model,
             capabilities=ModelCapabilities(
-                streaming=bool(validation_result.capabilities["streaming"]),
-                max_tokens=int(validation_result.capabilities["max_tokens"]),
+                streaming=validation_result.capabilities.streaming,
+                max_tokens=validation_result.capabilities.max_tokens,
             ),
             details={},
         )

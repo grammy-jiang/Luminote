@@ -17,15 +17,20 @@ class TranslationResult(BaseModel):
     provider: str = Field(..., description="Provider name")
 
 
+class ModelCapabilitiesResult(BaseModel):
+    """Model capabilities for validation result."""
+
+    streaming: bool = Field(..., description="Whether model supports streaming")
+    max_tokens: int = Field(..., description="Maximum tokens supported", ge=0)
+
+
 class ValidationResult(BaseModel):
     """Result from a validation operation."""
 
     valid: bool = Field(..., description="Whether the validation succeeded")
     provider: str = Field(..., description="Provider name")
     model: str = Field(..., description="Model identifier")
-    capabilities: dict[str, int | bool] = Field(
-        ..., description="Model capabilities (streaming, max_tokens)"
-    )
+    capabilities: ModelCapabilitiesResult = Field(..., description="Model capabilities")
 
 
 class BaseProvider(ABC):

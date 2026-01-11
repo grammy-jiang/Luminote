@@ -2,6 +2,7 @@
 
 from app.services.providers.base import (
     BaseProvider,
+    ModelCapabilitiesResult,
     TranslationResult,
     ValidationResult,
 )
@@ -69,8 +70,8 @@ class MockProvider(BaseProvider):
             valid=True,
             provider=self.get_provider_name(),
             model=model,
-            capabilities={
-                "streaming": True,
-                "max_tokens": 4096,
-            },
+            capabilities=ModelCapabilitiesResult(
+                streaming=True,
+                max_tokens=4096,
+            ),
         )
