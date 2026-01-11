@@ -413,7 +413,12 @@
 
 	<!-- Action Buttons -->
 	<div class="action-buttons">
-		<Button label={isSaving ? 'Saving...' : 'Save'} variant="primary" disabled={isSaving} onclick={handleSave} />
+		<Button
+			label={isSaving ? 'Saving...' : 'Save'}
+			variant="primary"
+			disabled={isSaving}
+			onclick={handleSave}
+		/>
 		<Button label="Reset" variant="danger" onclick={handleReset} />
 	</div>
 
