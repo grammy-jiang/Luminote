@@ -1,6 +1,10 @@
 """Mock translation provider for testing."""
 
-from app.services.providers.base import BaseProvider, TranslationResult
+from app.services.providers.base import (
+    BaseProvider,
+    TranslationResult,
+    ValidationResult,
+)
 
 
 class MockProvider(BaseProvider):
@@ -45,4 +49,28 @@ class MockProvider(BaseProvider):
             tokens_used=tokens_used,
             model=model,
             provider=self.get_provider_name(),
+        )
+
+    async def validate(self, model: str, api_key: str) -> ValidationResult:
+        """Mock validate that always succeeds.
+
+        Args:
+            model: Model identifier
+            api_key: API key (ignored for mock)
+
+        Returns:
+            ValidationResult with mock capabilities
+
+        Raises:
+            Never raises exceptions (for testing happy paths)
+        """
+        # Mock always validates successfully
+        return ValidationResult(
+            valid=True,
+            provider=self.get_provider_name(),
+            model=model,
+            capabilities={
+                "streaming": True,
+                "max_tokens": 4096,
+            },
         )
