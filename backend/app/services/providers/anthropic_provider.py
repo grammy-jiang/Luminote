@@ -2,7 +2,12 @@
 
 import httpx
 
-from app.core.errors import APIKeyError, RateLimitError, TranslationError
+from app.core.errors import (
+    APIKeyError,
+    ProviderTimeoutError,
+    RateLimitError,
+    TranslationError,
+)
 from app.core.logging import logger
 from app.services.providers.base import (
     BaseProvider,
@@ -105,6 +110,7 @@ class AnthropicProvider(BaseProvider):
                     try:
                         retry_after = int(e.response.headers["retry-after"])
                     except (ValueError, TypeError):
+                        # Ignore invalid Retry-After header values and keep the default
                         pass
                 raise RateLimitError(
                     retry_after=retry_after, provider="anthropic"
@@ -127,7 +133,7 @@ class AnthropicProvider(BaseProvider):
                 ) from e
 
         except httpx.TimeoutException as e:
-            raise TranslationError(
+            raise ProviderTimeoutError(
                 provider="anthropic", model=model, reason="Request timed out"
             ) from e
 
@@ -246,6 +252,7 @@ class AnthropicProvider(BaseProvider):
                     try:
                         retry_after = int(e.response.headers["retry-after"])
                     except (ValueError, TypeError):
+                        # Ignore invalid Retry-After header values and keep the default
                         pass
                 raise RateLimitError(
                     retry_after=retry_after, provider="anthropic"
@@ -268,7 +275,7 @@ class AnthropicProvider(BaseProvider):
                 ) from e
 
         except httpx.TimeoutException as e:
-            raise TranslationError(
+            raise ProviderTimeoutError(
                 provider="anthropic", model=model, reason="Validation request timed out"
             ) from e
 

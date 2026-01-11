@@ -301,9 +301,9 @@ async def test_validate_config_timeout(mock_client_class, client: TestClient) ->
     response = client.post("/api/v1/config/validate", json=request_data)
 
     # Assert
-    assert response.status_code == 500
+    assert response.status_code == 504
     data = response.json()
-    assert data["code"] == "TRANSLATION_ERROR"
+    assert data["code"] == "PROVIDER_TIMEOUT"
     assert "timed out" in data["error"].lower()
 
 

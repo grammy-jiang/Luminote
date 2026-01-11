@@ -2,7 +2,12 @@
 
 import httpx
 
-from app.core.errors import APIKeyError, RateLimitError, TranslationError
+from app.core.errors import (
+    APIKeyError,
+    ProviderTimeoutError,
+    RateLimitError,
+    TranslationError,
+)
 from app.core.logging import logger
 from app.services.providers.base import (
     BaseProvider,
@@ -99,9 +104,11 @@ class OpenAIProvider(BaseProvider):
                 try:
                     error_data = e.response.json()
                     if "error" in error_data and "message" in error_data["error"]:
-                        # OpenAI sometimes includes retry info in message
+                        # OpenAI sometimes includes retry info in message; currently unused.
+                        # TODO: Parse retry-after seconds from this message when format is stable.
                         pass
                 except Exception:
+                    # Failed to parse error response; ignore and use default retry_after
                     pass
                 raise RateLimitError(retry_after=retry_after, provider="openai") from e
             elif status_code >= 500:
@@ -122,7 +129,7 @@ class OpenAIProvider(BaseProvider):
                 ) from e
 
         except httpx.TimeoutException as e:
-            raise TranslationError(
+            raise ProviderTimeoutError(
                 provider="openai", model=model, reason="Request timed out"
             ) from e
 
@@ -239,9 +246,11 @@ class OpenAIProvider(BaseProvider):
                 try:
                     error_data = e.response.json()
                     if "error" in error_data and "message" in error_data["error"]:
-                        # OpenAI sometimes includes retry info in message
+                        # OpenAI sometimes includes retry info in message; currently unused.
+                        # TODO: Parse retry-after seconds from this message when format is stable.
                         pass
                 except Exception:
+                    # Failed to parse error response; ignore and use default retry_after
                     pass
                 raise RateLimitError(retry_after=retry_after, provider="openai") from e
             elif status_code >= 500:
@@ -262,7 +271,7 @@ class OpenAIProvider(BaseProvider):
                 ) from e
 
         except httpx.TimeoutException as e:
-            raise TranslationError(
+            raise ProviderTimeoutError(
                 provider="openai", model=model, reason="Validation request timed out"
             ) from e
 

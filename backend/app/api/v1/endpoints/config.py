@@ -1,7 +1,7 @@
 """Config validation API endpoint.
 
-This module provides the POST /api/v1/config/validate endpoint for validating
-API keys and retrieving model capabilities.
+This module provides the POST /api/v1/config/validate endpoint for validating API keys
+and retrieving model capabilities.
 """
 
 from fastapi import APIRouter, Request
