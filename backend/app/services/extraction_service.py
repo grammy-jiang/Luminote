@@ -161,6 +161,28 @@ class ExtractionService:
         # Find the body or main content area
         content_root = soup.find("body") or soup
 
+        # First, handle tabbed content (common in technical docs)
+        tabbed_containers = content_root.find_all(
+            "div", class_=re.compile(r"(?:tab|tabbed)[-_]content", re.I)
+        )
+        tabbed_containers.extend(
+            content_root.find_all("div", attrs={"data-tabs": True})
+        )
+
+        for tab_container in tabbed_containers:
+            # Extract all code blocks from tabs
+            tab_blocks = tab_container.find_all(["pre", "code"])
+            for tab_block in tab_blocks:
+                parent_pre = tab_block.find_parent("pre")
+                if not parent_pre:
+                    continue
+                block = self._element_to_block(parent_pre)
+                if block:
+                    blocks.append(block)
+            # Remove the tabbed container from the tree so its content
+            # is not processed again in the main element loop below.
+            tab_container.decompose()
+
         # Process each element
         for element in content_root.find_all(
             [
@@ -191,11 +213,43 @@ class ExtractionService:
             if self._is_navigation_or_sidebar(element):
                 continue
 
+            # Skip if already processed as part of tabbed content
+            if self._is_inside_tabbed_content(element):
+                continue
+
             block = self._element_to_block(element)
             if block:
                 blocks.append(block)
 
         return blocks
+
+    def _is_inside_tabbed_content(self, element: Any) -> bool:
+        """Check if element is inside a tabbed content container.
+
+        Args:
+            element: BeautifulSoup element
+
+        Returns:
+            True if element is inside tabbed content
+        """
+        current = element
+        while current:
+            # Check for tabbed content classes
+            classes = current.get("class", [])
+            if isinstance(classes, list):
+                class_str = " ".join(classes).lower()
+                if "tabbed" in class_str or "tab-content" in class_str:
+                    return True
+
+            # Check for data-tabs attribute
+            if current.get("data-tabs"):
+                return True
+
+            current = current.parent
+            if current and current.name in ["body", "html", "[document]"]:
+                break
+
+        return False
 
     def _is_navigation_or_sidebar(self, element: Any) -> bool:
         """Check if element is part of navigation, sidebar, or comments.
@@ -317,6 +371,279 @@ class ExtractionService:
 
         return False
 
+    def _remove_line_numbers(self, code_text: str) -> str:
+        """Remove line numbers from code blocks.
+
+        This method is intentionally conservative: it only strips prefixes that
+        look like line numbers when most lines in the block follow the same
+        pattern and their numbers are consecutive. This avoids corrupting
+        legitimate code such as floating point literals (e.g. ``1. + x``) or
+        ordered list markers in comments.
+
+        Common patterns in technical documentation:
+        - "1. code line"
+        - "1: code line"
+        - "  1. code line" (with leading spaces)
+
+        Args:
+            code_text: Raw code text that may contain line numbers
+
+        Returns:
+            Code text with line numbers removed when a consistent line number
+            pattern is detected, otherwise the original text.
+        """
+        lines = code_text.split("\n")
+
+        # Match: optional spaces, then digits, then . or :, then space, then rest
+        pattern = re.compile(r"^(\s*)(\d+)[.:]\s(.*)$")
+
+        matches: list[tuple[int, int, re.Match[str]]] = []
+        for idx, line in enumerate(lines):
+            match = pattern.match(line)
+            if match:
+                number = int(match.group(2))
+                matches.append((idx, number, match))
+
+        # If we don't have enough lines that look numbered, or they are sparse,
+        # leave the text unchanged to avoid false positives.
+        if len(matches) < 2 or len(matches) < len(lines) / 2:
+            return code_text
+
+        # Ensure the detected numbers are consecutive in order of appearance
+        numbers = [m[1] for m in matches]
+        if not all(
+            later == earlier + 1
+            for earlier, later in zip(numbers, numbers[1:], strict=False)
+        ):
+            return code_text
+
+        # At this point we are confident these are real line numbers - strip them.
+        cleaned_lines: list[str] = []
+        match_by_index = {idx: m for idx, _, m in matches}
+
+        for idx, line in enumerate(lines):
+            match = match_by_index.get(idx)
+            if match:
+                # Preserve indentation (group 1) and the rest of the line (group 3)
+                cleaned_lines.append(f"{match.group(1)}{match.group(3)}")
+            else:
+                cleaned_lines.append(line)
+
+        return "\n".join(cleaned_lines)
+
+    def _build_heading_structure(
+        self, content_blocks: list[ContentBlock]
+    ) -> dict[str, Any]:
+        """Build nested heading structure for technical documentation.
+
+        Creates a hierarchical structure of headings (H1-H6) that represents
+        the document's organization. Handles malformed HTML gracefully by
+        inserting missing parent levels when needed.
+
+        Args:
+            content_blocks: List of content blocks
+
+        Returns:
+            Nested dictionary representing heading hierarchy
+        """
+        structure: dict[str, Any] = {"type": "root", "children": []}
+        stack: list[dict[str, Any]] = [structure]
+
+        for block in content_blocks:
+            if block.type == "heading":
+                level = block.metadata.get("level", 1)
+                node = {
+                    "type": "heading",
+                    "level": level,
+                    "text": block.text,
+                    "id": block.id,
+                    "children": [],
+                }
+
+                # Pop stack until we find the parent level
+                while len(stack) > 1 and stack[-1].get("level", 0) >= level:
+                    stack.pop()
+
+                # If there's a gap in heading levels (e.g., H1 followed by H3),
+                # the current parent in the stack is still appropriate since we
+                # want H3 to be a child of H1, not a sibling.
+
+                # Add to current parent
+                stack[-1]["children"].append(node)
+                stack.append(node)
+
+        return structure
+
+    def _extract_code_languages(self, content_blocks: list[ContentBlock]) -> list[str]:
+        """Extract all unique programming languages from code blocks.
+
+        Args:
+            content_blocks: List of content blocks
+
+        Returns:
+            Sorted list of unique language identifiers
+        """
+        languages = set()
+        for block in content_blocks:
+            if block.type == "code" and "language" in block.metadata:
+                languages.add(block.metadata["language"])
+        return sorted(languages)
+
+    def _detect_api_documentation(self, soup: BeautifulSoup) -> bool:
+        """Detect if content is API documentation.
+
+        Looks for common API documentation patterns:
+        - Classes like "api-documentation", "api-reference"
+        - Multiple code blocks with endpoint patterns
+        - Structured endpoint documentation (GET, POST, etc.)
+
+        Args:
+            soup: BeautifulSoup object
+
+        Returns:
+            True if content appears to be API documentation
+        """
+        # Check for API-related classes
+        api_classes = soup.find_all(
+            class_=re.compile(r"api[-_]?(doc|reference|endpoint)", re.I)
+        )
+        if api_classes:
+            return True
+
+        # Check for structured endpoint patterns (HTTP methods)
+        http_methods = ["GET", "POST", "PUT", "DELETE", "PATCH"]
+        headings = soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"])
+        api_pattern_count = 0
+
+        for heading in headings:
+            heading_text = heading.get_text(strip=True)
+            # Look for patterns like "GET /users" or "POST /api/items"
+            for method in http_methods:
+                if heading_text.startswith(method + " /"):
+                    api_pattern_count += 1
+                    break
+
+        # If we find 2+ endpoint patterns, likely API docs
+        return api_pattern_count >= 2
+
+    def _extract_reference_links(self, soup: BeautifulSoup) -> list[dict[str, str]]:
+        """Extract reference links from documentation.
+
+        Preserves links from "References", "See Also", or similar sections
+        that are common in technical documentation.
+
+        Args:
+            soup: BeautifulSoup object
+
+        Returns:
+            List of dictionaries with 'text' and 'url' keys
+        """
+        reference_links: list[dict[str, str]] = []
+
+        # Look for reference sections
+        for heading in soup.find_all(["h1", "h2", "h3", "h4", "h5", "h6"]):
+            heading_text = heading.get_text(strip=True).lower()
+
+            # Check if this is a reference section
+            if any(
+                keyword in heading_text
+                for keyword in ["reference", "see also", "further reading", "links"]
+            ):
+                # Find the next sibling elements until we hit another heading
+                current = heading.find_next_sibling()
+
+                while current and current.name not in [
+                    "h1",
+                    "h2",
+                    "h3",
+                    "h4",
+                    "h5",
+                    "h6",
+                ]:
+                    # Extract links from lists or paragraphs
+                    links = current.find_all("a", href=True)
+                    for link in links:
+                        href = link.get("href", "")
+                        text = link.get_text(strip=True)
+                        if href and text:
+                            reference_links.append({"text": text, "url": href})
+
+                    current = current.find_next_sibling()
+
+        # Deduplicate by URL while preserving order of first occurrence
+        seen_urls: set[str] = set()
+        unique_reference_links: list[dict[str, str]] = []
+        for link_info in reference_links:
+            url = link_info.get("url")
+            if not url:
+                continue
+            if url in seen_urls:
+                continue
+            seen_urls.add(url)
+            unique_reference_links.append(link_info)
+
+        return unique_reference_links
+
+    def _detect_technical_article(self, soup: BeautifulSoup) -> bool:
+        """Detect if content is a technical article/documentation.
+
+        Criteria:
+        - Multiple code blocks
+        - Technical keywords in title/headings
+        - Structured content with nested headings
+        - TechArticle schema type
+
+        Args:
+            soup: BeautifulSoup object
+
+        Returns:
+            True if content is technical documentation
+        """
+        # Check for TechArticle in JSON-LD
+        json_ld = soup.find("script", attrs={"type": "application/ld+json"})
+        if json_ld:
+            try:
+                data = json.loads(json_ld.string or "")
+                if isinstance(data, dict) and data.get("@type") == "TechArticle":
+                    return True
+            except (TypeError, json.JSONDecodeError, ValueError) as exc:
+                logger.debug(
+                    "Failed to parse JSON-LD while detecting TechArticle schema.",
+                    exc_info=exc,
+                )
+
+        # Count logical code blocks without double-counting <pre><code> pairs
+        pre_code_blocks = [
+            pre for pre in soup.find_all("pre") if pre.find("code") is not None
+        ]
+        standalone_code_blocks = [
+            code for code in soup.find_all("code") if code.find_parent("pre") is None
+        ]
+        code_block_count = len(pre_code_blocks) + len(standalone_code_blocks)
+        if code_block_count >= 3:  # 3+ code blocks suggests technical content
+            return True
+
+        # Check for technical keywords in title/headings
+        title = soup.find("title")
+        if title:
+            title_text = title.get_text().lower()
+            technical_keywords = [
+                "api",
+                "documentation",
+                "guide",
+                "tutorial",
+                "reference",
+                "sdk",
+                "library",
+            ]
+            if any(keyword in title_text for keyword in technical_keywords):
+                # Also need multiple headings for structure
+                headings = soup.find_all(["h2", "h3", "h4"])
+                if len(headings) >= 4:
+                    return True
+
+        return False
+
     def _element_to_block(self, element: Any) -> ContentBlock | None:
         """Convert HTML element to ContentBlock.
 
@@ -401,6 +728,9 @@ class ExtractionService:
             text = element.get_text()  # Preserve whitespace in code
             if not text.strip():
                 return None
+
+            # Remove line numbers from code (common in technical docs)
+            text = self._remove_line_numbers(text)
 
             # Try to detect language
             language = None
@@ -684,10 +1014,38 @@ class ExtractionService:
         """
         metadata: dict[str, Any] = {}
 
-        # Detect article type
+        # Detect article type (blog, news, or technical)
         article_type = self._detect_article_type(soup)
+
+        # Check for technical documentation
+        is_technical = self._detect_technical_article(soup)
+        if is_technical and not article_type:
+            article_type = "technical"
+
         if article_type:
             metadata["article_type"] = article_type
+
+        # For technical documentation, add specialized metadata
+        if article_type == "technical":
+            # Extract code languages
+            code_languages = self._extract_code_languages(content_blocks)
+            if code_languages:
+                metadata["code_languages"] = code_languages
+
+            # Build heading structure
+            heading_structure = self._build_heading_structure(content_blocks)
+            if heading_structure.get("children"):
+                metadata["heading_structure"] = heading_structure
+
+            # Extract reference links
+            reference_links = self._extract_reference_links(soup)
+            if reference_links:
+                metadata["reference_links"] = reference_links
+
+            # Detect if this is API documentation
+            is_api_doc = self._detect_api_documentation(soup)
+            if is_api_doc:
+                metadata["is_api_documentation"] = True
 
         # Try to find author
         author = None
