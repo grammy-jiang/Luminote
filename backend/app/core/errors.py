@@ -150,6 +150,42 @@ class RateLimitError(ClientError):
         self.status_code = 429  # Override default 400 status
 
 
+class QuotaExceededError(ClientError):
+    """API quota exceeded (payment required)."""
+
+    def __init__(self, provider: str, reason: str = "API quota exceeded") -> None:
+        """Initialize a quota exceeded error.
+
+        Args:
+            provider: Provider name (openai, anthropic, etc.)
+            reason: Reason for the quota error
+        """
+        super().__init__(
+            message=f"API quota exceeded for {provider}: {reason}",
+            code="QUOTA_EXCEEDED",
+            details={"provider": provider, "reason": reason},
+        )
+        self.status_code = 402  # Payment Required
+
+
+class InsufficientPermissionsError(ClientError):
+    """Insufficient permissions to access resource."""
+
+    def __init__(self, provider: str, reason: str = "Insufficient permissions") -> None:
+        """Initialize an insufficient permissions error.
+
+        Args:
+            provider: Provider name (openai, anthropic, etc.)
+            reason: Reason for the permission error
+        """
+        super().__init__(
+            message=f"Insufficient permissions for {provider}: {reason}",
+            code="INSUFFICIENT_PERMISSIONS",
+            details={"provider": provider, "reason": reason},
+        )
+        self.status_code = 403  # Forbidden
+
+
 class TranslationError(ServerError):
     """Translation failed."""
 
