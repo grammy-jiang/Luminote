@@ -110,7 +110,7 @@ async def test_fetch_url_timeout():
 
         assert exc_info.value.code == "URL_FETCH_ERROR"
         assert exc_info.value.status_code == 504
-        assert "timeout" in exc_info.value.message.lower()
+        assert "timed out" in exc_info.value.message.lower()
 
 
 @pytest.mark.unit
@@ -135,7 +135,7 @@ async def test_fetch_url_http_error():
 
         assert exc_info.value.code == "URL_FETCH_ERROR"
         assert exc_info.value.status_code == 404  # 404 is preserved
-        assert "404" in exc_info.value.message
+        assert "not found" in exc_info.value.message.lower()
 
 
 @pytest.mark.unit
@@ -156,7 +156,8 @@ async def test_fetch_url_network_error():
 
         assert exc_info.value.code == "URL_FETCH_ERROR"
         assert exc_info.value.status_code == 502
-        assert "unreachable" in exc_info.value.message.lower()
+        assert "network error" in exc_info.value.message.lower()
+        assert "dns" in exc_info.value.message.lower()
 
 
 @pytest.mark.unit
@@ -181,6 +182,226 @@ async def test_fetch_url_non_html_content():
         assert exc_info.value.code == "EXTRACTION_ERROR"
         assert exc_info.value.status_code == 422
         assert "non-html" in exc_info.value.message.lower()
+
+
+@pytest.mark.unit
+async def test_fetch_url_http_401_access_denied():
+    """Test URL fetch with 401 Unauthorized response."""
+    service = ExtractionService()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        # Setup 401 error
+        mock_response = MagicMock()
+        mock_response.status_code = 401
+        mock_client_instance = AsyncMock()
+        mock_client_instance.get = AsyncMock(
+            side_effect=httpx.HTTPStatusError(
+                "Unauthorized", request=MagicMock(), response=mock_response
+            )
+        )
+        mock_client.return_value.__aenter__.return_value = mock_client_instance
+
+        with pytest.raises(URLFetchError) as exc_info:
+            await service._fetch_url("https://example.com/protected")
+
+        assert exc_info.value.code == "URL_FETCH_ERROR"
+        assert exc_info.value.status_code == 403
+        assert "access denied" in exc_info.value.message.lower()
+        assert "authentication" in exc_info.value.message.lower()
+
+
+@pytest.mark.unit
+async def test_fetch_url_http_403_forbidden():
+    """Test URL fetch with 403 Forbidden response."""
+    service = ExtractionService()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        # Setup 403 error
+        mock_response = MagicMock()
+        mock_response.status_code = 403
+        mock_client_instance = AsyncMock()
+        mock_client_instance.get = AsyncMock(
+            side_effect=httpx.HTTPStatusError(
+                "Forbidden", request=MagicMock(), response=mock_response
+            )
+        )
+        mock_client.return_value.__aenter__.return_value = mock_client_instance
+
+        with pytest.raises(URLFetchError) as exc_info:
+            await service._fetch_url("https://example.com/forbidden")
+
+        assert exc_info.value.code == "URL_FETCH_ERROR"
+        assert exc_info.value.status_code == 403
+        assert "access denied" in exc_info.value.message.lower()
+        assert "permission" in exc_info.value.message.lower()
+
+
+@pytest.mark.unit
+async def test_fetch_url_http_500_server_error():
+    """Test URL fetch with 500 Internal Server Error response."""
+    service = ExtractionService()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        # Setup 500 error
+        mock_response = MagicMock()
+        mock_response.status_code = 500
+        mock_client_instance = AsyncMock()
+        mock_client_instance.get = AsyncMock(
+            side_effect=httpx.HTTPStatusError(
+                "Internal Server Error", request=MagicMock(), response=mock_response
+            )
+        )
+        mock_client.return_value.__aenter__.return_value = mock_client_instance
+
+        with pytest.raises(URLFetchError) as exc_info:
+            await service._fetch_url("https://example.com/error")
+
+        assert exc_info.value.code == "URL_FETCH_ERROR"
+        assert exc_info.value.status_code == 502
+        assert "server error" in exc_info.value.message.lower()
+        assert "500" in exc_info.value.message
+
+
+@pytest.mark.unit
+async def test_fetch_url_http_502_bad_gateway():
+    """Test URL fetch with 502 Bad Gateway response."""
+    service = ExtractionService()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        # Setup 502 error
+        mock_response = MagicMock()
+        mock_response.status_code = 502
+        mock_client_instance = AsyncMock()
+        mock_client_instance.get = AsyncMock(
+            side_effect=httpx.HTTPStatusError(
+                "Bad Gateway", request=MagicMock(), response=mock_response
+            )
+        )
+        mock_client.return_value.__aenter__.return_value = mock_client_instance
+
+        with pytest.raises(URLFetchError) as exc_info:
+            await service._fetch_url("https://example.com/gateway")
+
+        assert exc_info.value.code == "URL_FETCH_ERROR"
+        assert exc_info.value.status_code == 502
+        assert "server error" in exc_info.value.message.lower()
+        assert "502" in exc_info.value.message
+
+
+@pytest.mark.unit
+async def test_fetch_url_http_503_service_unavailable():
+    """Test URL fetch with 503 Service Unavailable response."""
+    service = ExtractionService()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        # Setup 503 error
+        mock_response = MagicMock()
+        mock_response.status_code = 503
+        mock_client_instance = AsyncMock()
+        mock_client_instance.get = AsyncMock(
+            side_effect=httpx.HTTPStatusError(
+                "Service Unavailable", request=MagicMock(), response=mock_response
+            )
+        )
+        mock_client.return_value.__aenter__.return_value = mock_client_instance
+
+        with pytest.raises(URLFetchError) as exc_info:
+            await service._fetch_url("https://example.com/unavailable")
+
+        assert exc_info.value.code == "URL_FETCH_ERROR"
+        assert exc_info.value.status_code == 502
+        assert "server error" in exc_info.value.message.lower()
+        assert "503" in exc_info.value.message
+
+
+@pytest.mark.unit
+async def test_fetch_url_connect_error():
+    """Test URL fetch with connection error (host unreachable)."""
+    service = ExtractionService()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        # Setup connect error
+        mock_client_instance = AsyncMock()
+        mock_client_instance.get = AsyncMock(
+            side_effect=httpx.ConnectError("Connection refused")
+        )
+        mock_client.return_value.__aenter__.return_value = mock_client_instance
+
+        with pytest.raises(URLFetchError) as exc_info:
+            await service._fetch_url("https://unreachable.example.com")
+
+        assert exc_info.value.code == "URL_FETCH_ERROR"
+        assert exc_info.value.status_code == 502
+        assert "unable to connect" in exc_info.value.message.lower()
+        assert "unreachable" in exc_info.value.message.lower()
+
+
+@pytest.mark.unit
+async def test_fetch_url_dns_failure():
+    """Test URL fetch with DNS resolution failure."""
+    service = ExtractionService()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        # Setup network error (DNS failure is a type of NetworkError)
+        mock_client_instance = AsyncMock()
+        mock_client_instance.get = AsyncMock(
+            side_effect=httpx.NetworkError("Name or service not known")
+        )
+        mock_client.return_value.__aenter__.return_value = mock_client_instance
+
+        with pytest.raises(URLFetchError) as exc_info:
+            await service._fetch_url("https://nonexistent-domain-12345.com")
+
+        assert exc_info.value.code == "URL_FETCH_ERROR"
+        assert exc_info.value.status_code == 502
+        assert "network error" in exc_info.value.message.lower()
+        assert "dns" in exc_info.value.message.lower()
+
+
+@pytest.mark.unit
+async def test_fetch_url_timeout_user_friendly_message():
+    """Test that timeout error has user-friendly message."""
+    service = ExtractionService(timeout=1.0)
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_client_instance = AsyncMock()
+        mock_client_instance.get = AsyncMock(
+            side_effect=httpx.TimeoutException("Timeout")
+        )
+        mock_client.return_value.__aenter__.return_value = mock_client_instance
+
+        with pytest.raises(URLFetchError) as exc_info:
+            await service._fetch_url("https://slow.example.com")
+
+        # Verify user-friendly message
+        assert "timed out" in exc_info.value.message.lower()
+        assert "took too long" in exc_info.value.message.lower()
+        assert exc_info.value.status_code == 504
+
+
+@pytest.mark.unit
+async def test_fetch_url_404_user_friendly_message():
+    """Test that 404 error has user-friendly message."""
+    service = ExtractionService()
+
+    with patch("httpx.AsyncClient") as mock_client:
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_client_instance = AsyncMock()
+        mock_client_instance.get = AsyncMock(
+            side_effect=httpx.HTTPStatusError(
+                "Not found", request=MagicMock(), response=mock_response
+            )
+        )
+        mock_client.return_value.__aenter__.return_value = mock_client_instance
+
+        with pytest.raises(URLFetchError) as exc_info:
+            await service._fetch_url("https://example.com/missing")
+
+        # Verify user-friendly message
+        assert "not found" in exc_info.value.message.lower()
+        assert "does not exist" in exc_info.value.message.lower()
+        assert exc_info.value.status_code == 404
 
 
 @pytest.mark.unit

@@ -108,19 +108,60 @@ class ExtractionService:
 
         except httpx.TimeoutException as e:
             raise URLFetchError(
-                url=url, reason="Request timeout", status_code=504
+                url=url,
+                reason="Request timed out - the server took too long to respond",
+                status_code=504,
             ) from e
         except httpx.HTTPStatusError as e:
-            # Preserve the original HTTP status code for 404s
-            status_code = 404 if e.response.status_code == 404 else 502
+            # Map HTTP status codes to appropriate error codes
+            response_status = e.response.status_code
+
+            if response_status == 401:
+                raise URLFetchError(
+                    url=url,
+                    reason="Access denied - authentication required",
+                    status_code=403,
+                ) from e
+            elif response_status == 403:
+                raise URLFetchError(
+                    url=url,
+                    reason="Access denied - you don't have permission to access this resource",
+                    status_code=403,
+                ) from e
+            elif response_status == 404:
+                raise URLFetchError(
+                    url=url,
+                    reason="Page not found - the requested URL does not exist",
+                    status_code=404,
+                ) from e
+            elif 500 <= response_status < 600:
+                raise URLFetchError(
+                    url=url,
+                    reason=f"Server error - the remote server returned an error (HTTP {response_status})",
+                    status_code=502,
+                ) from e
+            else:
+                raise URLFetchError(
+                    url=url,
+                    reason=f"HTTP error - request failed with status {response_status}",
+                    status_code=502,
+                ) from e
+        except httpx.ConnectError as e:
+            # NOTE: ConnectError must be caught before NetworkError because ConnectError
+            # is a subclass of NetworkError in httpx. This ordering ensures we can provide
+            # more specific error messages for connection failures (host unreachable,
+            # connection refused) vs. other network issues (DNS failures, network timeouts).
             raise URLFetchError(
                 url=url,
-                reason=f"HTTP {e.response.status_code}",
-                status_code=status_code,
+                reason="Unable to connect - the host may be unreachable or the connection was refused",
+                status_code=502,
             ) from e
         except httpx.NetworkError as e:
+            # NetworkError includes DNS failures and other network issues
             raise URLFetchError(
-                url=url, reason="Network error (unreachable host)", status_code=502
+                url=url,
+                reason="Network error - unable to reach the host (this may be a DNS failure or network issue)",
+                status_code=502,
             ) from e
         except ExtractionError:
             # Re-raise ExtractionError as-is

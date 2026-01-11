@@ -19,19 +19,23 @@ between source and translated content.
 #### 1. SourcePane.svelte
 
 - **Added Props:**
+
   - `highlightedBlockId: string | null` - ID of the block to highlight
 
 - **Added Events:**
+
   - `blockHover` - Emitted when mouse enters a block or block receives focus
   - `blockLeave` - Emitted when mouse leaves a block or block loses focus
 
 - **Event Handlers:**
+
   - `handleBlockMouseEnter(blockId)` - Debounced by 50ms to prevent flicker
   - `handleBlockMouseLeave(blockId)` - Clears pending hover timeout
   - `handleBlockFocus(blockId)` - Immediate, not debounced
   - `handleBlockBlur(blockId)` - Immediate
 
 - **DOM Changes:**
+
   - All block elements now have `tabindex="0"` for keyboard navigation
   - All block elements have `block-hoverable` class for cursor styling
   - Highlighted blocks receive `block-highlighted` class
@@ -43,9 +47,11 @@ between source and translated content.
 #### 3. DualPaneLayout.svelte
 
 - **Added State:**
+
   - `hoveredBlockId: string | null` - Tracks currently hovered block
 
 - **Event Coordination:**
+
   - Listens to `blockHover` and `blockLeave` events from both panes
   - Updates `hoveredBlockId` when blocks are hovered
   - Passes `hoveredBlockId` to both panes via slot props
@@ -92,34 +98,41 @@ between source and translated content.
 ### Accessibility Features
 
 1. **Keyboard Navigation:**
+
    - All blocks are focusable with `tabindex="0"`
    - Tab key moves focus between blocks
    - Focus triggers highlighting immediately (no debounce)
 
 1. **Visual Indicators:**
+
    - Uses both background color AND border (not color alone)
    - Distinct focus outline (blue) vs hover highlight (amber)
    - Smooth transitions for visual comfort
 
 1. **ARIA Attributes:**
+
    - Code blocks have `aria-label` describing language
    - All blocks maintain semantic HTML structure
 
 1. **Svelte Accessibility Warnings:**
+
    - Added `<!-- svelte-ignore a11y-no-noninteractive-tabindex -->` where
      intentionally making non-interactive elements focusable for this feature
 
 ### Performance Optimizations
 
 1. **Debouncing:**
+
    - Mouse hover events debounced by 50ms to prevent flicker
    - Keyboard focus events NOT debounced for immediate feedback
 
 1. **Minimal DOM Operations:**
+
    - Only CSS classes toggle, no DOM manipulation
    - Transitions handled by CSS, not JavaScript
 
 1. **Tested with Large Documents:**
+
    - Validated with 150+ blocks
    - Renders in \<500ms
    - No performance degradation observed
@@ -226,26 +239,31 @@ DualPaneLayout.
 ### Key Test Cases
 
 1. **Hover Events:**
+
    - Emits `blockHover` after 50ms debounce
    - Emits `blockLeave` immediately
    - Cancels pending hover if mouse leaves quickly
 
 1. **Keyboard Events:**
+
    - Focus emits `blockHover` immediately
    - Blur emits `blockLeave` immediately
    - No debounce for keyboard events
 
 1. **Styling:**
+
    - Applies `.block-highlighted` when `highlightedBlockId` matches
    - Works for all block types (paragraph, heading, code, list, quote, image)
    - Removes highlight when `highlightedBlockId` changes to null
 
 1. **Accessibility:**
+
    - All blocks have `tabindex="0"`
    - All blocks have `.block-hoverable` class
    - Keyboard focus works identically to mouse hover
 
 1. **Performance:**
+
    - Renders 150 blocks in \<500ms
    - Debouncing prevents multiple events from rapid mouse movement
 
@@ -276,19 +294,23 @@ npm run test:coverage
 Potential improvements for future iterations:
 
 1. **Touch Support:**
+
    - Add tap-and-hold for mobile highlighting
    - Consider alternative interaction for touch devices
 
 1. **Scroll Synchronization:**
+
    - Option to auto-scroll opposite pane to highlighted block
    - "Sticky highlight" that persists on click
 
 1. **Customization:**
+
    - User-selectable highlight colors
    - Configurable debounce delay
    - Toggle hover feature on/off
 
 1. **Analytics:**
+
    - Track which blocks users hover over most
    - Use data to improve translation quality
 
