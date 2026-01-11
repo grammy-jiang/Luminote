@@ -14,9 +14,11 @@ from app.core.errors import (
     ExtractionError,
     InvalidURLError,
     LuminoteException,
+    ProviderTimeoutError,
     RateLimitError,
     ServerError,
     TranslationError,
+    URLFetchError,
     ValidationError,
 )
 
@@ -149,3 +151,36 @@ class TestServerErrors(unittest.TestCase):
         self.assertEqual(exc.details["provider"], "openai")
         self.assertEqual(exc.details["model"], "gpt-4")
         self.assertEqual(exc.details["reason"], "API unavailable")
+
+    def test_url_fetch_error_default_status(self) -> None:
+        """Test URLFetchError with default status code."""
+        exc = URLFetchError("https://example.com", "Connection refused")
+        self.assertEqual(exc.status_code, 502)
+        self.assertEqual(exc.code, "URL_FETCH_ERROR")
+        self.assertIn("https://example.com", exc.message)
+        self.assertEqual(exc.details["url"], "https://example.com")
+        self.assertEqual(exc.details["reason"], "Connection refused")
+
+    def test_url_fetch_error_custom_status(self) -> None:
+        """Test URLFetchError with custom status code."""
+        exc = URLFetchError("https://example.com", "Timeout", status_code=504)
+        self.assertEqual(exc.status_code, 504)
+        self.assertEqual(exc.code, "URL_FETCH_ERROR")
+
+    def test_provider_timeout_error(self) -> None:
+        """Test ProviderTimeoutError exception."""
+        exc = ProviderTimeoutError("openai", "gpt-4", "Request exceeded 30s limit")
+        self.assertEqual(exc.status_code, 504)
+        self.assertEqual(exc.code, "PROVIDER_TIMEOUT")
+        self.assertIn("openai", exc.message)
+        self.assertIn("gpt-4", exc.message)
+        self.assertEqual(exc.details["provider"], "openai")
+        self.assertEqual(exc.details["model"], "gpt-4")
+        self.assertEqual(exc.details["reason"], "Request exceeded 30s limit")
+
+    def test_provider_timeout_error_default_reason(self) -> None:
+        """Test ProviderTimeoutError with default reason."""
+        exc = ProviderTimeoutError("anthropic", "claude-3")
+        self.assertEqual(exc.status_code, 504)
+        self.assertEqual(exc.code, "PROVIDER_TIMEOUT")
+        self.assertEqual(exc.details["reason"], "Request timed out")
