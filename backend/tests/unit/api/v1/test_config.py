@@ -1,11 +1,9 @@
 """Tests for config validation API endpoint."""
 
-import pytest
-from fastapi.testclient import TestClient
 from unittest.mock import AsyncMock, patch
 
-from app.core.errors import APIKeyError, RateLimitError, TranslationError
-from app.services.providers.base import ValidationResult
+import pytest
+from fastapi.testclient import TestClient
 
 
 @pytest.mark.unit
