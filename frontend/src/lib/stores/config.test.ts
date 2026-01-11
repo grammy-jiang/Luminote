@@ -54,41 +54,47 @@ describe('Configuration Store', () => {
 			expect(state.api_key).toBe('');
 		});
 
-		it('uses defaults if stored provider is invalid', () => {
+		it('loadFromStorage uses defaults if stored provider is invalid', async () => {
 			localStorageMock['luminote_config'] = JSON.stringify({
 				provider: 'invalid_provider',
 				model: 'gpt-4',
 				target_language: 'en'
 			});
 
-			configStore.reset();
-			const state = get(configStore);
+			// Re-import configStore so that loadFromStorage runs with the mocked localStorage value
+			vi.resetModules();
+			const { configStore: freshConfigStore } = await import('./config');
+			const state = get(freshConfigStore);
 
 			expect(state.provider).toBe('openai');
 		});
 
-		it('uses defaults if stored model is invalid', () => {
+		it('loadFromStorage uses defaults if stored model is invalid', async () => {
 			localStorageMock['luminote_config'] = JSON.stringify({
 				provider: 'openai',
 				model: '',
 				target_language: 'en'
 			});
 
-			configStore.reset();
-			const state = get(configStore);
+			// Re-import configStore so that loadFromStorage runs with the mocked localStorage value
+			vi.resetModules();
+			const { configStore: freshConfigStore } = await import('./config');
+			const state = get(freshConfigStore);
 
 			expect(state.model).toBe('gpt-4');
 		});
 
-		it('uses defaults if stored target_language is invalid', () => {
+		it('loadFromStorage uses defaults if stored target_language is invalid', async () => {
 			localStorageMock['luminote_config'] = JSON.stringify({
 				provider: 'openai',
 				model: 'gpt-4',
 				target_language: 'english' // Invalid: should be 2-letter code
 			});
 
-			configStore.reset();
-			const state = get(configStore);
+			// Re-import the config store so that loadFromStorage runs against the mocked data
+			vi.resetModules();
+			const { configStore: freshConfigStore } = await import('./config');
+			const state = get(freshConfigStore);
 
 			expect(state.target_language).toBe('en');
 		});

@@ -1,6 +1,8 @@
 # Configuration Store
 
-The configuration store manages user settings with localStorage persistence, following ADR-003 (Client-Side Storage Strategy) and ADR-005 (Frontend State Management).
+The configuration store manages user settings with localStorage persistence,
+following ADR-003 (Client-Side Storage Strategy) and ADR-005 (Frontend State
+Management).
 
 ## Features
 
@@ -224,7 +226,8 @@ try {
 
 ## Security
 
-**CRITICAL:** The API key is **NEVER** persisted to localStorage. It exists only in memory.
+**CRITICAL:** The API key is **NEVER** persisted to localStorage. It exists only
+in memory.
 
 ```typescript
 // ✅ Safe: API key is only in memory
@@ -242,7 +245,8 @@ console.log(JSON.parse(stored));
 
 ## Storage
 
-Configuration is automatically persisted to localStorage under the key `luminote_config`.
+Configuration is automatically persisted to localStorage under the key
+`luminote_config`.
 
 **Persisted fields:**
 
