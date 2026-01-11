@@ -1506,7 +1506,7 @@ def test_remove_line_numbers():
     """Test line number removal from code blocks."""
     service = ExtractionService()
 
-    # Test with numbered lines (period separator)
+    # Test with numbered lines (period separator) - consecutive numbers
     code_with_numbers = """1. pip install fastapi
 2. pip install uvicorn"""
     cleaned = service._remove_line_numbers(code_with_numbers)
@@ -1516,7 +1516,7 @@ def test_remove_line_numbers():
 pip install uvicorn"""
     )
 
-    # Test with numbered lines (colon separator)
+    # Test with numbered lines (colon separator) - consecutive numbers
     code_with_colons = """1: import fastapi
 2: from fastapi import FastAPI"""
     cleaned = service._remove_line_numbers(code_with_colons)
@@ -1526,14 +1526,14 @@ pip install uvicorn"""
 from fastapi import FastAPI"""
     )
 
-    # Test with indented line numbers
+    # Test with indented line numbers - consecutive numbers
     code_indented = """  1. def hello():
   2.     return "world" """
     cleaned = service._remove_line_numbers(code_indented)
     assert (
         cleaned
-        == """def hello():
-    return "world" """
+        == """  def hello():
+      return "world" """
     )
 
     # Test code without line numbers (should remain unchanged)
@@ -1541,6 +1541,25 @@ from fastapi import FastAPI"""
     pass"""
     cleaned = service._remove_line_numbers(code_no_numbers)
     assert cleaned == code_no_numbers
+
+    # Test with non-consecutive numbers (should remain unchanged to avoid false positives)
+    code_non_consecutive = """1. first line
+3. third line"""
+    cleaned = service._remove_line_numbers(code_non_consecutive)
+    assert cleaned == code_non_consecutive
+
+    # Test with sparse line numbers (less than 50% of lines, should remain unchanged)
+    code_sparse = """def function():
+1. line with number
+    return value"""
+    cleaned = service._remove_line_numbers(code_sparse)
+    assert cleaned == code_sparse
+
+    # Test with floating point literals (should remain unchanged)
+    code_with_floats = """result = [1. + x, 2. * y]
+other_line = 3. / z"""
+    cleaned = service._remove_line_numbers(code_with_floats)
+    assert cleaned == code_with_floats
 
 
 @pytest.mark.unit

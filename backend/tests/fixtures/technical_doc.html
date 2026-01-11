@@ -25,23 +25,23 @@
     <!-- API Documentation Structure -->
     <article class="api-documentation">
         <h1>FastAPI Complete Guide</h1>
-        
+
         <p>FastAPI is a modern, fast (high-performance) web framework for building APIs with Python 3.7+ based on standard Python type hints.</p>
 
         <!-- Nested heading structure -->
         <h2>Getting Started</h2>
         <p>This section covers installation and basic setup.</p>
-        
+
         <h3>Installation</h3>
         <p>Install FastAPI using pip:</p>
-        
+
         <!-- Code block with language and line numbers to be removed -->
         <pre><code class="language-bash">1. pip install fastapi
 2. pip install "uvicorn[standard]"</code></pre>
 
         <h3>First Application</h3>
         <p>Create a simple FastAPI application:</p>
-        
+
         <!-- Python code with syntax highlighting -->
         <pre><code class="language-python">from fastapi import FastAPI
 
@@ -58,7 +58,7 @@ async def read_item(item_id: int, q: str | None = None):
 
         <h3>Running the Server</h3>
         <p>Start the development server with uvicorn:</p>
-        
+
         <pre><code class="language-bash">uvicorn main:app --reload</code></pre>
 
         <h2>Core Concepts</h2>
@@ -66,7 +66,7 @@ async def read_item(item_id: int, q: str | None = None):
 
         <h3>Path Parameters</h3>
         <p>Path parameters are variable parts of a URL path.</p>
-        
+
         <!-- Tabbed content example - multiple code examples -->
         <div class="tabbed-content" data-tabs="python,typescript">
             <div class="tab-content" data-tab="python">
@@ -86,7 +86,7 @@ async def read_user(user_id: int):
 
         <h3>Query Parameters</h3>
         <p>Query parameters provide optional filtering:</p>
-        
+
         <pre><code class="language-python">from typing import Optional
 
 @app.get("/items/")
@@ -96,7 +96,7 @@ async def read_items(skip: int = 0, limit: int = 10):
 
         <h3>Request Body</h3>
         <p>Use Pydantic models for request validation:</p>
-        
+
         <!-- Code with proper indentation -->
         <pre><code class="language-python">from pydantic import BaseModel
 
@@ -115,16 +115,16 @@ async def create_item(item: Item):
         <p>Complete API endpoint documentation.</p>
 
         <h3>Endpoints</h3>
-        
+
         <h4>GET /users</h4>
         <p>Retrieve a list of users.</p>
-        
+
         <ul>
             <li><strong>Parameters:</strong></li>
             <li><code>skip</code> (integer, optional) - Number of records to skip</li>
             <li><code>limit</code> (integer, optional) - Maximum number of records to return</li>
         </ul>
-        
+
         <p>Example response:</p>
         <pre><code class="language-json">{
     "users": [
@@ -137,7 +137,7 @@ async def create_item(item: Item):
 
         <h4>POST /users</h4>
         <p>Create a new user.</p>
-        
+
         <ul>
             <li><strong>Request Body:</strong></li>
             <li><code>name</code> (string, required) - User's full name</li>
@@ -146,7 +146,7 @@ async def create_item(item: Item):
 
         <h3>Error Handling</h3>
         <p>FastAPI provides built-in error handling with HTTP exceptions.</p>
-        
+
         <pre><code class="language-python">from fastapi import HTTPException
 
 @app.get("/items/{item_id}")
@@ -157,10 +157,10 @@ async def read_item(item_id: str):
 </code></pre>
 
         <h2>Advanced Topics</h2>
-        
+
         <h3>Dependency Injection</h3>
         <p>FastAPI has a powerful dependency injection system.</p>
-        
+
         <!-- Multiple code blocks in sequence -->
         <pre><code class="language-python">from fastapi import Depends
 
@@ -178,7 +178,7 @@ async def read_users(db = Depends(get_db)):
 
         <h3>Background Tasks</h3>
         <p>Execute tasks after returning a response:</p>
-        
+
         <pre><code class="language-python">from fastapi import BackgroundTasks
 
 def write_log(message: str):
@@ -192,10 +192,10 @@ async def send_email(email: str, background_tasks: BackgroundTasks):
 </code></pre>
 
         <h2>Best Practices</h2>
-        
+
         <h3>Project Structure</h3>
         <p>Organize your FastAPI project for maintainability:</p>
-        
+
         <!-- Plain text code block showing directory structure -->
         <pre><code>my_project/
 ├── app/
@@ -215,7 +215,7 @@ async def send_email(email: str, background_tasks: BackgroundTasks):
 
         <h3>Testing</h3>
         <p>Use TestClient for testing endpoints:</p>
-        
+
         <pre><code class="language-python">from fastapi.testclient import TestClient
 from app.main import app
 

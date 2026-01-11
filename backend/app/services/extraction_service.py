@@ -163,7 +163,7 @@ class ExtractionService:
 
         # First, handle tabbed content (common in technical docs)
         tabbed_containers = content_root.find_all(
-            "div", class_=re.compile(r"tabbed?[-_]?content", re.I)
+            "div", class_=re.compile(r"(?:tab|tabbed)[-_]content", re.I)
         )
         tabbed_containers.extend(
             content_root.find_all("div", attrs={"data-tabs": True})
@@ -173,11 +173,15 @@ class ExtractionService:
             # Extract all code blocks from tabs
             tab_blocks = tab_container.find_all(["pre", "code"])
             for tab_block in tab_blocks:
-                if not tab_block.find_parent("pre"):  # Skip nested code in pre
+                parent_pre = tab_block.find_parent("pre")
+                if not parent_pre:
                     continue
-                block = self._element_to_block(tab_block.find_parent("pre"))
+                block = self._element_to_block(parent_pre)
                 if block:
                     blocks.append(block)
+            # Remove the tabbed container from the tree so its content
+            # is not processed again in the main element loop below.
+            tab_container.decompose()
 
         # Process each element
         for element in content_root.find_all(
@@ -370,6 +374,12 @@ class ExtractionService:
     def _remove_line_numbers(self, code_text: str) -> str:
         """Remove line numbers from code blocks.
 
+        This method is intentionally conservative: it only strips prefixes that
+        look like line numbers when most lines in the block follow the same
+        pattern and their numbers are consecutive. This avoids corrupting
+        legitimate code such as floating point literals (e.g. ``1. + x``) or
+        ordered list markers in comments.
+
         Common patterns in technical documentation:
         - "1. code line"
         - "1: code line"
@@ -379,16 +389,45 @@ class ExtractionService:
             code_text: Raw code text that may contain line numbers
 
         Returns:
-            Code text with line numbers removed
+            Code text with line numbers removed when a consistent line number
+            pattern is detected, otherwise the original text.
         """
         lines = code_text.split("\n")
-        cleaned_lines = []
 
-        for line in lines:
-            # Pattern: optional spaces, then digit(s), then . or :, then space
-            # e.g., "1. " or "  12: " or "123. "
-            cleaned_line = re.sub(r"^\s*\d+[.:]\s", "", line)
-            cleaned_lines.append(cleaned_line)
+        # Match: optional spaces, then digits, then . or :, then space, then rest
+        pattern = re.compile(r"^(\s*)(\d+)[.:]\s(.*)$")
+
+        matches: list[tuple[int, int, re.Match[str]]] = []
+        for idx, line in enumerate(lines):
+            match = pattern.match(line)
+            if match:
+                number = int(match.group(2))
+                matches.append((idx, number, match))
+
+        # If we don't have enough lines that look numbered, or they are sparse,
+        # leave the text unchanged to avoid false positives.
+        if len(matches) < 2 or len(matches) < len(lines) / 2:
+            return code_text
+
+        # Ensure the detected numbers are consecutive in order of appearance
+        numbers = [m[1] for m in matches]
+        if not all(
+            later == earlier + 1
+            for earlier, later in zip(numbers, numbers[1:], strict=False)
+        ):
+            return code_text
+
+        # At this point we are confident these are real line numbers - strip them.
+        cleaned_lines: list[str] = []
+        match_by_index = {idx: m for idx, _, m in matches}
+
+        for idx, line in enumerate(lines):
+            match = match_by_index.get(idx)
+            if match:
+                # Preserve indentation (group 1) and the rest of the line (group 3)
+                cleaned_lines.append(f"{match.group(1)}{match.group(3)}")
+            else:
+                cleaned_lines.append(line)
 
         return "\n".join(cleaned_lines)
 
@@ -398,7 +437,8 @@ class ExtractionService:
         """Build nested heading structure for technical documentation.
 
         Creates a hierarchical structure of headings (H1-H6) that represents
-        the document's organization.
+        the document's organization. Handles malformed HTML gracefully by
+        inserting missing parent levels when needed.
 
         Args:
             content_blocks: List of content blocks
@@ -423,6 +463,10 @@ class ExtractionService:
                 # Pop stack until we find the parent level
                 while len(stack) > 1 and stack[-1].get("level", 0) >= level:
                     stack.pop()
+
+                # If there's a gap in heading levels (e.g., H1 followed by H3),
+                # the current parent in the stack is still appropriate since we
+                # want H3 to be a child of H1, not a sibling.
 
                 # Add to current parent
                 stack[-1]["children"].append(node)
@@ -526,7 +570,19 @@ class ExtractionService:
 
                     current = current.find_next_sibling()
 
-        return reference_links
+        # Deduplicate by URL while preserving order of first occurrence
+        seen_urls: set[str] = set()
+        unique_reference_links: list[dict[str, str]] = []
+        for link_info in reference_links:
+            url = link_info.get("url")
+            if not url:
+                continue
+            if url in seen_urls:
+                continue
+            seen_urls.add(url)
+            unique_reference_links.append(link_info)
+
+        return unique_reference_links
 
     def _detect_technical_article(self, soup: BeautifulSoup) -> bool:
         """Detect if content is a technical article/documentation.
@@ -550,12 +606,21 @@ class ExtractionService:
                 data = json.loads(json_ld.string or "")
                 if isinstance(data, dict) and data.get("@type") == "TechArticle":
                     return True
-            except (TypeError, json.JSONDecodeError, ValueError):
-                pass
+            except (TypeError, json.JSONDecodeError, ValueError) as exc:
+                logger.debug(
+                    "Failed to parse JSON-LD while detecting TechArticle schema.",
+                    exc_info=exc,
+                )
 
-        # Count code blocks
-        code_blocks = soup.find_all(["pre", "code"])
-        if len(code_blocks) >= 3:  # 3+ code blocks suggests technical content
+        # Count logical code blocks without double-counting <pre><code> pairs
+        pre_code_blocks = [
+            pre for pre in soup.find_all("pre") if pre.find("code") is not None
+        ]
+        standalone_code_blocks = [
+            code for code in soup.find_all("code") if code.find_parent("pre") is None
+        ]
+        code_block_count = len(pre_code_blocks) + len(standalone_code_blocks)
+        if code_block_count >= 3:  # 3+ code blocks suggests technical content
             return True
 
         # Check for technical keywords in title/headings
