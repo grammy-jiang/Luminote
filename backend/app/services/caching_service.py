@@ -51,8 +51,8 @@ class CacheEntry:
 class CachingService:
     """Thread-safe caching service for extracted content.
 
-    Provides in-memory caching with TTL, compression, quota management,
-    and LRU eviction.
+    Provides in-memory caching with TTL, compression, quota management, and LRU
+    eviction.
     """
 
     def __init__(
@@ -160,13 +160,14 @@ class CachingService:
                 extra={"count": len(expired_keys)},
             )
 
-    def _evict_lru(self, bytes_needed: int) -> None:
+    def _evict_lru(self, bytes_needed: int, exclude_key: str | None = None) -> None:
         """Evict least recently used entries to free up space.
 
         This method should be called while holding the lock.
 
         Args:
             bytes_needed: Number of bytes that need to be freed
+            exclude_key: Optional key to exclude from eviction (e.g., key being updated)
         """
         bytes_freed = 0
         evicted_count = 0
@@ -177,6 +178,10 @@ class CachingService:
         for key, entry in sorted_items:
             if bytes_freed >= bytes_needed:
                 break
+
+            # Skip the key being updated to avoid unnecessary eviction
+            if exclude_key is not None and key == exclude_key:
+                continue
 
             bytes_freed += entry.size_bytes
             del self._cache[key]
@@ -276,8 +281,8 @@ class CachingService:
                 space_needed = (current_storage + size_bytes) - self.max_storage_bytes
 
                 if space_needed > 0:
-                    # Need to evict LRU entries
-                    self._evict_lru(space_needed)
+                    # Need to evict LRU entries, but exclude the key being updated
+                    self._evict_lru(space_needed, exclude_key=cache_key)
 
                 # Store in cache
                 entry = CacheEntry(compressed_data, expires_at, size_bytes)

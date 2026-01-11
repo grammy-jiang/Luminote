@@ -26,8 +26,8 @@ class FixtureAttrs:
 def clear_cache() -> None:
     """Clear the caching service before each test to ensure test isolation.
 
-    This autouse fixture runs before every test to prevent cache pollution
-    between tests.
+    This autouse fixture runs before every test to prevent cache pollution between
+    tests.
     """
     from app.api.v1.endpoints.extract import caching_service
 
