@@ -133,6 +133,44 @@ export interface ConfigResponse {
 }
 
 /**
+ * Configuration validation request parameters.
+ */
+export interface ConfigValidationRequest {
+	/** AI provider (e.g., 'openai', 'anthropic') */
+	provider: string;
+	/** Model identifier (e.g., 'gpt-4', 'claude-3-opus-20240229') */
+	model: string;
+	/** User's API key for the provider */
+	api_key: string;
+}
+
+/**
+ * Model capabilities information.
+ */
+export interface ModelCapabilities {
+	/** Whether model supports streaming */
+	streaming: boolean;
+	/** Maximum tokens supported by model */
+	max_tokens: number;
+}
+
+/**
+ * Configuration validation response data.
+ */
+export interface ConfigValidationResponse {
+	/** Whether the configuration is valid */
+	valid: boolean;
+	/** Provider name */
+	provider: string;
+	/** Model identifier */
+	model: string;
+	/** Model capabilities */
+	capabilities: ModelCapabilities;
+	/** Additional validation details */
+	details: Record<string, unknown>;
+}
+
+/**
  * Generic API request options.
  */
 export interface APIRequestOptions {
