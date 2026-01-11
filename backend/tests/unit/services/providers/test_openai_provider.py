@@ -6,7 +6,12 @@ from unittest.mock import AsyncMock, patch
 import httpx
 import pytest
 
-from app.core.errors import APIKeyError, RateLimitError, TranslationError
+from app.core.errors import (
+    APIKeyError,
+    ProviderTimeoutError,
+    RateLimitError,
+    TranslationError,
+)
 from app.services.providers.openai_provider import OpenAIProvider
 
 
@@ -273,12 +278,13 @@ async def test_openai_translate_timeout():
         mock_post.side_effect = httpx.TimeoutException("Request timed out")
         mock_client.return_value.__aenter__.return_value.post = mock_post
 
-        with pytest.raises(TranslationError) as exc_info:
+        with pytest.raises(ProviderTimeoutError) as exc_info:
             await provider.translate(
                 text="Hello", target_language="es", model="gpt-4", api_key="sk-test"
             )
 
-        assert exc_info.value.code == "TRANSLATION_ERROR"
+        assert exc_info.value.code == "PROVIDER_TIMEOUT"
+        assert exc_info.value.status_code == 504
         assert "timed out" in exc_info.value.message.lower()
 
 

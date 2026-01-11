@@ -6,7 +6,12 @@ import pytest
 
 from app.core.errors import LuminoteException
 from app.schemas.translation import ContentBlock
-from app.services.providers.base import BaseProvider, TranslationResult
+from app.services.providers.base import (
+    BaseProvider,
+    ModelCapabilitiesResult,
+    TranslationResult,
+    ValidationResult,
+)
 from app.services.translation_service import ProviderFactory, TranslationService
 
 
@@ -24,6 +29,14 @@ class CustomTestProvider(BaseProvider):
             tokens_used=10,
             model=model,
             provider="custom",
+        )
+
+    async def validate(self, model: str, api_key: str) -> ValidationResult:
+        return ValidationResult(
+            valid=True,
+            provider="custom",
+            model=model,
+            capabilities=ModelCapabilitiesResult(streaming=True, max_tokens=4096),
         )
 
 

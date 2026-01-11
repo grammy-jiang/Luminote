@@ -17,6 +17,22 @@ class TranslationResult(BaseModel):
     provider: str = Field(..., description="Provider name")
 
 
+class ModelCapabilitiesResult(BaseModel):
+    """Model capabilities for validation result."""
+
+    streaming: bool = Field(..., description="Whether model supports streaming")
+    max_tokens: int = Field(..., description="Maximum tokens supported", ge=0)
+
+
+class ValidationResult(BaseModel):
+    """Result from a validation operation."""
+
+    valid: bool = Field(..., description="Whether the validation succeeded")
+    provider: str = Field(..., description="Provider name")
+    model: str = Field(..., description="Model identifier")
+    capabilities: ModelCapabilitiesResult = Field(..., description="Model capabilities")
+
+
 class BaseProvider(ABC):
     """Abstract base class for translation providers.
 
@@ -50,5 +66,25 @@ class BaseProvider(ABC):
 
         Returns:
             Provider name (e.g., "openai", "anthropic")
+        """
+        pass
+
+    @abstractmethod
+    async def validate(self, model: str, api_key: str) -> ValidationResult:
+        """Validate API key and get model capabilities.
+
+        This method makes a minimal test API call to verify the API key is valid
+        and retrieve model capabilities. Uses a minimal prompt to avoid charging
+        the user significant costs.
+
+        Args:
+            model: Model identifier for the provider
+            api_key: User's API key for authentication
+
+        Returns:
+            ValidationResult with validation status and model capabilities
+
+        Raises:
+            LuminoteException: On validation failure or API errors (401, 429, etc.)
         """
         pass

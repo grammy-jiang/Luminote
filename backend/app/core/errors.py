@@ -160,3 +160,24 @@ class TranslationError(ServerError):
             code="TRANSLATION_ERROR",
             details={"provider": provider, "model": model, "reason": reason},
         )
+
+
+class ProviderTimeoutError(ServerError):
+    """Provider request timed out."""
+
+    def __init__(
+        self, provider: str, model: str, reason: str = "Request timed out"
+    ) -> None:
+        """Initialize a provider timeout error.
+
+        Args:
+            provider: Provider name (openai, anthropic, etc.)
+            model: Model identifier
+            reason: Reason for the timeout
+        """
+        super().__init__(
+            message=f"Provider {provider} request timed out for model {model}: {reason}",
+            code="PROVIDER_TIMEOUT",
+            details={"provider": provider, "model": model, "reason": reason},
+        )
+        self.status_code = 504  # Gateway Timeout

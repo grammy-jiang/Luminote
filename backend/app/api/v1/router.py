@@ -5,9 +5,16 @@ This module aggregates all v1 endpoints and provides the main APIRouter for vers
 
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import extract, translate
+from app.api.v1.endpoints import config, extract, translate
 
 api_router = APIRouter()
+
+# Include config endpoint
+api_router.include_router(
+    config.router,
+    prefix="/config",
+    tags=["configuration"],
+)
 
 # Include extract endpoint
 api_router.include_router(

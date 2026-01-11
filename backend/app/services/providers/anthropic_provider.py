@@ -2,8 +2,19 @@
 
 import httpx
 
-from app.core.errors import APIKeyError, RateLimitError, TranslationError
-from app.services.providers.base import BaseProvider, TranslationResult
+from app.core.errors import (
+    APIKeyError,
+    ProviderTimeoutError,
+    RateLimitError,
+    TranslationError,
+)
+from app.core.logging import logger
+from app.services.providers.base import (
+    BaseProvider,
+    ModelCapabilitiesResult,
+    TranslationResult,
+    ValidationResult,
+)
 
 
 class AnthropicProvider(BaseProvider):
@@ -99,6 +110,7 @@ class AnthropicProvider(BaseProvider):
                     try:
                         retry_after = int(e.response.headers["retry-after"])
                     except (ValueError, TypeError):
+                        # Ignore invalid Retry-After header values and keep the default
                         pass
                 raise RateLimitError(
                     retry_after=retry_after, provider="anthropic"
@@ -121,8 +133,150 @@ class AnthropicProvider(BaseProvider):
                 ) from e
 
         except httpx.TimeoutException as e:
-            raise TranslationError(
+            raise ProviderTimeoutError(
                 provider="anthropic", model=model, reason="Request timed out"
+            ) from e
+
+        except KeyError as e:
+            raise TranslationError(
+                provider="anthropic",
+                model=model,
+                reason=f"Unexpected API response format: {str(e)}",
+            ) from e
+
+        except Exception as e:
+            raise TranslationError(
+                provider="anthropic", model=model, reason=f"Unexpected error: {str(e)}"
+            ) from e
+
+    async def validate(self, model: str, api_key: str) -> ValidationResult:
+        """Validate Anthropic API key and get model capabilities.
+
+        Makes a minimal test API call to verify the API key is valid.
+        Uses a single-word prompt to minimize cost.
+
+        Args:
+            model: Anthropic model identifier (e.g., "claude-3-5-sonnet-20241022")
+            api_key: User's Anthropic API key
+
+        Returns:
+            ValidationResult with validation status and model capabilities
+
+        Raises:
+            APIKeyError: If API key is invalid or missing (401)
+            RateLimitError: If rate limit is exceeded (429)
+            TranslationError: If validation fails
+        """
+        # Validate API key format
+        if not api_key or not api_key.startswith("sk-ant-"):
+            raise APIKeyError(
+                provider="anthropic",
+                reason="Invalid API key format (must start with 'sk-ant-')",
+            )
+
+        # Minimal test prompt (single word to minimize tokens/cost)
+        test_prompt = "Hi"
+
+        try:
+            async with httpx.AsyncClient() as client:
+                response = await client.post(
+                    "https://api.anthropic.com/v1/messages",
+                    headers={
+                        "x-api-key": api_key,
+                        "anthropic-version": "2023-06-01",
+                        "Content-Type": "application/json",
+                    },
+                    json={
+                        "model": model,
+                        "messages": [{"role": "user", "content": test_prompt}],
+                        "max_tokens": 5,  # Minimal tokens to reduce cost
+                        "temperature": 0.0,
+                    },
+                    timeout=10.0,  # 10-second timeout as per requirements
+                )
+                response.raise_for_status()
+                # Note: We don't need to parse the response data, just verify it's valid
+                # by checking that raise_for_status() didn't raise
+
+                # Extract model capabilities from response
+                # Anthropic Claude models support streaming and have specific token limits
+                # Map known models to their capabilities
+                max_tokens_map = {
+                    "claude-3-5-sonnet": 200000,
+                    "claude-3-5-haiku": 200000,
+                    "claude-3-opus": 200000,
+                    "claude-3-sonnet": 200000,
+                    "claude-3-haiku": 200000,
+                    "claude-2.1": 200000,
+                    "claude-2.0": 100000,
+                    "claude-instant": 100000,
+                }
+
+                # Find matching model prefix for max tokens
+                max_tokens = 100000  # Default fallback
+                model_matched = False
+                for model_prefix, tokens in max_tokens_map.items():
+                    if model.startswith(model_prefix):
+                        max_tokens = tokens
+                        model_matched = True
+                        break
+
+                # Log when using fallback for unknown model
+                if not model_matched:
+                    logger.warning(
+                        f"Unknown Anthropic model '{model}', using default max_tokens={max_tokens}",
+                        extra={"model": model, "provider": "anthropic"},
+                    )
+
+                return ValidationResult(
+                    valid=True,
+                    provider=self.get_provider_name(),
+                    model=model,
+                    capabilities=ModelCapabilitiesResult(
+                        streaming=True,  # All Claude models support streaming
+                        max_tokens=max_tokens,
+                    ),
+                )
+
+        except httpx.HTTPStatusError as e:
+            status_code = e.response.status_code
+
+            if status_code == 401:
+                raise APIKeyError(
+                    provider="anthropic", reason="Invalid or expired API key"
+                ) from e
+            elif status_code == 429:
+                # Try to extract retry-after from response headers
+                retry_after = 60  # Default
+                if "retry-after" in e.response.headers:
+                    try:
+                        retry_after = int(e.response.headers["retry-after"])
+                    except (ValueError, TypeError):
+                        # Ignore invalid Retry-After header values and keep the default
+                        pass
+                raise RateLimitError(
+                    retry_after=retry_after, provider="anthropic"
+                ) from e
+            elif status_code >= 500:
+                raise TranslationError(
+                    provider="anthropic",
+                    model=model,
+                    reason=f"Anthropic API server error (status {status_code})",
+                ) from e
+            else:
+                # Try to extract error message from response
+                try:
+                    error_data = e.response.json()
+                    error_msg = error_data.get("error", {}).get("message", str(e))
+                except Exception:
+                    error_msg = str(e)
+                raise TranslationError(
+                    provider="anthropic", model=model, reason=error_msg
+                ) from e
+
+        except httpx.TimeoutException as e:
+            raise ProviderTimeoutError(
+                provider="anthropic", model=model, reason="Validation request timed out"
             ) from e
 
         except KeyError as e:
