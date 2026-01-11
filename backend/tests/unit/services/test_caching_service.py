@@ -3,6 +3,7 @@
 import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
+from unittest.mock import patch
 
 import pytest
 
@@ -584,3 +585,50 @@ def test_caching_with_special_characters_in_url():
 
     assert cached is not None
     assert cached.url == url
+
+
+@pytest.mark.unit
+def test_get_expired_entry_directly():
+    """Test getting an expired entry that is still in cache."""
+    service = CachingService(ttl_seconds=1)
+    url = "https://example.com/article"
+    content = create_sample_content(url)
+
+    # Set content
+    service.set(url, content)
+
+    # Wait for expiration
+    time.sleep(1.1)
+
+    # Manually check entry is still in cache dict but expired
+    cache_key = service._make_cache_key(url)
+    with service._lock:
+        assert cache_key in service._cache
+        entry = service._cache[cache_key]
+        assert entry.expires_at <= time.time()
+
+    # Try to get - should detect expiration during get
+    result = service.get(url)
+    assert result is None
+
+    # Entry should be removed
+    stats = service.get_stats()
+    assert stats["expirations"] >= 1
+
+
+@pytest.mark.unit
+def test_set_handles_compression_failure_gracefully():
+    """Test that set doesn't crash if compression fails."""
+    service = CachingService()
+    url = "https://example.com/article"
+
+    # Try to set content with a mock that fails during compression
+    with patch.object(
+        service, "_compress_content", side_effect=Exception("Compression failed")
+    ):
+        # This should not raise - it should just log and continue
+        service.set(url, create_sample_content(url))
+
+    # Cache should be empty since set failed
+    result = service.get(url)
+    assert result is None
