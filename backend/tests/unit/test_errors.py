@@ -12,8 +12,10 @@ from app.core.errors import (
     APIKeyError,
     ExtractionError,
     InvalidURLError,
+    ProviderTimeoutError,
     RateLimitError,
     TranslationError,
+    URLFetchError,
 )
 from app.main import fastapi_application
 from tests.conftest import FixtureAttrs
@@ -151,6 +153,55 @@ class TestExceptionHandlers(FixtureAttrs, unittest.TestCase):
         self.assertEqual(data["code"], "EXTRACTION_ERROR")
         self.assertIn("https://example.com", data["error"])
         self.assertEqual(data["details"]["url"], "https://example.com")
+        self.assertIn("request_id", data)
+
+    def test_url_fetch_error_handler(self) -> None:
+        """Test URL fetch error handler."""
+
+        @fastapi_application.get("/test-url-fetch-error")
+        async def test_url_fetch_endpoint() -> dict[str, str]:
+            raise URLFetchError("https://example.com", "Connection refused")
+
+        response = self.client.get("/test-url-fetch-error")
+        self.assertEqual(response.status_code, 502)
+
+        data = response.json()
+        self.assertEqual(data["code"], "URL_FETCH_ERROR")
+        self.assertIn("https://example.com", data["error"])
+        self.assertEqual(data["details"]["url"], "https://example.com")
+        self.assertEqual(data["details"]["reason"], "Connection refused")
+        self.assertIn("request_id", data)
+
+    def test_url_fetch_timeout_handler(self) -> None:
+        """Test URL fetch timeout error handler."""
+
+        @fastapi_application.get("/test-url-fetch-timeout")
+        async def test_url_fetch_timeout_endpoint() -> dict[str, str]:
+            raise URLFetchError("https://example.com", "Timeout", status_code=504)
+
+        response = self.client.get("/test-url-fetch-timeout")
+        self.assertEqual(response.status_code, 504)
+
+        data = response.json()
+        self.assertEqual(data["code"], "URL_FETCH_ERROR")
+        self.assertIn("request_id", data)
+
+    def test_provider_timeout_error_handler(self) -> None:
+        """Test provider timeout error handler."""
+
+        @fastapi_application.get("/test-provider-timeout")
+        async def test_provider_timeout_endpoint() -> dict[str, str]:
+            raise ProviderTimeoutError("openai", "gpt-4", "Request exceeded limit")
+
+        response = self.client.get("/test-provider-timeout")
+        self.assertEqual(response.status_code, 504)
+
+        data = response.json()
+        self.assertEqual(data["code"], "PROVIDER_TIMEOUT")
+        self.assertIn("openai", data["error"])
+        self.assertIn("gpt-4", data["error"])
+        self.assertEqual(data["details"]["provider"], "openai")
+        self.assertEqual(data["details"]["model"], "gpt-4")
         self.assertIn("request_id", data)
 
 
