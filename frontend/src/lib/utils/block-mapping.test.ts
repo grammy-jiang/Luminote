@@ -37,6 +37,23 @@ describe('BlockMapping', () => {
 
 			expect(mapping.size).toBe(0);
 		});
+
+		it('should handle duplicate translation IDs by using last occurrence', () => {
+			// When duplicate translation IDs exist, the last mapping wins
+			const entries: Array<[string, string]> = [
+				['source-1', 'translation-1'],
+				['source-2', 'translation-1'] // Same translation ID
+			];
+			const mapping = new BlockMapping(entries);
+
+			// Both sources map to the same translation
+			expect(mapping.map('source-1')).toBe('translation-1');
+			expect(mapping.map('source-2')).toBe('translation-1');
+
+			// Reverse map returns the last source that was set
+			expect(mapping.reverseMap('translation-1')).toBe('source-2');
+			expect(mapping.size).toBe(2);
+		});
 	});
 
 	describe('map (forward mapping)', () => {
@@ -184,6 +201,25 @@ describe('BlockMapping', () => {
 			expect(updated.map('source-1')).toBe('translation-new');
 			expect(updated.reverseMap('translation-1')).toBeNull();
 			expect(updated.reverseMap('translation-new')).toBe('source-1');
+		});
+
+		it('should handle adding mapping with translation ID already used by different source', () => {
+			// Start with source-1 -> trans-1
+			const original = new BlockMapping([['source-1', 'trans-1']]);
+
+			// Add source-2 -> trans-1 (reusing trans-1)
+			const updated = original.add('source-2', 'trans-1');
+
+			// Original unchanged
+			expect(original.size).toBe(1);
+			expect(original.map('source-1')).toBe('trans-1');
+			expect(original.reverseMap('trans-1')).toBe('source-1');
+
+			// Updated should have removed old mapping to maintain consistency
+			expect(updated.size).toBe(1);
+			expect(updated.map('source-1')).toBeNull(); // Old mapping removed
+			expect(updated.map('source-2')).toBe('trans-1'); // New mapping added
+			expect(updated.reverseMap('trans-1')).toBe('source-2'); // Reverse map updated
 		});
 	});
 

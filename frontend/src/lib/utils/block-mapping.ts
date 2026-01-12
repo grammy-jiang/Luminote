@@ -131,6 +131,7 @@ export class BlockMapping {
 	 * Create a new BlockMapping instance with an additional mapping.
 	 * The original instance remains unchanged (immutable API).
 	 * If the sourceId already exists, it will be replaced with the new mapping.
+	 * If the translationId is already mapped to a different source, the old mapping is removed.
 	 *
 	 * @param sourceId - The source block ID
 	 * @param translationId - The translation block ID
@@ -144,9 +145,10 @@ export class BlockMapping {
 	 * ```
 	 */
 	add(sourceId: string, translationId: string): BlockMapping {
-		// Filter out existing mapping for this source ID to handle overwrites
+		// Filter out existing mapping for this source ID and translation ID to handle overwrites
+		// This ensures bidirectional consistency when reusing translation IDs
 		const entries = Array.from(this.sourceToTranslation.entries()).filter(
-			([id]) => id !== sourceId
+			([src, trans]) => src !== sourceId && trans !== translationId
 		);
 		entries.push([sourceId, translationId]);
 		return new BlockMapping(entries);

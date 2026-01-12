@@ -11,13 +11,7 @@ import { BlockMapping } from './block-mapping';
  * Example 1: Creating a mapping from translation results
  */
 function createMappingFromTranslation() {
-	// Assume we have source blocks and translation results
-	const sourceBlocks = [
-		{ id: 'source-1', text: 'Hello world' },
-		{ id: 'source-2', text: 'This is a paragraph' },
-		{ id: 'source-3', text: 'Another block' }
-	];
-
+	// Assume we have translation results
 	const translationResults = [
 		{ id: 'trans-1', sourceId: 'source-1', text: 'Hola mundo' },
 		{ id: 'trans-2', sourceId: 'source-2', text: 'Este es un párrafo' },
