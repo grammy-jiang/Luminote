@@ -1,0 +1,8 @@
+# Generated files
+.svelte-kit/
+coverage/
+dist/
+build/
+
+# Lock files and config files that should maintain original formatting
+package-lock.json
