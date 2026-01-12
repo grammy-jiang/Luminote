@@ -1495,5 +1495,56 @@ describe('DualPaneLayout Component', () => {
 			// Should work with touch just like mouse
 			expect((rightPane as HTMLElement).scrollTop).toBeGreaterThan(0);
 		});
+
+		it('handles zero scrollable height gracefully', async () => {
+			const { component, container } = render(DualPaneLayout);
+
+			const leftPane = container.querySelector('.left-pane');
+			const rightPane = container.querySelector('.right-pane');
+
+			// Mock scroll properties where content doesn't overflow (no scrollable area)
+			Object.defineProperty(leftPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'scrollHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'clientHeight', {
+				value: 500, // Same as scrollHeight - no overflow
+				writable: false,
+				configurable: true
+			});
+
+			Object.defineProperty(rightPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'scrollHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'clientHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+
+			component.setScrollSyncEnabled(true);
+
+			// This should not throw or produce NaN
+			await fireEvent.scroll(leftPane!);
+
+			await new Promise((resolve) => setTimeout(resolve, 100));
+
+			// Should remain at 0 (no error)
+			expect((rightPane as HTMLElement).scrollTop).toBe(0);
+			expect(isNaN((rightPane as HTMLElement).scrollTop)).toBe(false);
+		});
 	});
 });

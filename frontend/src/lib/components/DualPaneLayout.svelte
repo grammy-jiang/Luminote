@@ -282,6 +282,9 @@
 		}
 	}
 
+	// Constants for scroll synchronization
+	const SYNC_DEBOUNCE_MS = 50; // Debounce time to prevent circular scroll updates
+
 	/**
 	 * Synchronize scroll position between panes
 	 * Uses requestAnimationFrame for optimal performance
@@ -298,19 +301,21 @@
 		syncAnimationFrame = requestAnimationFrame(() => {
 			isSyncing = true;
 
-			// Calculate scroll ratio
+			// Calculate scroll ratio (handle edge case where content doesn't overflow)
+			const sourceScrollableHeight = sourcePane.scrollHeight - sourcePane.clientHeight;
 			const scrollRatio =
-				sourcePane.scrollTop / (sourcePane.scrollHeight - sourcePane.clientHeight);
+				sourceScrollableHeight > 0 ? sourcePane.scrollTop / sourceScrollableHeight : 0;
 
 			// Apply to target pane
-			const targetScrollTop = scrollRatio * (targetPane.scrollHeight - targetPane.clientHeight);
+			const targetScrollableHeight = targetPane.scrollHeight - targetPane.clientHeight;
+			const targetScrollTop = scrollRatio * targetScrollableHeight;
 
 			targetPane.scrollTop = targetScrollTop;
 
 			// Reset syncing flag after a brief delay to prevent circular updates
 			setTimeout(() => {
 				isSyncing = false;
-			}, 50);
+			}, SYNC_DEBOUNCE_MS);
 
 			syncAnimationFrame = null;
 		});
