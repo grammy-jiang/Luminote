@@ -8,10 +8,7 @@ import unittest
 
 import pytest
 
-from app.core.errors import (
-    LuminoteException,
-    RateLimitError,
-)
+from app.core.errors import LuminoteException, RateLimitError
 from tests.conftest import FixtureAttrs
 
 

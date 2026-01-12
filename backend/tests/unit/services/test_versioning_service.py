@@ -350,7 +350,8 @@ def test_save_version_auto_prunes(
     sample_blocks: list[VersionedTranslatedBlock],
     sample_metadata: VersionMetadata,
 ) -> None:
-    """Test that save_version automatically prunes old versions (default keep_count=5)."""
+    """Test that save_version automatically prunes old versions (default
+    keep_count=5)."""
     document_url = "https://example.com/article"
 
     # Save 10 versions (datetime.now(UTC) has microsecond precision)
