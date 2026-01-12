@@ -1,5 +1,6 @@
 """Tests for extraction API endpoint."""
 
+from typing import Any
 from unittest.mock import patch
 
 import pytest
@@ -91,7 +92,7 @@ def test_extract_success(client: TestClient) -> None:
 def test_extract_missing_url(client: TestClient) -> None:
     """Test extraction request with missing url field."""
     # Arrange
-    request_data = {}
+    request_data: dict[str, Any] = {}
 
     # Act
     response = client.post("/api/v1/extract", json=request_data)

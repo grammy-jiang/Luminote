@@ -87,11 +87,11 @@ class TestExceptionHandlers(FixtureAttrs, unittest.TestCase):
     def test_rate_limit_error_handler(self) -> None:
         """Test rate limit error handler."""
 
-        @fastapi_application.get("/test-rate-limit")
+        @fastapi_application.get("/test-rate-limit-unit")
         async def test_rate_limit_endpoint() -> dict[str, str]:
             raise RateLimitError(60, provider="openai")
 
-        response = self.client.get("/test-rate-limit")
+        response = self.client.get("/test-rate-limit-unit")
         self.assertEqual(response.status_code, 429)
 
         data = response.json()

@@ -132,5 +132,6 @@ markers = [
 
 [tool.bandit]
 # Exclude test files from B101 (assert_used) - asserts are standard in pytest
-skips = ["B101"]
+# Exclude B110 (try_except_pass) - used intentionally for optional metadata extraction
+skips = ["B101", "B110"]
 exclude_dirs = []
