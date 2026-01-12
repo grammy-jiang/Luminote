@@ -313,8 +313,12 @@
 			targetPane.scrollTop = targetScrollTop;
 
 			// Reset syncing flag after a brief delay to prevent circular updates
-			setTimeout(() => {
+			if (syncDebounceTimeout) {
+				clearTimeout(syncDebounceTimeout);
+			}
+			syncDebounceTimeout = setTimeout(() => {
 				isSyncing = false;
+				syncDebounceTimeout = null;
 			}, SYNC_DEBOUNCE_MS);
 
 			syncAnimationFrame = null;
@@ -367,6 +371,7 @@
 	let announcementTimeout: ReturnType<typeof setTimeout> | null = null;
 	let pulseAnimationTimeout: ReturnType<typeof setTimeout> | null = null;
 	let scrollCompleteTimeout: ReturnType<typeof setTimeout> | null = null;
+	let syncDebounceTimeout: ReturnType<typeof setTimeout> | null = null;
 
 	// Clean up timeouts on component destroy to prevent memory leaks
 	onDestroy(() => {
@@ -381,6 +386,10 @@
 		if (scrollCompleteTimeout) {
 			clearTimeout(scrollCompleteTimeout);
 			scrollCompleteTimeout = null;
+		}
+		if (syncDebounceTimeout) {
+			clearTimeout(syncDebounceTimeout);
+			syncDebounceTimeout = null;
 		}
 		if (scrollAnimationController) {
 			scrollAnimationController.abort();
@@ -530,7 +539,7 @@
 			? 'Disable scroll synchronization'
 			: 'Enable scroll synchronization'}
 		aria-pressed={syncScrollEnabled}
-		title={syncScrollEnabled ? 'Independent scroll mode' : 'Synchronized scroll mode'}
+		title={syncScrollEnabled ? 'Synchronized scroll mode' : 'Independent scroll mode'}
 	>
 		<svg
 			class="icon"

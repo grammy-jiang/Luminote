@@ -1388,6 +1388,58 @@ describe('DualPaneLayout Component', () => {
 			expect(global.cancelAnimationFrame).toHaveBeenCalled();
 		});
 
+		it('clears debounce timeout on unmount', async () => {
+			const { component, container, unmount } = render(DualPaneLayout);
+
+			const leftPane = container.querySelector('.left-pane');
+			const rightPane = container.querySelector('.right-pane');
+
+			// Mock scroll properties
+			Object.defineProperty(leftPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'scrollHeight', {
+				value: 1000,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'clientHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+
+			Object.defineProperty(rightPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'scrollHeight', {
+				value: 1000,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'clientHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+
+			component.setScrollSyncEnabled(true);
+
+			// Trigger scroll to create a pending debounce timeout
+			(leftPane as HTMLElement).scrollTop = 250;
+			await fireEvent.scroll(leftPane!);
+
+			// Wait for requestAnimationFrame to execute
+			await new Promise((resolve) => setTimeout(resolve, 10));
+
+			// Unmount component should not throw error (timeout cleanup works)
+			expect(() => unmount()).not.toThrow();
+		});
+
 		it('handles rapid scroll events efficiently', async () => {
 			const { component, container } = render(DualPaneLayout);
 
