@@ -12,11 +12,12 @@
 	 * - Two-column flexbox layout with configurable split
 	 * - Draggable divider for resizing panes
 	 * - Independent scroll containers
+	 * - Optional scroll synchronization mode
 	 * - Responsive stacking on mobile (<768px)
 	 * - Keyboard navigation (Tab to switch panes, Ctrl+Arrow to resize)
 	 * - ARIA labels for accessibility
 	 * - Exported refs for programmatic control
-	 * - localStorage persistence for split ratio
+	 * - localStorage persistence for split ratio and scroll sync mode
 	 * - Block hover highlighting coordination via context
 	 */
 
@@ -24,6 +25,7 @@
 	export let rightLabel: string = 'Translation';
 	export let minPaneWidth: number = 20; // Minimum pane width percentage
 	export let persistKey: string = 'luminote-split'; // localStorage key
+	export let syncPersistKey: string = 'luminote-scroll-sync'; // localStorage key for sync mode
 
 	const dispatch = createEventDispatcher<{
 		splitChange: { leftWidth: number; rightWidth: number };
@@ -47,6 +49,12 @@
 	let isHovering = false;
 	let initialized = false;
 
+	// Scroll synchronization state
+	let syncScrollEnabled = false;
+	let syncInitialized = false;
+	let isSyncing = false; // Prevent circular scroll updates
+	let syncAnimationFrame: number | null = null;
+
 	// Load split ratio from localStorage on mount or when persistKey changes
 	$: if (!initialized && persistKey && typeof window !== 'undefined') {
 		const saved = localStorage.getItem(persistKey);
@@ -57,6 +65,15 @@
 			}
 		}
 		initialized = true;
+	}
+
+	// Load scroll sync mode from localStorage on mount
+	$: if (!syncInitialized && syncPersistKey && typeof window !== 'undefined') {
+		const saved = localStorage.getItem(syncPersistKey);
+		if (saved === 'true') {
+			syncScrollEnabled = true;
+		}
+		syncInitialized = true;
 	}
 
 	// Save split ratio to localStorage
@@ -234,6 +251,92 @@
 	}
 
 	/**
+	 * Toggle scroll synchronization mode
+	 */
+	export function toggleScrollSync() {
+		syncScrollEnabled = !syncScrollEnabled;
+		saveScrollSyncMode();
+	}
+
+	/**
+	 * Get current scroll sync mode
+	 */
+	export function getScrollSyncEnabled(): boolean {
+		return syncScrollEnabled;
+	}
+
+	/**
+	 * Set scroll sync mode programmatically
+	 */
+	export function setScrollSyncEnabled(enabled: boolean) {
+		syncScrollEnabled = enabled;
+		saveScrollSyncMode();
+	}
+
+	/**
+	 * Save scroll sync mode to localStorage
+	 */
+	function saveScrollSyncMode() {
+		if (typeof window !== 'undefined') {
+			localStorage.setItem(syncPersistKey, syncScrollEnabled.toString());
+		}
+	}
+
+	/**
+	 * Synchronize scroll position between panes
+	 * Uses requestAnimationFrame for optimal performance
+	 */
+	function syncScroll(sourcePane: HTMLDivElement, targetPane: HTMLDivElement) {
+		if (!syncScrollEnabled || isSyncing) return;
+
+		// Cancel any pending animation frame
+		if (syncAnimationFrame !== null) {
+			cancelAnimationFrame(syncAnimationFrame);
+		}
+
+		// Schedule sync on next animation frame for smooth performance
+		syncAnimationFrame = requestAnimationFrame(() => {
+			isSyncing = true;
+
+			// Calculate scroll ratio
+			const scrollRatio =
+				sourcePane.scrollTop / (sourcePane.scrollHeight - sourcePane.clientHeight);
+
+			// Apply to target pane
+			const targetScrollTop = scrollRatio * (targetPane.scrollHeight - targetPane.clientHeight);
+
+			targetPane.scrollTop = targetScrollTop;
+
+			// Reset syncing flag after a brief delay to prevent circular updates
+			setTimeout(() => {
+				isSyncing = false;
+			}, 50);
+
+			syncAnimationFrame = null;
+		});
+	}
+
+	/**
+	 * Handle scroll event on left pane
+	 */
+	function handleLeftPaneScroll() {
+		handleUserScroll();
+		if (syncScrollEnabled && rightPane) {
+			syncScroll(leftPane, rightPane);
+		}
+	}
+
+	/**
+	 * Handle scroll event on right pane
+	 */
+	function handleRightPaneScroll() {
+		handleUserScroll();
+		if (syncScrollEnabled && leftPane) {
+			syncScroll(rightPane, leftPane);
+		}
+	}
+
+	/**
 	 * Handle block hover from either pane.
 	 */
 	function handleBlockHover(event: CustomEvent<{ blockId: string }>) {
@@ -277,6 +380,10 @@
 		if (scrollAnimationController) {
 			scrollAnimationController.abort();
 			scrollAnimationController = null;
+		}
+		if (syncAnimationFrame !== null) {
+			cancelAnimationFrame(syncAnimationFrame);
+			syncAnimationFrame = null;
 		}
 	});
 
@@ -409,6 +516,42 @@
 		aria-atomic="true"
 	></div>
 
+	<!-- Scroll Sync Toggle Button -->
+	<button
+		class="scroll-sync-toggle"
+		class:active={syncScrollEnabled}
+		on:click={toggleScrollSync}
+		aria-label={syncScrollEnabled
+			? 'Disable scroll synchronization'
+			: 'Enable scroll synchronization'}
+		aria-pressed={syncScrollEnabled}
+		title={syncScrollEnabled ? 'Independent scroll mode' : 'Synchronized scroll mode'}
+	>
+		<svg
+			class="icon"
+			width="20"
+			height="20"
+			viewBox="0 0 24 24"
+			fill="none"
+			stroke="currentColor"
+			stroke-width="2"
+			stroke-linecap="round"
+			stroke-linejoin="round"
+		>
+			{#if syncScrollEnabled}
+				<!-- Linked icon -->
+				<path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+				<path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+			{:else}
+				<!-- Unlinked icon -->
+				<line x1="18" y1="6" x2="6" y2="18" />
+				<path d="M10 13a5 5 0 0 0 7.54.54l.88-.88" />
+				<path d="M14 11a5 5 0 0 0-7.54-.54l-.88.88" />
+			{/if}
+		</svg>
+		<span class="label">{syncScrollEnabled ? 'Synced' : 'Independent'}</span>
+	</button>
+
 	<!-- Left Pane (Source Content) -->
 	<!-- svelte-ignore a11y-no-noninteractive-tabindex -->
 	<div
@@ -422,7 +565,7 @@
 		on:blockHover={handleBlockHover}
 		on:blockLeave={handleBlockLeave}
 		on:blockClick={handleLeftPaneBlockClick}
-		on:scroll={handleUserScroll}
+		on:scroll={handleLeftPaneScroll}
 		style="width: {leftWidth}%;"
 	>
 		<slot name="left">
@@ -464,7 +607,7 @@
 		on:blockHover={handleBlockHover}
 		on:blockLeave={handleBlockLeave}
 		on:blockClick={handleRightPaneBlockClick}
-		on:scroll={handleUserScroll}
+		on:scroll={handleRightPaneScroll}
 		style="width: {100 - leftWidth}%;"
 	>
 		<slot name="right">
@@ -616,6 +759,64 @@
 		100% {
 			background-color: transparent;
 			transform: scale(1);
+		}
+	}
+
+	/* Scroll Sync Toggle Button */
+	.scroll-sync-toggle {
+		position: absolute;
+		top: 1rem;
+		right: 1rem;
+		z-index: 10;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		background-color: #ffffff;
+		border: 1px solid #e5e7eb;
+		border-radius: 0.375rem;
+		color: #6b7280;
+		font-size: 0.875rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+		box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+	}
+
+	.scroll-sync-toggle:hover {
+		background-color: #f9fafb;
+		border-color: #d1d5db;
+		color: #374151;
+	}
+
+	.scroll-sync-toggle:focus {
+		outline: 2px solid #3b82f6;
+		outline-offset: 2px;
+	}
+
+	.scroll-sync-toggle.active {
+		background-color: #3b82f6;
+		border-color: #3b82f6;
+		color: #ffffff;
+	}
+
+	.scroll-sync-toggle.active:hover {
+		background-color: #2563eb;
+		border-color: #2563eb;
+	}
+
+	.scroll-sync-toggle .icon {
+		flex-shrink: 0;
+	}
+
+	.scroll-sync-toggle .label {
+		white-space: nowrap;
+	}
+
+	/* Hide toggle button on mobile */
+	@media (max-width: 767px) {
+		.scroll-sync-toggle {
+			display: none;
 		}
 	}
 </style>
