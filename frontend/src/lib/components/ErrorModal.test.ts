@@ -393,6 +393,10 @@ describe('ErrorModal Component', () => {
 		});
 
 		it('does not close on other keys', async () => {
+			// Note: This test has the same jsdom limitation as the ESC key test above.
+			// The keyboard event listener is attached via addEventListener in onMount,
+			// which may not be properly triggered in the test environment. The test
+			// verifies expected behavior but actual keyboard handling is validated manually.
 			const { component } = render(ErrorModal, {
 				props: {
 					title: 'Error',

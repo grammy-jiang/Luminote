@@ -59,7 +59,13 @@
 	 * Copy error details to clipboard for bug report
 	 */
 	async function handleCopy() {
-		const errorDetails = `Error Code: ${errorCode}\nTitle: ${title}\nMessage: ${message}${suggestedActions.length > 0 ? '\n\nSuggested Actions:\n' + suggestedActions.map((action, i) => `${i + 1}. ${action}`).join('\n') : ''}`;
+		const suggestedActionsText =
+			suggestedActions.length > 0
+				? '\n\nSuggested Actions:\n' +
+					suggestedActions.map((action, i) => `${i + 1}. ${action}`).join('\n')
+				: '';
+
+		const errorDetails = `Error Code: ${errorCode}\nTitle: ${title}\nMessage: ${message}${suggestedActionsText}`;
 
 		try {
 			await navigator.clipboard.writeText(errorDetails);

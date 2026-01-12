@@ -9,7 +9,8 @@
 	let showModal = false;
 	let modalConfig = {
 		title: 'Translation Service Error',
-		message: 'Failed to translate content using OpenAI API. The service is currently unavailable or your API key may be invalid.',
+		message:
+			'Failed to translate content using OpenAI API. The service is currently unavailable or your API key may be invalid.',
 		errorCode: 'TRANSLATION_ERROR_001',
 		suggestedActions: [
 			'Check your API key in the settings',
@@ -41,7 +42,8 @@
 		} else if (type === 'long-message') {
 			modalConfig = {
 				title: 'Content Extraction Failed',
-				message: 'Unable to extract content from the provided URL. This could be due to several reasons: the website may be blocking automated access, the page structure might be incompatible with our extraction algorithm, or there could be network connectivity issues. Please verify the URL is correct and accessible, then try again. If the problem persists, consider reporting this issue with the URL and error code.',
+				message:
+					'Unable to extract content from the provided URL. This could be due to several reasons: the website may be blocking automated access, the page structure might be incompatible with our extraction algorithm, or there could be network connectivity issues. Please verify the URL is correct and accessible, then try again. If the problem persists, consider reporting this issue with the URL and error code.',
 				errorCode: 'EXTRACTION_ERROR_429',
 				suggestedActions: [
 					'Verify the URL is correct and publicly accessible',
@@ -68,8 +70,8 @@
 	<h1>ErrorModal Component Test</h1>
 
 	<p class="description">
-		Test the ErrorModal component with different configurations. Click the buttons below to open
-		the modal with different error scenarios.
+		Test the ErrorModal component with different configurations. Click the buttons below to open the
+		modal with different error scenarios.
 	</p>
 
 	<div class="button-group">
