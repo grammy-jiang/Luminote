@@ -9,14 +9,18 @@ import uuid
 from datetime import UTC, datetime
 from pathlib import Path
 
-from app.schemas.versioning import TranslatedBlock, TranslationVersion, VersionMetadata
+from app.schemas.versioning import (
+    TranslationVersion,
+    VersionedTranslatedBlock,
+    VersionMetadata,
+)
 
 
 class VersioningService:
     """Manage translation versions with automatic pruning.
 
-    This service provides file-based storage for translation versions with
-    automatic pruning to keep only the N most recent versions per document.
+    This service provides file-based storage for translation versions with automatic
+    pruning to keep only the N most recent versions per document.
     """
 
     def __init__(self, storage_path: Path | str = Path("./data/versions")) -> None:
@@ -43,7 +47,7 @@ class VersioningService:
     def save_version(
         self,
         document_url: str,
-        blocks: list[TranslatedBlock],
+        blocks: list[VersionedTranslatedBlock],
         metadata: VersionMetadata,
     ) -> TranslationVersion:
         """Save new translation version and auto-prune old versions.

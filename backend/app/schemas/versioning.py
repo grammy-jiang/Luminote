@@ -26,8 +26,8 @@ class VersionMetadata(BaseModel):
     )
 
 
-class TranslatedBlock(BaseModel):
-    """A translated content block."""
+class VersionedTranslatedBlock(BaseModel):
+    """A translated content block with version history tracking."""
 
     id: str = Field(..., description="Unique identifier for the content block")
     type: str = Field(
@@ -49,7 +49,7 @@ class TranslationVersion(BaseModel):
         default_factory=lambda: datetime.now(UTC),
         description="Version creation timestamp",
     )
-    blocks: list[TranslatedBlock] = Field(
+    blocks: list[VersionedTranslatedBlock] = Field(
         ..., description="List of translated content blocks"
     )
     metadata: VersionMetadata = Field(..., description="Translation metadata")

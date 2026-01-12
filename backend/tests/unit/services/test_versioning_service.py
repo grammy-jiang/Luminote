@@ -1,12 +1,11 @@
 """Tests for VersioningService."""
 
 import json
-import time
 from pathlib import Path
 
 import pytest
 
-from app.schemas.versioning import TranslatedBlock, VersionMetadata
+from app.schemas.versioning import VersionedTranslatedBlock, VersionMetadata
 from app.services.versioning_service import VersioningService
 
 
@@ -56,21 +55,21 @@ def sample_metadata() -> VersionMetadata:
 
 
 @pytest.fixture
-def sample_blocks() -> list[TranslatedBlock]:
+def sample_blocks() -> list[VersionedTranslatedBlock]:
     """Create sample translated blocks for testing.
 
     Returns:
-        List of TranslatedBlock instances
+        List of VersionedTranslatedBlock instances
     """
     return [
-        TranslatedBlock(
+        VersionedTranslatedBlock(
             id="block-1",
             type="paragraph",
             original_text="Hello world",
             translated_text="Hola mundo",
             metadata={"tokens": 10},
         ),
-        TranslatedBlock(
+        VersionedTranslatedBlock(
             id="block-2",
             type="heading",
             original_text="Welcome",
@@ -133,7 +132,7 @@ def test_url_hash_different_urls(versioning_service: VersioningService) -> None:
 @pytest.mark.unit
 def test_save_version_creates_file(
     versioning_service: VersioningService,
-    sample_blocks: list[TranslatedBlock],
+    sample_blocks: list[VersionedTranslatedBlock],
     sample_metadata: VersionMetadata,
     temp_storage: Path,
 ) -> None:
@@ -166,7 +165,7 @@ def test_save_version_creates_file(
 @pytest.mark.unit
 def test_get_version_by_id(
     versioning_service: VersioningService,
-    sample_blocks: list[TranslatedBlock],
+    sample_blocks: list[VersionedTranslatedBlock],
     sample_metadata: VersionMetadata,
 ) -> None:
     """Test retrieving a specific version by ID."""
@@ -200,13 +199,13 @@ def test_get_version_invalid_id_returns_none(
 @pytest.mark.unit
 def test_get_versions_returns_sorted(
     versioning_service: VersioningService,
-    sample_blocks: list[TranslatedBlock],
+    sample_blocks: list[VersionedTranslatedBlock],
     sample_metadata: VersionMetadata,
 ) -> None:
     """Test that get_versions returns versions sorted newest first."""
     document_url = "https://example.com/article"
 
-    # Save multiple versions with small delays
+    # Save multiple versions (datetime.now(UTC) has microsecond precision)
     versions = []
     for _ in range(3):
         version = versioning_service.save_version(
@@ -215,7 +214,6 @@ def test_get_versions_returns_sorted(
             metadata=sample_metadata,
         )
         versions.append(version)
-        time.sleep(0.01)  # Small delay to ensure different timestamps
 
     # Retrieve versions
     retrieved_versions = versioning_service.get_versions(document_url)
@@ -229,7 +227,7 @@ def test_get_versions_returns_sorted(
 @pytest.mark.unit
 def test_get_versions_filters_by_url(
     versioning_service: VersioningService,
-    sample_blocks: list[TranslatedBlock],
+    sample_blocks: list[VersionedTranslatedBlock],
     sample_metadata: VersionMetadata,
 ) -> None:
     """Test that get_versions only returns versions for the specified URL."""
@@ -262,21 +260,20 @@ def test_get_versions_empty_list_for_unknown_url(
 @pytest.mark.unit
 def test_prune_old_versions_keeps_n_most_recent(
     versioning_service: VersioningService,
-    sample_blocks: list[TranslatedBlock],
+    sample_blocks: list[VersionedTranslatedBlock],
     sample_metadata: VersionMetadata,
 ) -> None:
     """Test that prune_old_versions keeps only N most recent versions."""
     document_url = "https://example.com/article"
     keep_count = 3
 
-    # Save 5 versions
+    # Save 5 versions (datetime.now(UTC) has microsecond precision)
     for _ in range(5):
         versioning_service.save_version(
             document_url=document_url,
             blocks=sample_blocks,
             metadata=sample_metadata,
         )
-        time.sleep(0.01)  # Ensure different timestamps
 
     # Get all versions before pruning
     versions_before = versioning_service.get_versions(document_url)
@@ -301,7 +298,7 @@ def test_prune_old_versions_keeps_n_most_recent(
 @pytest.mark.unit
 def test_prune_old_versions_no_deletion_when_under_limit(
     versioning_service: VersioningService,
-    sample_blocks: list[TranslatedBlock],
+    sample_blocks: list[VersionedTranslatedBlock],
     sample_metadata: VersionMetadata,
 ) -> None:
     """Test that prune does not delete when version count is under limit."""
@@ -326,7 +323,7 @@ def test_prune_old_versions_no_deletion_when_under_limit(
 @pytest.mark.unit
 def test_get_version_count(
     versioning_service: VersioningService,
-    sample_blocks: list[TranslatedBlock],
+    sample_blocks: list[VersionedTranslatedBlock],
     sample_metadata: VersionMetadata,
 ) -> None:
     """Test that get_version_count returns correct count."""
@@ -350,20 +347,19 @@ def test_get_version_count(
 @pytest.mark.unit
 def test_save_version_auto_prunes(
     versioning_service: VersioningService,
-    sample_blocks: list[TranslatedBlock],
+    sample_blocks: list[VersionedTranslatedBlock],
     sample_metadata: VersionMetadata,
 ) -> None:
     """Test that save_version automatically prunes old versions (default keep_count=5)."""
     document_url = "https://example.com/article"
 
-    # Save 10 versions
+    # Save 10 versions (datetime.now(UTC) has microsecond precision)
     for _ in range(10):
         versioning_service.save_version(
             document_url=document_url,
             blocks=sample_blocks,
             metadata=sample_metadata,
         )
-        time.sleep(0.01)
 
     # Check that only 5 remain (auto-pruned)
     versions = versioning_service.get_versions(document_url)
@@ -373,7 +369,7 @@ def test_save_version_auto_prunes(
 @pytest.mark.unit
 def test_full_versioning_workflow(
     versioning_service: VersioningService,
-    sample_blocks: list[TranslatedBlock],
+    sample_blocks: list[VersionedTranslatedBlock],
     sample_metadata: VersionMetadata,
 ) -> None:
     """Integration test: save 10 versions, prune to 5, verify kept versions are newest.
@@ -382,7 +378,7 @@ def test_full_versioning_workflow(
     """
     document_url = "https://example.com/article"
 
-    # Step 1: Save 10 versions
+    # Step 1: Save 10 versions (datetime.now(UTC) has microsecond precision)
     saved_versions = []
     for _ in range(10):
         version = versioning_service.save_version(
@@ -391,7 +387,6 @@ def test_full_versioning_workflow(
             metadata=sample_metadata,
         )
         saved_versions.append(version)
-        time.sleep(0.01)  # Ensure different timestamps
 
     # Step 2: Verify 10 versions exist (but auto-prune keeps only 5)
     versions_after_save = versioning_service.get_versions(document_url)
@@ -418,7 +413,7 @@ def test_full_versioning_workflow(
 @pytest.mark.unit
 def test_version_metadata_serialization(
     versioning_service: VersioningService,
-    sample_blocks: list[TranslatedBlock],
+    sample_blocks: list[VersionedTranslatedBlock],
     sample_metadata: VersionMetadata,
 ) -> None:
     """Test that version metadata is correctly serialized and deserialized."""
@@ -465,7 +460,7 @@ def test_corrupted_file_handling(
 @pytest.mark.unit
 def test_version_with_minimal_metadata(
     versioning_service: VersioningService,
-    sample_blocks: list[TranslatedBlock],
+    sample_blocks: list[VersionedTranslatedBlock],
 ) -> None:
     """Test saving version with minimal metadata (only required fields)."""
     document_url = "https://example.com/article"
