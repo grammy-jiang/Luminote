@@ -184,7 +184,7 @@ describe('ErrorToast Component', () => {
 			await fireEvent.click(dismissButton);
 
 			// Verify toast is dismissed
-			let toast = container.querySelector('[data-testid="error-toast"]');
+			const toast = container.querySelector('[data-testid="error-toast"]');
 			expect(toast).not.toBeInTheDocument();
 			expect(onDismiss).toHaveBeenCalledTimes(1);
 
