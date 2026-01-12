@@ -473,3 +473,6 @@ pnpm-debug.log*
 # OS files
 .DS_Store
 Thumbs.db
+
+# Versioning service data (runtime storage)
+data/versions/
