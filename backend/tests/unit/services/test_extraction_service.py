@@ -1700,9 +1700,9 @@ async def test_technical_doc():
             for line in lines:
                 # Allow empty lines and lines with content, but not "1. pip install"
                 if line.strip():
-                    assert not re.match(r"^\s*\d+[.:]\s", line), (
-                        f"Line number found in code: {line}"
-                    )
+                    assert not re.match(
+                        r"^\s*\d+[.:]\s", line
+                    ), f"Line number found in code: {line}"
 
         # Verify tabbed content is handled
         # Should have code from both Python and TypeScript tabs
