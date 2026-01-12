@@ -53,9 +53,7 @@
 		<button on:click={() => addToast('New error message', 'error', true)}>
 			Add Error Toast (with Retry)
 		</button>
-		<button on:click={() => addToast('New warning message', 'warning')}>
-			Add Warning Toast
-		</button>
+		<button on:click={() => addToast('New warning message', 'warning')}> Add Warning Toast </button>
 		<button on:click={() => addToast('New info message', 'info')}> Add Info Toast </button>
 		<button
 			on:click={() =>
