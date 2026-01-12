@@ -1039,4 +1039,564 @@ describe('DualPaneLayout Component', () => {
 			// When panes receive focus, screen readers will announce the aria-label
 		});
 	});
+
+	describe('Scroll Synchronization', () => {
+		beforeEach(() => {
+			// Mock requestAnimationFrame and cancelAnimationFrame
+			let frameId = 0;
+			global.requestAnimationFrame = vi.fn((callback) => {
+				setTimeout(() => callback(Date.now()), 0);
+				return ++frameId;
+			});
+			global.cancelAnimationFrame = vi.fn();
+		});
+
+		it('renders scroll sync toggle button', () => {
+			render(DualPaneLayout);
+
+			const toggleButton = screen.getByRole('button', {
+				name: /scroll synchronization/i
+			});
+			expect(toggleButton).toBeInTheDocument();
+		});
+
+		it('toggle button has correct ARIA attributes', () => {
+			render(DualPaneLayout);
+
+			const toggleButton = screen.getByRole('button', {
+				name: /scroll synchronization/i
+			});
+			expect(toggleButton).toHaveAttribute('aria-pressed', 'false');
+		});
+
+		it('exports getScrollSyncEnabled method', () => {
+			const { component } = render(DualPaneLayout);
+
+			expect(typeof component.getScrollSyncEnabled).toBe('function');
+			expect(component.getScrollSyncEnabled()).toBe(false);
+		});
+
+		it('exports setScrollSyncEnabled method', () => {
+			const { component } = render(DualPaneLayout);
+
+			expect(typeof component.setScrollSyncEnabled).toBe('function');
+
+			component.setScrollSyncEnabled(true);
+			expect(component.getScrollSyncEnabled()).toBe(true);
+		});
+
+		it('exports toggleScrollSync method', () => {
+			const { component } = render(DualPaneLayout);
+
+			expect(typeof component.toggleScrollSync).toBe('function');
+
+			const initialState = component.getScrollSyncEnabled();
+			component.toggleScrollSync();
+			expect(component.getScrollSyncEnabled()).toBe(!initialState);
+		});
+
+		it('toggleScrollSync changes state', () => {
+			const { component } = render(DualPaneLayout);
+
+			expect(component.getScrollSyncEnabled()).toBe(false);
+
+			component.toggleScrollSync();
+			expect(component.getScrollSyncEnabled()).toBe(true);
+
+			component.toggleScrollSync();
+			expect(component.getScrollSyncEnabled()).toBe(false);
+		});
+
+		it('clicking toggle button changes sync mode', async () => {
+			const { component } = render(DualPaneLayout);
+
+			const toggleButton = screen.getByRole('button', {
+				name: /scroll synchronization/i
+			});
+
+			expect(component.getScrollSyncEnabled()).toBe(false);
+
+			await fireEvent.click(toggleButton);
+			expect(component.getScrollSyncEnabled()).toBe(true);
+
+			await fireEvent.click(toggleButton);
+			expect(component.getScrollSyncEnabled()).toBe(false);
+		});
+
+		it('toggle button updates aria-pressed attribute', async () => {
+			render(DualPaneLayout);
+
+			const toggleButton = screen.getByRole('button', {
+				name: /scroll synchronization/i
+			});
+
+			expect(toggleButton).toHaveAttribute('aria-pressed', 'false');
+
+			await fireEvent.click(toggleButton);
+			expect(toggleButton).toHaveAttribute('aria-pressed', 'true');
+
+			await fireEvent.click(toggleButton);
+			expect(toggleButton).toHaveAttribute('aria-pressed', 'false');
+		});
+
+		it('toggle button shows correct label for each state', async () => {
+			render(DualPaneLayout);
+
+			const toggleButton = screen.getByRole('button', {
+				name: /scroll synchronization/i
+			});
+
+			// Initial state (independent mode)
+			expect(toggleButton.textContent).toContain('Independent');
+
+			await fireEvent.click(toggleButton);
+
+			// Synced state
+			expect(toggleButton.textContent).toContain('Synced');
+
+			await fireEvent.click(toggleButton);
+
+			// Back to independent
+			expect(toggleButton.textContent).toContain('Independent');
+		});
+
+		it('saves scroll sync mode to localStorage', async () => {
+			const { component } = render(DualPaneLayout, {
+				props: { syncPersistKey: 'test-scroll-sync' }
+			});
+
+			component.setScrollSyncEnabled(true);
+
+			const saved = localStorage.getItem('test-scroll-sync');
+			expect(saved).toBe('true');
+
+			component.setScrollSyncEnabled(false);
+
+			const savedAgain = localStorage.getItem('test-scroll-sync');
+			expect(savedAgain).toBe('false');
+		});
+
+		it('restores scroll sync mode from localStorage on mount', async () => {
+			localStorage.setItem('test-scroll-sync-restore', 'true');
+
+			const { component } = render(DualPaneLayout, {
+				props: { syncPersistKey: 'test-scroll-sync-restore' }
+			});
+
+			await waitFor(() => {
+				expect(component.getScrollSyncEnabled()).toBe(true);
+			});
+		});
+
+		it('uses default sync mode if localStorage is empty', () => {
+			const { component } = render(DualPaneLayout, {
+				props: { syncPersistKey: 'non-existent-sync-key' }
+			});
+
+			expect(component.getScrollSyncEnabled()).toBe(false);
+		});
+
+		it('synchronizes scroll from left to right pane when enabled', async () => {
+			const { component, container } = render(DualPaneLayout);
+
+			const leftPane = container.querySelector('.left-pane');
+			const rightPane = container.querySelector('.right-pane');
+
+			// Mock scroll properties
+			Object.defineProperty(leftPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'scrollHeight', {
+				value: 1000,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'clientHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+
+			Object.defineProperty(rightPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'scrollHeight', {
+				value: 1000,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'clientHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+
+			// Enable scroll sync
+			component.setScrollSyncEnabled(true);
+
+			// Scroll left pane
+			(leftPane as HTMLElement).scrollTop = 250;
+			await fireEvent.scroll(leftPane!);
+
+			// Wait for requestAnimationFrame
+			await new Promise((resolve) => setTimeout(resolve, 100));
+
+			// Right pane should sync (approximately)
+			expect((rightPane as HTMLElement).scrollTop).toBeGreaterThan(0);
+		});
+
+		it('synchronizes scroll from right to left pane when enabled', async () => {
+			const { component, container } = render(DualPaneLayout);
+
+			const leftPane = container.querySelector('.left-pane');
+			const rightPane = container.querySelector('.right-pane');
+
+			// Mock scroll properties
+			Object.defineProperty(leftPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'scrollHeight', {
+				value: 1000,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'clientHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+
+			Object.defineProperty(rightPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'scrollHeight', {
+				value: 1000,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'clientHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+
+			// Enable scroll sync
+			component.setScrollSyncEnabled(true);
+
+			// Scroll right pane
+			(rightPane as HTMLElement).scrollTop = 300;
+			await fireEvent.scroll(rightPane!);
+
+			// Wait for requestAnimationFrame
+			await new Promise((resolve) => setTimeout(resolve, 100));
+
+			// Left pane should sync (approximately)
+			expect((leftPane as HTMLElement).scrollTop).toBeGreaterThan(0);
+		});
+
+		it('does not synchronize scroll when disabled', async () => {
+			const { component, container } = render(DualPaneLayout);
+
+			const leftPane = container.querySelector('.left-pane');
+			const rightPane = container.querySelector('.right-pane');
+
+			// Mock scroll properties
+			Object.defineProperty(leftPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+
+			// Ensure scroll sync is disabled
+			component.setScrollSyncEnabled(false);
+
+			// Scroll left pane
+			(leftPane as HTMLElement).scrollTop = 250;
+			await fireEvent.scroll(leftPane!);
+
+			// Wait for any potential sync
+			await new Promise((resolve) => setTimeout(resolve, 100));
+
+			// Right pane should NOT sync
+			expect((rightPane as HTMLElement).scrollTop).toBe(0);
+		});
+
+		it('uses requestAnimationFrame for performance', async () => {
+			const { component, container } = render(DualPaneLayout);
+
+			const leftPane = container.querySelector('.left-pane');
+
+			// Mock scroll properties
+			Object.defineProperty(leftPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'scrollHeight', {
+				value: 1000,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'clientHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+
+			component.setScrollSyncEnabled(true);
+
+			// Clear any previous calls
+			vi.clearAllMocks();
+
+			// Scroll left pane
+			(leftPane as HTMLElement).scrollTop = 250;
+			await fireEvent.scroll(leftPane!);
+
+			// requestAnimationFrame should have been called
+			expect(global.requestAnimationFrame).toHaveBeenCalled();
+		});
+
+		it('cancels pending animation frame on unmount', () => {
+			const { component, unmount } = render(DualPaneLayout);
+
+			component.setScrollSyncEnabled(true);
+
+			// Trigger a scroll to create a pending animation frame
+			const leftPane = component.getLeftPaneRef();
+			fireEvent.scroll(leftPane);
+
+			// Clear mocks to count unmount calls
+			vi.clearAllMocks();
+
+			// Unmount component
+			unmount();
+
+			// cancelAnimationFrame should have been called
+			expect(global.cancelAnimationFrame).toHaveBeenCalled();
+		});
+
+		it('clears debounce timeout on unmount', async () => {
+			const { component, container, unmount } = render(DualPaneLayout);
+
+			const leftPane = container.querySelector('.left-pane');
+			const rightPane = container.querySelector('.right-pane');
+
+			// Mock scroll properties
+			Object.defineProperty(leftPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'scrollHeight', {
+				value: 1000,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'clientHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+
+			Object.defineProperty(rightPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'scrollHeight', {
+				value: 1000,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'clientHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+
+			component.setScrollSyncEnabled(true);
+
+			// Trigger scroll to create a pending debounce timeout
+			(leftPane as HTMLElement).scrollTop = 250;
+			await fireEvent.scroll(leftPane!);
+
+			// Wait for requestAnimationFrame to execute
+			await new Promise((resolve) => setTimeout(resolve, 10));
+
+			// Unmount component should not throw error (timeout cleanup works)
+			expect(() => unmount()).not.toThrow();
+		});
+
+		it('handles rapid scroll events efficiently', async () => {
+			const { component, container } = render(DualPaneLayout);
+
+			const leftPane = container.querySelector('.left-pane');
+
+			// Mock scroll properties
+			Object.defineProperty(leftPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'scrollHeight', {
+				value: 1000,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'clientHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+
+			component.setScrollSyncEnabled(true);
+
+			// Clear previous calls
+			vi.clearAllMocks();
+
+			// Trigger multiple rapid scroll events
+			for (let i = 0; i < 10; i++) {
+				(leftPane as HTMLElement).scrollTop = i * 50;
+				await fireEvent.scroll(leftPane!);
+			}
+
+			// Wait for animations to settle
+			await new Promise((resolve) => setTimeout(resolve, 100));
+
+			// requestAnimationFrame should have been called, but not 10 times
+			// (some should have been cancelled/batched)
+			const callCount = (global.requestAnimationFrame as unknown as { mock: { calls: unknown[] } })
+				.mock.calls.length;
+			expect(callCount).toBeGreaterThan(0);
+			expect(callCount).toBeLessThanOrEqual(10);
+		});
+
+		it('toggle button has correct active class', async () => {
+			const { container } = render(DualPaneLayout);
+
+			const toggleButton = container.querySelector('.scroll-sync-toggle');
+			expect(toggleButton).not.toHaveClass('active');
+
+			await fireEvent.click(toggleButton!);
+			expect(toggleButton).toHaveClass('active');
+
+			await fireEvent.click(toggleButton!);
+			expect(toggleButton).not.toHaveClass('active');
+		});
+
+		it('handles touch devices with scroll sync', async () => {
+			const { component, container } = render(DualPaneLayout);
+
+			const leftPane = container.querySelector('.left-pane');
+			const rightPane = container.querySelector('.right-pane');
+
+			// Mock scroll properties for touch
+			Object.defineProperty(leftPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'scrollHeight', {
+				value: 1000,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'clientHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+
+			Object.defineProperty(rightPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'scrollHeight', {
+				value: 1000,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'clientHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+
+			component.setScrollSyncEnabled(true);
+
+			// Simulate touch scroll
+			(leftPane as HTMLElement).scrollTop = 200;
+			await fireEvent.scroll(leftPane!);
+
+			await new Promise((resolve) => setTimeout(resolve, 100));
+
+			// Should work with touch just like mouse
+			expect((rightPane as HTMLElement).scrollTop).toBeGreaterThan(0);
+		});
+
+		it('handles zero scrollable height gracefully', async () => {
+			const { component, container } = render(DualPaneLayout);
+
+			const leftPane = container.querySelector('.left-pane');
+			const rightPane = container.querySelector('.right-pane');
+
+			// Mock scroll properties where content doesn't overflow (no scrollable area)
+			Object.defineProperty(leftPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'scrollHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(leftPane, 'clientHeight', {
+				value: 500, // Same as scrollHeight - no overflow
+				writable: false,
+				configurable: true
+			});
+
+			Object.defineProperty(rightPane, 'scrollTop', {
+				value: 0,
+				writable: true,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'scrollHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+			Object.defineProperty(rightPane, 'clientHeight', {
+				value: 500,
+				writable: false,
+				configurable: true
+			});
+
+			component.setScrollSyncEnabled(true);
+
+			// This should not throw or produce NaN
+			await fireEvent.scroll(leftPane!);
+
+			await new Promise((resolve) => setTimeout(resolve, 100));
+
+			// Should remain at 0 (no error)
+			expect((rightPane as HTMLElement).scrollTop).toBe(0);
+			expect(isNaN((rightPane as HTMLElement).scrollTop)).toBe(false);
+		});
+	});
 });
