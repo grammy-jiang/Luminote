@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, onDestroy, getContext } from 'svelte';
+	import { createEventDispatcher, onDestroy, onMount, getContext } from 'svelte';
 	import type { ContentBlock } from '$lib/types/api';
 	import type { Writable } from 'svelte/store';
 	import {
@@ -7,6 +7,7 @@
 		navigateToFirstBlock,
 		navigateToLastBlock
 	} from '$lib/utils/keyboard-navigation';
+	import BlockRetranslate from './BlockRetranslate.svelte';
 
 	/**
 	 * TranslationPane Component
@@ -28,6 +29,7 @@
 	 * - Responsive typography
 	 * - Accessible markup (semantic HTML, ARIA labels)
 	 * - Block hover highlighting for cross-pane synchronization
+	 * - Right-click context menu for per-block retranslation
 	 *
 	 * Note: Text content is escaped for security. HTML links in block.text will
 	 * be rendered as plain text, not as clickable anchors.
@@ -36,6 +38,7 @@
 	export let blocks: ContentBlock[] = [];
 	export let loading: boolean = false;
 	export let highlightedBlockId: string | null = null;
+	export let originalBlocks: ContentBlock[] = [];
 
 	// Try to get highlightedBlockId from context if not provided as prop
 	const highlightedBlockIdContext = getContext<Writable<string | null>>('highlightedBlockId');
@@ -49,9 +52,21 @@
 		blockHover: { blockId: string };
 		blockLeave: { blockId: string };
 		blockClick: { blockId: string };
+		blockUpdated: { blockId: string; newText: string };
 	}>();
 
 	let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
+
+	// Context menu state
+	let contextMenuBlock: ContentBlock | null = null;
+	let showContextMenu = false;
+	let contextMenuX = 0;
+	let contextMenuY = 0;
+
+	// Retranslation modal state
+	let showRetranslateModal = false;
+	let retranslateBlock: ContentBlock | null = null;
+	let retranslateOriginalText = '';
 
 	// Clean up timeout on component destroy to prevent memory leaks
 	onDestroy(() => {
@@ -123,6 +138,93 @@
 			navigateToLastBlock(blocks);
 		}
 	}
+
+	/**
+	 * Handle right-click on a block to show context menu
+	 */
+	function handleBlockContextMenu(event: MouseEvent, block: ContentBlock) {
+		event.preventDefault();
+
+		contextMenuBlock = block;
+		contextMenuX = event.clientX;
+		contextMenuY = event.clientY;
+		showContextMenu = true;
+	}
+
+	/**
+	 * Close context menu
+	 */
+	function closeContextMenu() {
+		showContextMenu = false;
+		contextMenuBlock = null;
+	}
+
+	/**
+	 * Open retranslation modal for the selected block
+	 */
+	function openRetranslationModal() {
+		if (!contextMenuBlock) return;
+
+		// Find the original block text
+		const originalBlock = originalBlocks.find((b) => b.id === contextMenuBlock!.id);
+
+		retranslateBlock = contextMenuBlock;
+		retranslateOriginalText = originalBlock?.text || contextMenuBlock.text;
+		showRetranslateModal = true;
+		closeContextMenu();
+	}
+
+	/**
+	 * Handle accepting new translation
+	 */
+	function handleAcceptRetranslation(event: CustomEvent<{ blockId: string; newText: string }>) {
+		const { blockId, newText } = event.detail;
+
+		// Update the block in the blocks array
+		blocks = blocks.map((block) => (block.id === blockId ? { ...block, text: newText } : block));
+
+		// Emit event for parent component
+		dispatch('blockUpdated', { blockId, newText });
+
+		showRetranslateModal = false;
+		retranslateBlock = null;
+	}
+
+	/**
+	 * Handle discarding retranslation
+	 */
+	function handleDiscardRetranslation() {
+		closeRetranslationModal();
+	}
+
+	/**
+	 * Close retranslation modal
+	 */
+	function closeRetranslationModal() {
+		showRetranslateModal = false;
+		retranslateBlock = null;
+	}
+
+	/**
+	 * Close context menu when clicking elsewhere
+	 */
+	function handleDocumentClick(event: MouseEvent) {
+		if (showContextMenu) {
+			const target = event.target as HTMLElement;
+			if (!target.closest('.context-menu')) {
+				closeContextMenu();
+			}
+		}
+	}
+
+	// Add event listener for closing context menu
+	onMount(() => {
+		document.addEventListener('click', handleDocumentClick);
+	});
+
+	onDestroy(() => {
+		document.removeEventListener('click', handleDocumentClick);
+	});
 
 	/**
 	 * RTL language codes (ISO 639-1).
@@ -258,6 +360,7 @@
 						on:blur={() => handleBlockBlur(block.id)}
 						on:click={() => handleBlockClick(block.id)}
 						on:keydown={(e) => handleBlockKeydown(e, block.id)}
+						on:contextmenu={(e) => handleBlockContextMenu(e, block)}
 					>
 						{block.text}
 					</p>
@@ -446,6 +549,35 @@
 		{/each}
 	{/if}
 </div>
+
+<!-- Context Menu -->
+{#if showContextMenu && contextMenuBlock}
+	<div
+		class="context-menu"
+		style="left: {contextMenuX}px; top: {contextMenuY}px;"
+		data-testid="context-menu"
+	>
+		<button
+			class="context-menu-item"
+			on:click={openRetranslationModal}
+			data-testid="context-menu-retranslate"
+		>
+			<span class="icon">🔄</span>
+			Re-translate
+		</button>
+	</div>
+{/if}
+
+<!-- Retranslation Modal -->
+{#if showRetranslateModal && retranslateBlock}
+	<BlockRetranslate
+		block={retranslateBlock}
+		originalText={retranslateOriginalText}
+		on:accept={handleAcceptRetranslation}
+		on:discard={handleDiscardRetranslation}
+		on:close={closeRetranslationModal}
+	/>
+{/if}
 
 <style>
 	.translation-pane-content {
@@ -712,5 +844,44 @@
 
 	.block-hoverable:hover {
 		background-color: rgba(15, 23, 42, 0.03);
+	}
+
+	/* Context Menu Styles */
+	.context-menu {
+		position: fixed;
+		z-index: 10000;
+		background-color: white;
+		border: 1px solid #e5e7eb;
+		border-radius: 0.375rem;
+		box-shadow:
+			0 10px 15px -3px rgba(0, 0, 0, 0.1),
+			0 4px 6px -2px rgba(0, 0, 0, 0.05);
+		padding: 0.25rem;
+		min-width: 160px;
+	}
+
+	.context-menu-item {
+		width: 100%;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		padding: 0.5rem 0.75rem;
+		background: none;
+		border: none;
+		cursor: pointer;
+		font-size: 0.875rem;
+		color: #374151;
+		border-radius: 0.25rem;
+		transition: background-color 0.15s ease-in-out;
+		text-align: left;
+	}
+
+	.context-menu-item:hover {
+		background-color: #f3f4f6;
+	}
+
+	.context-menu-item .icon {
+		font-size: 1rem;
+		line-height: 1;
 	}
 </style>
