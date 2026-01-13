@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { createEventDispatcher, onDestroy, getContext } from 'svelte';
+	import { createEventDispatcher, onDestroy, onMount, getContext } from 'svelte';
 	import type { ContentBlock } from '$lib/types/api';
 	import type { Writable } from 'svelte/store';
 	import {
@@ -194,8 +194,7 @@
 	 * Handle discarding retranslation
 	 */
 	function handleDiscardRetranslation() {
-		showRetranslateModal = false;
-		retranslateBlock = null;
+		closeRetranslationModal();
 	}
 
 	/**
@@ -219,13 +218,13 @@
 	}
 
 	// Add event listener for closing context menu
-	$: if (typeof window !== 'undefined') {
-		if (showContextMenu) {
-			window.addEventListener('click', handleDocumentClick);
-		} else {
-			window.removeEventListener('click', handleDocumentClick);
-		}
-	}
+	onMount(() => {
+		document.addEventListener('click', handleDocumentClick);
+	});
+
+	onDestroy(() => {
+		document.removeEventListener('click', handleDocumentClick);
+	});
 
 	/**
 	 * RTL language codes (ISO 639-1).

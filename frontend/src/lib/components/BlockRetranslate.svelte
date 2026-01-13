@@ -64,14 +64,45 @@
 	}
 
 	/**
-	 * Handle keyboard events
+	 * Handle keyboard events (combines both Esc/Ctrl+Enter and focus trap)
 	 */
 	function handleKeydown(event: KeyboardEvent) {
+		// Handle Esc and Ctrl+Enter
 		if (event.key === 'Escape') {
 			handleClose();
+			return;
 		} else if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') {
 			if (translationComplete && newTranslation) {
 				handleAccept();
+			}
+			return;
+		}
+
+		// Focus trap implementation
+		if (event.key !== 'Tab' || !modalElement) {
+			return;
+		}
+
+		const focusableElements = modalElement.querySelectorAll<HTMLElement>(
+			'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+		);
+
+		if (focusableElements.length === 0) {
+			return;
+		}
+
+		const firstElement = focusableElements[0];
+		const lastElement = focusableElements[focusableElements.length - 1];
+
+		if (event.shiftKey) {
+			if (document.activeElement === firstElement) {
+				lastElement.focus();
+				event.preventDefault();
+			}
+		} else {
+			if (document.activeElement === lastElement) {
+				firstElement.focus();
+				event.preventDefault();
 			}
 		}
 	}
@@ -155,48 +186,14 @@
 		handleClose();
 	}
 
-	/**
-	 * Focus trap implementation
-	 */
-	function trapFocus(event: KeyboardEvent) {
-		if (event.key !== 'Tab' || !modalElement) {
-			return;
-		}
-
-		const focusableElements = modalElement.querySelectorAll<HTMLElement>(
-			'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
-		);
-
-		if (focusableElements.length === 0) {
-			return;
-		}
-
-		const firstElement = focusableElements[0];
-		const lastElement = focusableElements[focusableElements.length - 1];
-
-		if (event.shiftKey) {
-			if (document.activeElement === firstElement) {
-				lastElement.focus();
-				event.preventDefault();
-			}
-		} else {
-			if (document.activeElement === lastElement) {
-				firstElement.focus();
-				event.preventDefault();
-			}
-		}
-	}
-
 	// Lifecycle
 	onMount(() => {
 		document.addEventListener('keydown', handleKeydown);
-		document.addEventListener('keydown', trapFocus);
 		document.body.style.overflow = 'hidden';
 	});
 
 	onDestroy(() => {
 		document.removeEventListener('keydown', handleKeydown);
-		document.removeEventListener('keydown', trapFocus);
 		document.body.style.overflow = '';
 		unsubscribe();
 	});
