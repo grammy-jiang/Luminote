@@ -26,8 +26,15 @@ class TemplateEngine:
     - Graceful handling of missing variables
     """
 
-    # Built-in templates
-    BUILT_IN_TEMPLATES: dict[str, Template] = {}
+    # IDs of built-in templates (immutable)
+    _BUILT_IN_TEMPLATE_IDS: frozenset[str] = frozenset(
+        [
+            "professional",
+            "casual",
+            "academic",
+            "business",
+        ]
+    )
 
     def __init__(self) -> None:
         """Initialize template engine with built-in templates."""
@@ -150,7 +157,7 @@ Provide a business-appropriate translation suitable for corporate communications
                 created_at=datetime.now(UTC),
                 usage_count=0,
             )
-            self.BUILT_IN_TEMPLATES[template.template_id] = template
+            # Store in instance templates (no need to populate class-level dict)
             self._templates[template.template_id] = template
 
     def create_template(
@@ -218,7 +225,7 @@ Provide a business-appropriate translation suitable for corporate communications
             return [
                 t
                 for t in self._templates.values()
-                if t.template_id not in self.BUILT_IN_TEMPLATES
+                if t.template_id not in self._BUILT_IN_TEMPLATE_IDS
             ]
 
     def get_template(self, template_id: str) -> Template | None:
@@ -247,7 +254,7 @@ Provide a business-appropriate translation suitable for corporate communications
             LuminoteException: If attempting to delete a built-in template
         """
         # Prevent deletion of built-in templates
-        if template_id in self.BUILT_IN_TEMPLATES:
+        if template_id in self._BUILT_IN_TEMPLATE_IDS:
             raise LuminoteException(
                 message=f"Cannot delete built-in template: {template_id}",
                 code="CANNOT_DELETE_BUILT_IN_TEMPLATE",
