@@ -56,7 +56,7 @@
 	}>();
 
 	let hoverTimeout: ReturnType<typeof setTimeout> | null = null;
-	
+
 	// Context menu state
 	let contextMenuBlock: ContentBlock | null = null;
 	let showContextMenu = false;
@@ -144,7 +144,7 @@
 	 */
 	function handleBlockContextMenu(event: MouseEvent, block: ContentBlock) {
 		event.preventDefault();
-		
+
 		contextMenuBlock = block;
 		contextMenuX = event.clientX;
 		contextMenuY = event.clientY;
@@ -166,8 +166,8 @@
 		if (!contextMenuBlock) return;
 
 		// Find the original block text
-		const originalBlock = originalBlocks.find(b => b.id === contextMenuBlock!.id);
-		
+		const originalBlock = originalBlocks.find((b) => b.id === contextMenuBlock!.id);
+
 		retranslateBlock = contextMenuBlock;
 		retranslateOriginalText = originalBlock?.text || contextMenuBlock.text;
 		showRetranslateModal = true;
@@ -179,17 +179,13 @@
 	 */
 	function handleAcceptRetranslation(event: CustomEvent<{ blockId: string; newText: string }>) {
 		const { blockId, newText } = event.detail;
-		
+
 		// Update the block in the blocks array
-		blocks = blocks.map(block => 
-			block.id === blockId 
-				? { ...block, text: newText }
-				: block
-		);
+		blocks = blocks.map((block) => (block.id === blockId ? { ...block, text: newText } : block));
 
 		// Emit event for parent component
 		dispatch('blockUpdated', { blockId, newText });
-		
+
 		showRetranslateModal = false;
 		retranslateBlock = null;
 	}

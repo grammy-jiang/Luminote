@@ -287,7 +287,9 @@ describe('BlockRetranslate Component', () => {
 							() =>
 								resolve({
 									data: {
-										translated_blocks: [{ id: 'block-1', type: 'paragraph', text: 'Test', metadata: {} }]
+										translated_blocks: [
+											{ id: 'block-1', type: 'paragraph', text: 'Test', metadata: {} }
+										]
 									},
 									request_id: 'test'
 								}),
@@ -341,9 +343,7 @@ describe('BlockRetranslate Component', () => {
 				}
 			});
 
-			expect(
-				screen.getByText('Please configure your API key in the settings')
-			).toBeInTheDocument();
+			expect(screen.getByText('Please configure your API key in the settings')).toBeInTheDocument();
 			expect(screen.getByTestId('retranslate-button')).toBeDisabled();
 		});
 	});
@@ -538,15 +538,15 @@ describe('BlockRetranslate Component', () => {
 			});
 
 			// Press Ctrl+Enter before translation - nothing should happen
-			const event = new KeyboardEvent('keydown', { 
-				key: 'Enter', 
-				ctrlKey: true, 
-				bubbles: true 
+			const event = new KeyboardEvent('keydown', {
+				key: 'Enter',
+				ctrlKey: true,
+				bubbles: true
 			});
 			document.dispatchEvent(event);
 
 			// Wait a bit to ensure no event was fired
-			await new Promise(resolve => setTimeout(resolve, 100));
+			await new Promise((resolve) => setTimeout(resolve, 100));
 			expect(acceptEventFired).toBe(false);
 		});
 	});
