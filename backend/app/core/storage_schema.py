@@ -1,5 +1,4 @@
-"""
-Storage schema definitions for IndexedDB.
+"""Storage schema definitions for IndexedDB.
 
 This module defines TypedDict schemas for data structures stored in IndexedDB
 on the frontend. These schemas ensure consistency between frontend storage and
@@ -36,7 +35,7 @@ class HistoryEntry(TypedDict):
 
     Object Store: history
     Primary Key: history_id
-    Indexes: document_url, created_at
+    Indexes: document_url, visited_at
     """
 
     history_id: str  # UUID

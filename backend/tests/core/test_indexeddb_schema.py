@@ -1,8 +1,7 @@
-"""
-Tests for IndexedDB storage schema definitions.
+"""Tests for IndexedDB storage schema definitions.
 
-These tests validate the schema structures and validation functions
-that define the data model for client-side IndexedDB storage.
+These tests validate the schema structures and validation functions that define the data
+model for client-side IndexedDB storage.
 """
 
 import pytest
