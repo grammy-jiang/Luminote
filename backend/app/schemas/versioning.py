@@ -6,7 +6,7 @@ This module defines Pydantic models for translation version management.
 from datetime import UTC, datetime
 from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, Field
 
 
 class VersionMetadata(BaseModel):
@@ -53,5 +53,3 @@ class TranslationVersion(BaseModel):
         ..., description="List of translated content blocks"
     )
     metadata: VersionMetadata = Field(..., description="Translation metadata")
-
-    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
